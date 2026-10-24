@@ -1,0 +1,3179 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Chimie SN2">
+  <meta name="theme-color" content="#111827">
+  <title>Cahier Chimie SN2</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <style>
+    :root {
+      --bg: #e9edf2;
+      --panel: #ffffff;
+      --ink: #0f172a;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --bar: #111827;
+      --accent: #2563eb;
+      --g: 24px; /* taille du quadrillage, ajustée en JS selon la largeur de la feuille */
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; }
+    body {
+      position: fixed; inset: 0;              /* aucun « rebond » de la page entière sur iPad */
+      display: flex; flex-direction: column;
+      overflow: hidden;
+      background: var(--bg); color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 15px;
+      -webkit-user-select: none; user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-text-size-adjust: 100%;
+      touch-action: pan-x pan-y;              /* pas de zoom par pincement / double-tap sur l'interface */
+      overscroll-behavior: none;
+    }
+    button { font: inherit; color: inherit; background: none; border: 0; margin: 0; padding: 0; cursor: pointer; -webkit-appearance: none; appearance: none; }
+    input, select { font: inherit; font-size: 16px; } /* 16 px = Safari ne zoome pas au focus */
+    svg.ic { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; display: block; }
+    .selectable, .selectable * { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
+
+    /* ---------- Barre du haut ---------- */
+    #topbar {
+      display: flex; align-items: center; gap: 4px;
+      padding: 6px 8px; padding-top: calc(6px + env(safe-area-inset-top));
+      padding-left: calc(8px + env(safe-area-inset-left)); padding-right: calc(8px + env(safe-area-inset-right));
+      background: var(--bar); color: #fff; flex-shrink: 0;
+    }
+    .tb-btn {
+      min-width: 44px; height: 44px; padding: 0 10px; border-radius: 12px;
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      color: #e5e7eb; font-weight: 600; font-size: 14px; flex-shrink: 0; white-space: nowrap;
+    }
+    .tb-btn:active { background: rgba(255,255,255,.14); }
+    .tb-btn.on-done { background: #065f46; color: #d1fae5; }
+    .tb-btn.on-review { background: #92400e; color: #fef3c7; }
+    .tb-title { flex: 1; min-width: 0; padding: 0 6px; line-height: 1.2; }
+    .tb-title b { display: block; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tb-title span { display: block; font-size: 12px; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #fbbf24; display: inline-block; }
+    .dot.ok { background: #34d399; }
+
+    /* ---------- Barre d'outils de dessin ---------- */
+    #toolbar {
+      display: flex; align-items: center; gap: 2px;
+      padding: 5px 8px; padding-left: calc(8px + env(safe-area-inset-left)); padding-right: calc(8px + env(safe-area-inset-right));
+      background: var(--panel); border-bottom: 1px solid var(--line);
+      flex-shrink: 0; overflow-x: auto; scrollbar-width: none;
+    }
+    #toolbar::-webkit-scrollbar { display: none; }
+    .tool {
+      width: 46px; height: 46px; border-radius: 12px; flex-shrink: 0;
+      display: inline-flex; align-items: center; justify-content: center; color: #334155; position: relative;
+    }
+    .tool:active { background: #f1f5f9; }
+    .tool.on { background: #dbeafe; color: #1d4ed8; box-shadow: inset 0 0 0 2px #93c5fd; }
+    .tool:disabled { opacity: .35; }
+    .tool .badge { position: absolute; bottom: 4px; right: 4px; font-size: 9px; font-weight: 800; background: #1d4ed8; color: #fff; border-radius: 4px; padding: 0 3px; line-height: 13px; }
+    .sw { width: 38px; height: 46px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; }
+    .sw i { width: 24px; height: 24px; border-radius: 50%; display: block; background: var(--c); box-shadow: 0 0 0 2px #fff, 0 0 0 3px #cbd5e1; }
+    .sw.on i { box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--c); }
+    .sz { width: 38px; height: 46px; border-radius: 12px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; }
+    .sz i { display: block; border-radius: 50%; background: #334155; }
+    .sz.on { background: #f1f5f9; box-shadow: inset 0 0 0 2px #cbd5e1; }
+    .sep { width: 1px; height: 28px; background: var(--line); margin: 0 5px; flex-shrink: 0; }
+    .grow { flex: 1; min-width: 4px; }
+    .focus-only { display: none !important; }
+    .focus-title { font-weight: 700; font-size: 14px; max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px; color: #334155; }
+
+    /* ---------- Zone principale ---------- */
+    #main { flex: 1; min-height: 0; display: flex; position: relative; }
+    #drawer {
+      width: 300px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line);
+      display: none; flex-direction: column; min-height: 0;
+    }
+    body.drawer-open #drawer { display: flex; }
+    #scrim { display: none; }
+    @media (max-width: 1099px) {
+      #drawer { position: absolute; top: 0; bottom: 0; left: 0; z-index: 30; width: min(330px, 88vw); box-shadow: 8px 0 30px rgba(15,23,42,.25); }
+      body.drawer-open #scrim { display: block; position: absolute; inset: 0; z-index: 29; background: rgba(15,23,42,.35); }
+    }
+    .dr-head { padding: 10px; border-bottom: 1px solid var(--line); background: #f8fafc; display: flex; flex-direction: column; gap: 8px; }
+    .seg { display: flex; background: #e2e8f0; border-radius: 12px; padding: 3px; gap: 3px; }
+    .seg button { flex: 1; height: 40px; border-radius: 9px; font-weight: 600; font-size: 13px; color: #475569; line-height: 1.1; }
+    .seg button small { display: block; font-weight: 500; font-size: 11px; opacity: .8; }
+    .seg button.on { background: #fff; color: #1d4ed8; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+    .progress-row { display: flex; justify-content: space-between; font-size: 12px; color: #475569; font-weight: 600; }
+    .bar { height: 6px; background: #e2e8f0; border-radius: 6px; overflow: hidden; }
+    .bar > div { height: 100%; background: #10b981; width: 0; transition: width .3s; }
+    .field { width: 100%; height: 42px; border: 1px solid #cbd5e1; border-radius: 10px; padding: 0 10px; background: #fff; color: var(--ink); }
+    .row { display: flex; gap: 6px; }
+    #exList { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 6px; overscroll-behavior: contain; }
+    .ex-sec { padding: 12px 8px 4px; font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #94a3b8; }
+    .ex-item { width: 100%; min-height: 48px; display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 12px; text-align: left; font-size: 14px; color: #334155; }
+    .ex-item:active { background: #f1f5f9; }
+    .ex-item.on { background: #eff6ff; color: #1e3a8a; font-weight: 700; box-shadow: inset 0 0 0 2px #93c5fd; }
+    .ex-item .tag { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 6px; background: #f1f5f9; color: #475569; flex-shrink: 0; }
+    .ex-item .tag.int { background: #e0e7ff; color: #4338ca; }
+    .ex-item .t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    #center { flex: 1; min-width: 0; display: flex; flex-direction: column; min-height: 0; position: relative; }
+    #page {
+      flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain; position: relative;
+      padding: 12px; padding-left: calc(12px + env(safe-area-inset-left)); padding-right: calc(12px + env(safe-area-inset-right));
+      touch-action: pan-y;
+    }
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+    .card-head { display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 14px; background: #f8fafc; border-bottom: 1px solid var(--line); min-height: 52px; }
+    .card-head .h { flex: 1; min-width: 0; font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .pill { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: #e0e7ff; color: #3730a3; }
+    .pill.prob { background: #dbeafe; color: #1e40af; }
+    .pill.sec { background: #f1f5f9; color: #475569; font-weight: 600; }
+    .ghost { height: 40px; padding: 0 12px; border-radius: 10px; font-size: 13px; font-weight: 600; color: #475569; flex-shrink: 0; }
+    .ghost:active { background: #e2e8f0; }
+    .card.collapsed .card-head { border-bottom: 0; }
+    .card.collapsed #exStatement { display: none; }
+    #exStatement { padding: 14px 16px; font-size: 16px; line-height: 1.55; }
+    #exStatement p { margin: .45em 0; }
+
+    #paper {
+      position: relative; margin-top: 12px; border-radius: 16px; overflow: hidden;
+      background-color: #fff; box-shadow: 0 1px 2px rgba(15,23,42,.08), 0 0 0 1px var(--line);
+      touch-action: pan-y;                     /* le doigt fait défiler ; le crayon est géré en JS */
+      -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+      cursor: crosshair;
+    }
+    #paper.finger { touch-action: none; }
+    #paper canvas { position: absolute; left: 0; top: 0; width: 100%; pointer-events: none; }
+    .paper-grid { background-image: linear-gradient(to right, rgba(148,163,184,.28) 1px, transparent 1px), linear-gradient(to bottom, rgba(148,163,184,.28) 1px, transparent 1px); background-size: var(--g) var(--g); }
+    .paper-lined { background-image: linear-gradient(to bottom, transparent calc(var(--g) * 1.33 - 1px), rgba(148,163,184,.45) calc(var(--g) * 1.33 - 1px)); background-size: 100% calc(var(--g) * 1.33); }
+    .paper-dots { background-image: radial-gradient(rgba(100,116,139,.45) 1.2px, transparent 1.4px); background-size: var(--g) var(--g); }
+    .paper-blank { background-image: none; }
+    .page-foot { display: flex; justify-content: center; gap: 8px; padding: 14px 0 6px; }
+    .soft-btn { height: 44px; padding: 0 16px; border-radius: 12px; background: #fff; border: 1px solid #cbd5e1; font-weight: 600; font-size: 14px; color: #334155; display: inline-flex; align-items: center; gap: 8px; }
+    .soft-btn:active { background: #f1f5f9; }
+
+    /* ---------- Barre d'aide (3 boutons) ---------- */
+    #assist {
+      display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+      padding: 8px 12px; padding-bottom: calc(8px + env(safe-area-inset-bottom));
+      padding-left: calc(12px + env(safe-area-inset-left)); padding-right: calc(12px + env(safe-area-inset-right));
+      background: var(--panel); border-top: 1px solid var(--line);
+    }
+    .as-btn { height: 46px; padding: 0 14px; border-radius: 12px; font-weight: 700; font-size: 14px; display: inline-flex; align-items: center; gap: 7px; color: #fff; flex-shrink: 0; white-space: nowrap; }
+    .as-btn:active { filter: brightness(.92); }
+    .as-verify { background: #059669; }
+    .as-error { background: #f59e0b; color: #1c1917; }
+    .as-explain { background: #2563eb; }
+    #noteInput { flex: 1; min-width: 80px; height: 46px; border: 1px solid #cbd5e1; border-radius: 12px; padding: 0 12px; background: #f8fafc; -webkit-user-select: text; user-select: text; }
+    @media (max-width: 900px) { .as-btn .long { display: none; } }
+    @media (max-width: 700px) { .tb-btn .lbl { display: none; } }
+
+    /* ---------- Mode plein écran / concentration ---------- */
+    body.focus #topbar, body.focus #assist, body.focus #drawer, body.focus #scrim { display: none !important; }
+    body.focus .focus-only { display: inline-flex !important; }
+    body.focus #toolbar { padding-top: calc(5px + env(safe-area-inset-top)); }
+    body.focus #page { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
+
+    /* ---------- Panneau de réponse (à droite) ---------- */
+    #sheet {
+      position: absolute; top: 0; right: 0; bottom: 0; width: min(480px, 94%); z-index: 25;
+      background: #fff; box-shadow: -10px 0 30px rgba(15,23,42,.18);
+      transform: translateX(105%); transition: transform .22s ease; display: flex; flex-direction: column;
+      visibility: hidden;
+    }
+    #sheet.open { transform: none; visibility: visible; }
+    .sheet-head { display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 16px; border-bottom: 1px solid var(--line); min-height: 56px; }
+    .sheet-head h3 { flex: 1; margin: 0; font-size: 16px; }
+    .sheet-head.verify { background: #ecfdf5; } .sheet-head.error { background: #fffbeb; } .sheet-head.explain { background: #eff6ff; }
+    #sheetBody { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px 16px calc(20px + env(safe-area-inset-bottom)); font-size: 15px; line-height: 1.55; overscroll-behavior: contain; }
+    #sheetBody p { margin: .45em 0; }
+    .box { padding: 12px 14px; border-radius: 14px; border: 1px solid; margin-bottom: 12px; }
+    .box.green { background: #f0fdf4; border-color: #bbf7d0; }
+    .box.amber { background: #fffbeb; border-color: #fde68a; }
+    .box.blue { background: #eff6ff; border-color: #bfdbfe; }
+    .box.indigo { background: #eef2ff; border-color: #c7d2fe; }
+    .box.slate { background: #f8fafc; border-color: #e2e8f0; }
+    .box-title { font-weight: 800; font-size: 13px; margin-bottom: 6px; }
+    .answer { font-family: ui-monospace, Menlo, monospace; font-weight: 700; background: #fff; border: 1px solid #bbf7d0; border-radius: 10px; padding: 10px 12px; font-size: 15px; word-break: break-word; }
+    .cp { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+    .cp li { display: flex; gap: 10px; background: #fff; border: 1px solid #fde68a; border-radius: 10px; padding: 9px 10px; }
+    .cp li > b { width: 22px; height: 22px; border-radius: 50%; background: #fde68a; color: #78350f; font-size: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .btn-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .mini { height: 40px; padding: 0 12px; border-radius: 10px; font-weight: 700; font-size: 13px; }
+    .mini.green { background: #059669; color: #fff; } .mini.amber { background: #f59e0b; color: #1c1917; }
+    .mini.blue { background: #2563eb; color: #fff; } .mini.white { background: #fff; border: 1px solid #c7d2fe; color: #3730a3; }
+    .spinner { width: 20px; height: 20px; border: 3px solid #6366f1; border-top-color: transparent; border-radius: 50%; animation: spin .8s linear infinite; flex-shrink: 0; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ---------- Contenu des énoncés ---------- */
+    .chem-eq { background: #f8fafc; border-left: 4px solid #3b82f6; padding: .55rem .85rem; margin: .5rem 0; font-weight: 600; border-radius: 0 .5rem .5rem 0; overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; margin: .6rem 0; font-size: .9em; background: #fff; }
+    .data-table th, .data-table td { border: 1px solid #cbd5e1; padding: .4rem .6rem; text-align: center; }
+    .data-table th { background: #f1f5f9; font-weight: 600; color: #334155; }
+    code { font-family: ui-monospace, Menlo, monospace; font-size: .92em; background: #f1f5f9; padding: 1px 5px; border-radius: 5px; }
+
+    /* ---------- Fenêtres modales, menu, toast ---------- */
+    .modal { position: fixed; inset: 0; z-index: 60; background: rgba(15,23,42,.55); display: none; align-items: center; justify-content: center; padding: 16px; }
+    .modal.open { display: flex; }
+    .modal-card { background: #fff; border-radius: 18px; width: 100%; max-width: 520px; max-height: 88%; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,.3); }
+    .modal-card.wide { max-width: 860px; }
+    .modal-head { display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 18px; background: var(--bar); color: #fff; }
+    .modal-head h3 { flex: 1; margin: 0; font-size: 16px; }
+    .modal-body { padding: 16px 18px; overflow-y: auto; -webkit-overflow-scrolling: touch; font-size: 14px; line-height: 1.5; }
+    .modal-body label { display: block; font-weight: 700; font-size: 13px; margin: 12px 0 6px; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+    .btn { height: 44px; padding: 0 16px; border-radius: 12px; font-weight: 700; font-size: 14px; }
+    .btn.primary { background: #4f46e5; color: #fff; } .btn.danger { background: #dc2626; color: #fff; }
+    .btn.plain { background: #f1f5f9; color: #334155; } .btn.link { color: #dc2626; }
+    .ref-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 700px) { .ref-grid { grid-template-columns: 1fr; } }
+    .ref-grid .box p, .box.amber p { margin: .3em 0; }
+
+    #menuScrim { position: fixed; inset: 0; z-index: 44; display: none; }
+    #menuScrim.open { display: block; }
+    #moreMenu {
+      position: fixed; z-index: 45; width: 300px; background: #fff; border-radius: 16px; padding: 8px;
+      box-shadow: 0 16px 40px rgba(15,23,42,.25), 0 0 0 1px var(--line); display: none;
+    }
+    #moreMenu.open { display: block; }
+    .mi { width: 100%; min-height: 48px; display: flex; align-items: center; gap: 12px; padding: 0 12px; border-radius: 10px; font-size: 15px; text-align: left; color: #1e293b; }
+    .mi:active { background: #f1f5f9; }
+    .mi .sub { margin-left: auto; font-size: 13px; color: var(--muted); font-weight: 600; }
+    .mi.danger { color: #dc2626; }
+    .mi-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: #94a3b8; padding: 10px 12px 4px; }
+    .mi-seg { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 0 6px 6px; }
+    .mi-seg button { height: 40px; border-radius: 9px; background: #f1f5f9; font-size: 12px; font-weight: 600; color: #475569; }
+    .mi-seg button.on { background: #dbeafe; color: #1d4ed8; box-shadow: inset 0 0 0 2px #93c5fd; }
+    .switch { margin-left: auto; width: 46px; height: 28px; border-radius: 14px; background: #cbd5e1; position: relative; flex-shrink: 0; transition: background .15s; }
+    .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .15s; }
+    .switch.on { background: #2563eb; } .switch.on::after { transform: translateX(18px); }
+    .mi-hr { height: 1px; background: var(--line); margin: 6px 4px; }
+
+    #toast {
+      position: fixed; left: 50%; bottom: calc(80px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+      background: #0f172a; color: #fff; font-size: 14px; font-weight: 600; padding: 11px 16px; border-radius: 12px;
+      z-index: 70; max-width: 90vw; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,.25);
+      opacity: 0; pointer-events: none; transition: opacity .2s;
+    }
+    #toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+
+  <!-- ===================== BARRE DU HAUT ===================== -->
+  <header id="topbar">
+    <button class="tb-btn" onclick="toggleDrawer()" title="Liste des exercices" aria-label="Liste des exercices"><span data-ic="menu"></span></button>
+    <button class="tb-btn" onclick="navigateExercise(-1)" title="Exercice précédent" aria-label="Exercice précédent"><span data-ic="left"></span></button>
+    <div class="tb-title">
+      <b id="tbTitle">—</b>
+      <span id="tbSub">Chimie SN2 — Examen 2</span>
+    </div>
+    <button class="tb-btn" onclick="navigateExercise(1)" title="Exercice suivant" aria-label="Exercice suivant"><span data-ic="right"></span></button>
+    <button id="markDoneBtn" class="tb-btn" onclick="setExerciseStatus('done')" title="Marquer comme réussi"><span data-ic="check"></span><span class="lbl">Réussi</span></button>
+    <button id="markReviewBtn" class="tb-btn" onclick="setExerciseStatus('review')" title="Marquer à revoir"><span data-ic="flag"></span><span class="lbl">À revoir</span></button>
+    <button class="tb-btn" onclick="openModal('refModal')" title="Aide-mémoire (formules, Ka)"><span data-ic="book"></span><span class="lbl">Formules</span></button>
+    <button class="tb-btn" onclick="openModal('apiModal')" title="Réglages de l'IA"><span id="apiDot" class="dot"></span><span>IA</span></button>
+  </header>
+
+  <!-- ===================== OUTILS DE DESSIN ===================== -->
+  <div id="toolbar">
+    <button class="tool focus-only" onclick="navigateExercise(-1)" aria-label="Exercice précédent"><span data-ic="left"></span></button>
+    <span id="focusTitle" class="focus-title focus-only"></span>
+    <button class="tool focus-only" onclick="navigateExercise(1)" aria-label="Exercice suivant"><span data-ic="right"></span></button>
+    <span class="sep focus-only"></span>
+
+    <button id="tool-pen" class="tool" onclick="setTool('pen')" title="Stylo" aria-label="Stylo"><span data-ic="pen"></span></button>
+    <button id="tool-hl" class="tool" onclick="setTool('hl')" title="Surligneur" aria-label="Surligneur"><span data-ic="highlighter"></span></button>
+    <button id="tool-line" class="tool" onclick="setTool('line')" title="Ligne droite (s'aligne toute seule à l'horizontale/verticale)" aria-label="Ligne droite"><span data-ic="line"></span></button>
+    <button id="tool-eraser" class="tool" onclick="setTool('eraser')" title="Gomme (touche encore pour changer de mode)" aria-label="Gomme"><span data-ic="eraser"></span><span id="eraserBadge" class="badge">trait</span></button>
+    <span class="sep"></span>
+    <span id="swatches" style="display:inline-flex"></span>
+    <span class="sep"></span>
+    <span id="sizes" style="display:inline-flex"></span>
+    <span class="sep"></span>
+    <button id="undoBtn" class="tool" onclick="undo()" title="Annuler" aria-label="Annuler"><span data-ic="undo"></span></button>
+    <button id="redoBtn" class="tool" onclick="redo()" title="Rétablir" aria-label="Rétablir"><span data-ic="redo"></span></button>
+    <span class="grow"></span>
+    <button id="moreBtn" class="tool" onclick="openMoreMenu()" title="Plus d'options" aria-label="Plus d'options"><span data-ic="more"></span></button>
+    <button id="focusBtn" class="tool" onclick="toggleFocus()" title="Plein écran" aria-label="Plein écran"><span id="focusIc" data-ic="maximize"></span></button>
+  </div>
+
+  <!-- ===================== ZONE PRINCIPALE ===================== -->
+  <div id="main">
+    <aside id="drawer">
+      <div class="dr-head">
+        <div class="seg">
+          <button id="tabCh2" onclick="selectChapter(2)">Chap. 2<small>Cinétique</small></button>
+          <button id="tabCh3" onclick="selectChapter(3)">Chap. 3<small>Équilibre</small></button>
+          <button id="tabCh4" onclick="selectChapter(4)">Chap. 4<small>Acides/bases</small></button>
+        </div>
+        <div class="progress-row"><span id="progressText">Progression</span><span id="countText"></span></div>
+        <div class="bar"><div id="progressFill"></div></div>
+        <input id="searchInput" class="field" type="search" placeholder="Rechercher (2.4, pH, Kp…)" oninput="renderExerciseList()" autocomplete="off" autocorrect="off" spellcheck="false">
+        <div class="row">
+          <select id="sectionFilter" class="field" onchange="renderExerciseList()"></select>
+          <select id="typeFilter" class="field" style="width:120px;flex-shrink:0" onchange="renderExerciseList()">
+            <option value="ALL">Tous</option>
+            <option value="interne">Internes</option>
+            <option value="probleme">Problèmes</option>
+          </select>
+        </div>
+      </div>
+      <div id="exList"></div>
+    </aside>
+    <div id="scrim" onclick="toggleDrawer(false)"></div>
+
+    <div id="center">
+      <div id="page">
+        <section id="statementCard" class="card">
+          <div class="card-head" onclick="toggleStatement()">
+            <div class="h"><span id="exTypePill" class="pill">Ex. interne</span><span id="exTitle">—</span><span id="exSectionPill" class="pill sec"></span></div>
+            <button id="statementToggle" class="ghost">Masquer</button>
+          </div>
+          <div id="exStatement" class="selectable"></div>
+        </section>
+
+        <div id="paper" class="paper-grid">
+          <canvas id="inkCanvas"></canvas>
+          <canvas id="liveCanvas"></canvas>
+        </div>
+
+        <div class="page-foot">
+          <button class="soft-btn" onclick="addSpace()"><span data-ic="plus"></span>Ajouter de l'espace</button>
+        </div>
+      </div>
+
+      <div id="assist">
+        <button class="as-btn as-verify" onclick="runAssistantAction('verify')"><span data-ic="check"></span><span>Vérifier<span class="long"> ma réponse</span></span></button>
+        <button class="as-btn as-error" onclick="runAssistantAction('error')"><span data-ic="search"></span><span><span class="long">Où est mon </span>erreur<span class="long"> ?</span></span></button>
+        <button class="as-btn as-explain" onclick="runAssistantAction('explain')"><span data-ic="bulb"></span><span>Expliquer</span></button>
+        <input id="noteInput" type="text" placeholder="Réponse finale (optionnel)" autocomplete="off" autocorrect="off" spellcheck="false">
+      </div>
+    </div>
+
+    <!-- Panneau de réponse de l'assistant -->
+    <aside id="sheet" aria-hidden="true">
+      <div id="sheetHead" class="sheet-head">
+        <h3 id="sheetTitle">Analyse</h3>
+        <button class="tool" onclick="closeSheet()" aria-label="Fermer"><span data-ic="x"></span></button>
+      </div>
+      <div id="sheetBody" class="selectable"></div>
+    </aside>
+  </div>
+
+  <!-- ===================== MENU « PLUS » ===================== -->
+  <div id="menuScrim" onclick="closeMoreMenu()"></div>
+  <div id="moreMenu">
+    <button class="mi" onclick="closeMoreMenu(); stampIRE()"><span data-ic="table"></span>Insérer un tableau I-R-E</button>
+    <div class="mi-label">Type de feuille</div>
+    <div class="mi-seg" id="paperSeg">
+      <button data-paper="grid" onclick="setPaper('grid')">Quadrillé</button>
+      <button data-paper="lined" onclick="setPaper('lined')">Ligné</button>
+      <button data-paper="dots" onclick="setPaper('dots')">Points</button>
+      <button data-paper="blank" onclick="setPaper('blank')">Blanc</button>
+    </div>
+    <div class="mi-hr"></div>
+    <button class="mi" onclick="toggleFingerDraw()"><span data-ic="hand"></span>Dessiner avec le doigt<span id="fingerSwitch" class="switch"></span></button>
+    <button class="mi" onclick="toggleEraserMode()"><span data-ic="eraser"></span>Gomme<span id="eraserModeText" class="sub">Trait entier</span></button>
+    <div class="mi-hr"></div>
+    <button class="mi" onclick="closeMoreMenu(); exportImage()"><span data-ic="share"></span>Partager / enregistrer l'image</button>
+    <button class="mi" onclick="closeMoreMenu(); openBackup()"><span data-ic="save"></span>Sauvegarde de mes réponses</button>
+    <button class="mi danger" onclick="closeMoreMenu(); openModal('clearModal')"><span data-ic="trash"></span>Effacer toute la feuille</button>
+  </div>
+
+  <!-- ===================== MODALE : IA ===================== -->
+  <div id="apiModal" class="modal" onclick="if(event.target===this) closeModal('apiModal')">
+    <div class="modal-card">
+      <div class="modal-head"><h3>Lecture de ton écriture par l'IA (Gemini)</h3><button class="tb-btn" onclick="closeModal('apiModal')" aria-label="Fermer"><span data-ic="x"></span></button></div>
+      <div class="modal-body">
+        <p>Avec une clé, les 3 boutons du bas lisent ce que tu as écrit au crayon et te répondent.</p>
+        <p style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px 12px;font-size:13px">
+          1. Va sur <b>aistudio.google.com</b> → <i>Get API key</i> (gratuit).<br>
+          2. Colle la clé ici. Elle reste seulement sur cet appareil.<br>
+          3. Sans clé, tu as quand même la réponse finale, les points de contrôle et le corrigé complet.
+        </p>
+        <label for="apiKeyInput">Clé API Gemini</label>
+        <input id="apiKeyInput" class="field selectable" type="password" placeholder="AIza…" autocomplete="off" autocorrect="off" spellcheck="false">
+        <label for="modelInput">Modèle</label>
+        <input id="modelInput" class="field selectable" list="modelList" autocomplete="off" autocorrect="off" spellcheck="false" autocapitalize="off">
+        <datalist id="modelList">
+          <option value="gemini-flash-latest">
+          <option value="gemini-2.5-flash">
+          <option value="gemini-2.5-pro">
+        </datalist>
+        <div class="modal-actions">
+          <button class="btn link" onclick="clearApiKey()">Effacer la clé</button>
+          <button class="btn primary" onclick="saveApiKey()">Enregistrer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== MODALE : AIDE-MÉMOIRE ===================== -->
+  <div id="refModal" class="modal" onclick="if(event.target===this) closeModal('refModal')">
+    <div class="modal-card wide">
+      <div class="modal-head"><h3>Aide-mémoire NDC (202-SN2-RE) &amp; tableau des K<sub>a</sub></h3><button class="tb-btn" onclick="closeModal('refModal')" aria-label="Fermer"><span data-ic="x"></span></button></div>
+      <div class="modal-body selectable">
+        <div class="ref-grid">
+          <div class="box blue">
+            <div class="box-title">Chapitre 2 — Cinétique chimique</div>
+            <p>• <b>Vitesse :</b> <code>v = &minus;(1/a) d[A]/dt = +(1/c) d[C]/dt</code></p>
+            <p>• <b>Ordre 0 :</b> <code>[A]<sub>t</sub> = [A]<sub>0</sub> &minus; kt</code> | <code>t<sub>1/2</sub> = [A]<sub>0</sub> / (2k)</code></p>
+            <p>• <b>Ordre 1 :</b> <code>ln[A]<sub>t</sub> = &minus;kt + ln[A]<sub>0</sub></code> | <code>t<sub>1/2</sub> = ln(2)/k = 0,693/k</code></p>
+            <p>• <b>Ordre 2 :</b> <code>1/[A]<sub>t</sub> = 1/[A]<sub>0</sub> + kt</code> | <code>t<sub>1/2</sub> = 1 / (k[A]<sub>0</sub>)</code></p>
+            <p>• <i>Note NDC (p. 111) : on ne voit pas l'équation d'Arrhenius.</i></p>
+          </div>
+          <div class="box green">
+            <div class="box-title">Chapitre 3 — Équilibre chimique</div>
+            <p>• <b>Tableau obligatoire :</b> I (initiale) – R (variation) – E (équilibre).</p>
+            <p>• <b>K<sub>p</sub> et K<sub>c</sub> :</b> <code>K<sub>p</sub> = K<sub>c</sub>(RT)<sup>&Delta;n</sup></code>, <code>R = 8,314 kPa&middot;L&middot;mol<sup>&minus;1</sup>&middot;K<sup>&minus;1</sup></code> (ou 0,08206 L&middot;atm&middot;mol<sup>&minus;1</sup>&middot;K<sup>&minus;1</sup>). Unité entre parenthèses : <code>K<sub>p</sub> = 150 (en kPa)</code>.</p>
+            <p>• <b>Gaz parfaits :</b> <code>P = (n/V)RT = CRT</code></p>
+          </div>
+        </div>
+        <div class="box amber">
+          <div class="box-title">Chapitre 4 (début) — Acides et bases (NDC p. 171–189)</div>
+          <p>• <b>Les 6 acides forts :</b> <code>HCl, HBr, HI, HNO<sub>3</sub>, HClO<sub>4</sub>, H<sub>2</sub>SO<sub>4</sub></code> (tableau I – R – F, dissociation à 100 %).</p>
+          <p>• <code>K<sub>e</sub> = [OH<sup>&minus;</sup>][H<sub>3</sub>O<sup>+</sup>] = 1,0 &times; 10<sup>&minus;14</sup></code> à 25 &deg;C | <code>pH = &minus;log[H<sub>3</sub>O<sup>+</sup>]</code> | <code>pH + pOH = 14,00</code></p>
+          <p>• <b>Acides faibles (I – R – E) :</b> <code>C<sub>i</sub> &minus; x &approx; C<sub>i</sub></code> si <b><code>C<sub>i</sub> / K<sub>a</sub> &ge; 100</code></b> (ou x &lt; 5 % de C<sub>i</sub>). Sinon : formule quadratique.</p>
+        </div>
+        <div class="box-title" style="margin-top:6px">Tableau 4.2 (p. 167, Chang 6<sup>e</sup> éd.) — K<sub>a</sub> à 25 &deg;C</div>
+        <table class="data-table">
+          <thead><tr><th>Acide faible</th><th>Formule</th><th>Base conjuguée</th><th>K<sub>a</sub></th></tr></thead>
+          <tbody>
+            <tr><td>Ion hydrogénosulfate</td><td>HSO<sub>4</sub><sup>&minus;</sup></td><td>SO<sub>4</sub><sup>2&minus;</sup></td><td>1,3 &times; 10<sup>&minus;2</sup></td></tr>
+            <tr><td>Acide phosphorique</td><td>H<sub>3</sub>PO<sub>4</sub></td><td>H<sub>2</sub>PO<sub>4</sub><sup>&minus;</sup></td><td>7,5 &times; 10<sup>&minus;3</sup></td></tr>
+            <tr><td>Acide chloroacétique</td><td>CH<sub>2</sub>ClCOOH</td><td>CH<sub>2</sub>ClCOO<sup>&minus;</sup></td><td>1,4 &times; 10<sup>&minus;3</sup></td></tr>
+            <tr><td>Acide fluorhydrique</td><td>HF</td><td>F<sup>&minus;</sup></td><td>7,1 &times; 10<sup>&minus;4</sup></td></tr>
+            <tr><td>Acide nitreux</td><td>HNO<sub>2</sub></td><td>NO<sub>2</sub><sup>&minus;</sup></td><td>4,5 &times; 10<sup>&minus;4</sup></td></tr>
+            <tr><td>Acide acétylsalicylique (aspirine)</td><td>C<sub>9</sub>H<sub>8</sub>O<sub>4</sub></td><td>C<sub>9</sub>H<sub>7</sub>O<sub>4</sub><sup>&minus;</sup></td><td>3,0 &times; 10<sup>&minus;4</sup></td></tr>
+            <tr><td>Acide formique</td><td>HCOOH</td><td>HCOO<sup>&minus;</sup></td><td>1,7 &times; 10<sup>&minus;4</sup> (ou 1,77 &times; 10<sup>&minus;4</sup> NDC)</td></tr>
+            <tr><td>Acide benzoïque</td><td>C<sub>6</sub>H<sub>5</sub>COOH</td><td>C<sub>6</sub>H<sub>5</sub>COO<sup>&minus;</sup></td><td>6,5 &times; 10<sup>&minus;5</sup></td></tr>
+            <tr><td>Acide acétique</td><td>CH<sub>3</sub>COOH</td><td>CH<sub>3</sub>COO<sup>&minus;</sup></td><td>1,8 &times; 10<sup>&minus;5</sup> (ou 1,76 &times; 10<sup>&minus;5</sup> NDC)</td></tr>
+            <tr><td>Ion pyridinium</td><td>C<sub>5</sub>H<sub>5</sub>NH<sup>+</sup></td><td>C<sub>5</sub>H<sub>5</sub>N</td><td>5,9 &times; 10<sup>&minus;6</sup></td></tr>
+            <tr><td>Acide carbonique</td><td>H<sub>2</sub>CO<sub>3</sub></td><td>HCO<sub>3</sub><sup>&minus;</sup></td><td>4,2 &times; 10<sup>&minus;7</sup></td></tr>
+            <tr><td>Ion dihydrogénophosphate</td><td>H<sub>2</sub>PO<sub>4</sub><sup>&minus;</sup></td><td>HPO<sub>4</sub><sup>2&minus;</sup></td><td>6,2 &times; 10<sup>&minus;8</sup></td></tr>
+            <tr><td>Acide hypochloreux</td><td>HClO</td><td>ClO<sup>&minus;</sup></td><td>4,0 &times; 10<sup>&minus;8</sup></td></tr>
+            <tr><td>Ion ammonium</td><td>NH<sub>4</sub><sup>+</sup></td><td>NH<sub>3</sub></td><td>5,6 &times; 10<sup>&minus;10</sup></td></tr>
+            <tr><td>Acide cyanhydrique</td><td>HCN</td><td>CN<sup>&minus;</sup></td><td>4,9 &times; 10<sup>&minus;10</sup></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== MODALE : EFFACER ===================== -->
+  <div id="clearModal" class="modal" onclick="if(event.target===this) closeModal('clearModal')">
+    <div class="modal-card" style="max-width:380px">
+      <div class="modal-body">
+        <h3 style="margin:0 0 6px;font-size:17px">Effacer toute la feuille ?</h3>
+        <p style="margin:0;color:#64748b">Tu pourras quand même revenir en arrière avec « Annuler ».</p>
+        <div class="modal-actions">
+          <button class="btn plain" onclick="closeModal('clearModal')">Garder</button>
+          <button class="btn danger" onclick="confirmClear()">Effacer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== MODALE : SAUVEGARDE ===================== -->
+  <div id="backupModal" class="modal" onclick="if(event.target===this) closeModal('backupModal')">
+    <div class="modal-card">
+      <div class="modal-head"><h3>Sauvegarde de mes réponses</h3><button class="tb-btn" onclick="closeModal('backupModal')" aria-label="Fermer"><span data-ic="x"></span></button></div>
+      <div class="modal-body">
+        <p style="margin-top:0">Tes dessins, statuts et notes s'enregistrent tout seuls sur cet iPad, même si tu fermes l'app ou éteins l'iPad. Une copie dans Fichiers te protège si tu supprimes l'app ou changes d'appareil.</p>
+        <p id="backupInfo" style="color:#64748b;font-size:13px"></p>
+        <div class="btn-row">
+          <button class="btn primary" onclick="exportBackup()">Enregistrer dans Fichiers</button>
+          <button class="btn plain" onclick="copyBackup()">Copier le texte</button>
+        </div>
+        <label for="backupFile">Restaurer une sauvegarde</label>
+        <input id="backupFile" class="field" type="file" accept=".json,application/json,text/plain" onchange="importBackupFile(this)" style="padding-top:8px">
+        <label for="backupText">… ou coller le texte copié</label>
+        <textarea id="backupText" class="field selectable" style="height:80px;padding:8px;font-size:13px;resize:vertical"></textarea>
+        <div class="modal-actions">
+          <button class="btn plain" onclick="importBackupText()">Restaurer le texte collé</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script>
+    // =========================================================================
+    // COMPLETE EXERCISE DATABASE (Chapters 2, 3, and 4 - Examen 2)
+    // =========================================================================
+    const EXERCISES = [
+      // CHAPITRE 2 : LA CINÉTIQUE CHIMIQUE
+      {
+        id: "ch2-ex2.1",
+        chapter: 2,
+        section: "Vitesse de réaction",
+        type: "interne",
+        title: "Ex. interne 2.1 (p. 57)",
+        statement: `<p>Soit la réaction de combustion du méthane :</p>
+<p class="chem-eq">CH<sub>4</sub>(g) + 2 O<sub>2</sub>(g) &rarr; CO<sub>2</sub>(g) + 2 H<sub>2</sub>O(g)</p>
+<p>Écrivez l'expression de la vitesse de réaction en fonction de la variation de concentration des réactifs et des produits.</p>`,
+        shortAnswer: "v = -Δ[CH4]/Δt = -(1/2)Δ[O2]/Δt = Δ[CO2]/Δt = (1/2)Δ[H2O]/Δt",
+        checkpoints: [
+          "As-tu mis un signe <strong>négatif (&minus;)</strong> devant les variations des réactifs (CH<sub>4</sub> et O<sub>2</sub>) et un signe <strong>positif (+)</strong> devant les produits (CO<sub>2</sub> et H<sub>2</sub>O) ?",
+          "As-tu divisé chaque vitesse par son coefficient stœchiométrique (donc multiplié par 1/2 pour O<sub>2</sub> et H<sub>2</sub>O) ?",
+          "Convention NDC (p. 94) : Tu peux aussi écrire la dérivée <code>-d[A]/dt</code> au lieu de <code>-Δ[A]/Δt</code>."
+        ],
+        fullSolution: `<p><strong>Démarche (Cahier NDC p. 94 &amp; Manuel) :</strong> Pour une réaction <em>a</em>A + <em>b</em>B &rarr; <em>c</em>C + <em>d</em>D :</p>
+<p class="chem-eq">v = &minus;(1/a) &Delta;[A]/&Delta;t = &minus;(1/b) &Delta;[B]/&Delta;t = +(1/c) &Delta;[C]/&Delta;t = +(1/d) &Delta;[D]/&Delta;t</p>
+<p><strong>Solution :</strong></p>
+<p class="chem-eq"><strong>v = &minus;&Delta;[CH<sub>4</sub>]/&Delta;t = &minus;(1/2) &Delta;[O<sub>2</sub>]/&Delta;t = &Delta;[CO<sub>2</sub>]/&Delta;t = (1/2) &Delta;[H<sub>2</sub>O]/&Delta;t</strong></p>`
+      },
+      {
+        id: "ch2-ex2.2",
+        chapter: 2,
+        section: "Vitesse de réaction",
+        type: "interne",
+        title: "Ex. interne 2.2 (p. 58)",
+        statement: `<p>Soit la réaction de décomposition de la phosphine :</p>
+<p class="chem-eq">4 PH<sub>3</sub>(g) &rarr; P<sub>4</sub>(g) + 6 H<sub>2</sub>(g)</p>
+<p>À un moment précis, du dihydrogène (H<sub>2</sub>) est formé à la vitesse de <strong>0,078 mol&middot;L<sup>&minus;1</sup>&middot;s<sup>&minus;1</sup></strong>.</p>
+<p><strong>a)</strong> À quelle vitesse le P<sub>4</sub> est-il formé ?<br>
+<strong>b)</strong> Quelle est la vitesse de transformation (disparition) de PH<sub>3</sub> ?</p>`,
+        shortAnswer: "a) 0,013 mol·L⁻¹·s⁻¹ ; b) 0,052 mol·L⁻¹·s⁻¹",
+        checkpoints: [
+          "Écris d'abord l'égalité : <code>v = -(1/4)Δ[PH3]/Δt = Δ[P4]/Δt = (1/6)Δ[H2]/Δt</code>.",
+          "En <strong>a)</strong>, la vitesse de formation de P<sub>4</sub> vaut <code>(1/6) × 0,078 mol·L⁻¹·s⁻¹</code>.",
+          "En <strong>b)</strong>, la vitesse de disparition de PH<sub>3</sub> vaut <code>(4/6) × 0,078 mol·L⁻¹·s⁻¹</code>."
+        ],
+        fullSolution: `<p class="chem-eq">v = &minus;(1/4) &Delta;[PH<sub>3</sub>]/&Delta;t = &Delta;[P<sub>4</sub>]/&Delta;t = (1/6) &Delta;[H<sub>2</sub>]/&Delta;t</p>
+<p><strong>a) Vitesse de formation de P<sub>4</sub> :</strong> <code>&Delta;[P<sub>4</sub>]/&Delta;t = (1/6)(0,078) = <strong>0,013 mol&middot;L<sup>&minus;1</sup>&middot;s<sup>&minus;1</sup></strong></code></p>
+<p><strong>b) Vitesse de disparition de PH<sub>3</sub> :</strong> <code>&minus;&Delta;[PH<sub>3</sub>]/&Delta;t = (4/6)(0,078) = <strong>0,052 mol&middot;L<sup>&minus;1</sup>&middot;s<sup>&minus;1</sup></strong></code></p>`
+      },
+      {
+        id: "ch2-p1",
+        chapter: 2,
+        section: "Vitesse de réaction",
+        type: "probleme",
+        title: "Problème 1 (p. 94)",
+        statement: `<p>Écrivez les expressions des vitesses des réactions suivantes en fonction de la disparition des réactifs et de la formation des produits :</p>
+<p><strong>a)</strong> H<sub>2</sub>(g) + I<sub>2</sub>(g) &rarr; 2 HI(g)<br>
+<strong>b)</strong> 2 H<sub>2</sub>(g) + O<sub>2</sub>(g) &rarr; 2 H<sub>2</sub>O(g)<br>
+<strong>c)</strong> 5 Br<sup>&minus;</sup>(aq) + BrO<sub>3</sub><sup>&minus;</sup>(aq) + 6 H<sub>3</sub>O<sup>+</sup>(aq) &rarr; 3 Br<sub>2</sub>(aq) + 9 H<sub>2</sub>O(l)</p>`,
+        shortAnswer: "a) v = -Δ[H2]/Δt = -Δ[I2]/Δt = (1/2)Δ[HI]/Δt ; b) v = -(1/2)Δ[H2]/Δt = -Δ[O2]/Δt = (1/2)Δ[H2O]/Δt ; c) v = -(1/5)Δ[Br-]/Δt = -Δ[BrO3-]/Δt = -(1/6)Δ[H3O+]/Δt = (1/3)Δ[Br2]/Δt",
+        checkpoints: [
+          "Vérifie le signe : <strong>&minus;</strong> devant chaque réactif et <strong>+</strong> devant chaque produit.",
+          "Vérifie que chaque terme est divisé par son coefficient stœchiométrique.",
+          "En <strong>c)</strong> (si tu la fais), comme la réaction a lieu en solution aqueuse, on ne tient pas compte de H<sub>2</sub>O(l)."
+        ],
+        fullSolution: `<p><strong>a)</strong> <code>vitesse = &minus;&Delta;[H<sub>2</sub>]/&Delta;t = &minus;&Delta;[I<sub>2</sub>]/&Delta;t = (1/2) &Delta;[HI]/&Delta;t</code></p>
+<p><strong>b)</strong> <code>vitesse = &minus;(1/2) &Delta;[H<sub>2</sub>]/&Delta;t = &minus;&Delta;[O<sub>2</sub>]/&Delta;t = (1/2) &Delta;[H<sub>2</sub>O]/&Delta;t</code></p>
+<p><strong>c)</strong> <code>vitesse = &minus;(1/5) &Delta;[Br<sup>&minus;</sup>]/&Delta;t = &minus;&Delta;[BrO<sub>3</sub><sup>&minus;</sup>]/&Delta;t = &minus;(1/6) &Delta;[H<sub>3</sub>O<sup>+</sup>]/&Delta;t = (1/3) &Delta;[Br<sub>2</sub>]/&Delta;t</code></p>`
+      },
+      {
+        id: "ch2-p2",
+        chapter: 2,
+        section: "Vitesse de réaction",
+        type: "probleme",
+        title: "Problème 2 (p. 94)",
+        statement: `<p>Soit la réaction de synthèse de l'ammoniac :</p>
+<p class="chem-eq">N<sub>2</sub>(g) + 3 H<sub>2</sub>(g) &rarr; 2 NH<sub>3</sub>(g)</p>
+<p>Supposons qu'à un moment précis au cours de la réaction, l'hydrogène moléculaire réagit à la vitesse de <strong>0,074 mol&middot;L<sup>&minus;1</sup>&middot;s<sup>&minus;1</sup></strong> (soit &Delta;[H<sub>2</sub>]/&Delta;t = &minus;0,074 mol&middot;L<sup>&minus;1</sup>&middot;s<sup>&minus;1</sup>).</p>
+<p><strong>a)</strong> À quelle vitesse se forme l'ammoniac ?<br>
+<strong>b)</strong> À quelle vitesse réagit l'azote moléculaire ?</p>`,
+        shortAnswer: "a) 0,049 mol·L⁻¹·s⁻¹ ; b) 0,025 mol·L⁻¹·s⁻¹",
+        checkpoints: [
+          "Écris la relation : <code>v = -Δ[N2]/Δt = -(1/3)Δ[H2]/Δt = (1/2)Δ[NH3]/Δt</code>.",
+          "En <strong>a)</strong>, multiplie par le rapport stœchiométrique 2/3 : <code>(2/3) × 0,074 = 0,049 mol·L⁻¹·s⁻¹</code>.",
+          "En <strong>b)</strong>, multiplie par le rapport stœchiométrique 1/3 : <code>(1/3) × 0,074 = 0,025 mol·L⁻¹·s⁻¹</code>."
+        ],
+        fullSolution: `<p class="chem-eq">vitesse = &minus;&Delta;[N<sub>2</sub>]/&Delta;t = &minus;(1/3) &Delta;[H<sub>2</sub>]/&Delta;t = (1/2) &Delta;[NH<sub>3</sub>]/&Delta;t</p>
+<p><strong>a) Vitesse de formation de NH<sub>3</sub> :</strong> <code>&Delta;[NH<sub>3</sub>]/&Delta;t = &minus;(2/3)(&minus;0,074) = <strong>0,049 mol&middot;L<sup>&minus;1</sup>&middot;s<sup>&minus;1</sup></strong></code></p>
+<p><strong>b) Vitesse de réaction de N<sub>2</sub> :</strong> <code>&minus;&Delta;[N<sub>2</sub>]/&Delta;t = &minus;(1/3)(&minus;0,074) = <strong>0,025 mol&middot;L<sup>&minus;1</sup>&middot;s<sup>&minus;1</sup></strong></code></p>`
+      },
+      {
+        id: "ch2-p28",
+        chapter: 2,
+        section: "Vitesse de réaction",
+        type: "probleme",
+        title: "Problème 28 (p. 96)",
+        statement: `<p>Laquelle des équations suivantes décrit le mieux le graphique de la concentration en fonction du temps où la courbe du réactif A (rouge, décroissante) diminue <strong>3 fois plus vite</strong> que la courbe du produit B (bleue, croissante) n'augmente ?</p>
+<p><strong>a)</strong> A &rarr; B &nbsp;&nbsp;&nbsp; <strong>b)</strong> A &rarr; 3 B &nbsp;&nbsp;&nbsp; <strong>c)</strong> 3 A &rarr; B</p>`,
+        shortAnswer: "c) 3 A → B",
+        checkpoints: [
+          "Compare l'amplitude de variation <code>|Δ[A]|</code> et <code>|Δ[B]|</code> : si A perd 3 unités pendant que B gagne 1 unité, il faut 3 moles de A pour former 1 mole de B."
+        ],
+        fullSolution: `<p><strong>Réponse : c) 3 A &rarr; B</strong> (car la vitesse de disparition de A est le triple de la vitesse d'apparition de B).</p>`
+      },
+      {
+        id: "ch2-p3",
+        chapter: 2,
+        section: "Lois de vitesse",
+        type: "probleme",
+        title: "Problème 3 (p. 94)",
+        statement: `<p>Soit la réaction en solution aqueuse :</p>
+<p class="chem-eq">NH<sub>4</sub><sup>+</sup>(aq) + NO<sub>2</sub><sup>&minus;</sup>(aq) &rarr; N<sub>2</sub>(g) + 2 H<sub>2</sub>O(l)</p>
+<p>La loi de vitesse est <strong>v = k[NH<sub>4</sub><sup>+</sup>][NO<sub>2</sub><sup>&minus;</sup>]</strong> et <strong>k = 3,0 &times; 10<sup>&minus;4</sup> L&middot;mol<sup>&minus;1</sup>&middot;s<sup>&minus;1</sup></strong> à 25 &deg;C. Calculez la vitesse de la réaction si <strong>[NH<sub>4</sub><sup>+</sup>] = 0,26 mol/L</strong> et <strong>[NO<sub>2</sub><sup>&minus;</sup>] = 0,080 mol/L</strong>.</p>`,
+        shortAnswer: "v = 6,2 × 10⁻⁶ mol·L⁻¹·s⁻¹",
+        checkpoints: [
+          "Substitue directement les valeurs dans <code>v = k[NH4+][NO2-]</code> et vérifie les unités (mol·L⁻¹·s⁻¹)."
+        ],
+        fullSolution: `<p class="chem-eq">v = (3,0 &times; 10<sup>&minus;4</sup> L&middot;mol<sup>&minus;1</sup>&middot;s<sup>&minus;1</sup>)(0,26 mol/L)(0,080 mol/L) = <strong>6,2 &times; 10<sup>&minus;6</sup> mol&middot;L<sup>&minus;1</sup>&middot;s<sup>&minus;1</sup></strong></p>`
+      },
+      {
+        id: "ch2-p7",
+        chapter: 2,
+        section: "Lois de vitesse",
+        type: "probleme",
+        title: "Problème 7 (p. 94)",
+        statement: `<p>Déterminez l'ordre global des réactions qui répondent aux lois de vitesse suivantes :</p>
+<p><strong>a)</strong> v = k[NO<sub>2</sub>]<sup>2</sup> &nbsp;&nbsp; <strong>b)</strong> v = k &nbsp;&nbsp; <strong>c)</strong> v = k[H<sub>2</sub>][Br<sub>2</sub>]<sup>1/2</sup> &nbsp;&nbsp; <strong>d)</strong> v = k[NO]<sup>2</sup>[O<sub>2</sub>]</p>`,
+        shortAnswer: "a) Ordre 2 ; b) Ordre 0 ; c) Ordre 1,5 (3/2) ; d) Ordre 3",
+        checkpoints: [
+          "Additionne les exposants des concentrations dans chaque loi de vitesse (Cahier NDC p. 97)."
+        ],
+        fullSolution: `<ul>
+<li><strong>a)</strong> Exposant = 2 &rArr; <strong>Ordre deux (2)</strong></li>
+<li><strong>b)</strong> Exposant = 0 &rArr; <strong>Ordre zéro (0)</strong></li>
+<li><strong>c)</strong> 1 + 1/2 = 1,5 &rArr; <strong>Ordre un et demi (1,5)</strong></li>
+<li><strong>d)</strong> 2 + 1 = 3 &rArr; <strong>Ordre trois (3)</strong></li>
+</ul>`
+      },
+      {
+        id: "ch2-p49",
+        chapter: 2,
+        section: "Lois de vitesse",
+        type: "probleme",
+        title: "Problème 49 (p. 98)",
+        statement: `<p>Soit la réaction <strong>élémentaire</strong> (limitante) suivante : <strong>X + 2 Y &rarr; XY<sub>2</sub></strong></p>
+<p><strong>a)</strong> Écrivez la loi de vitesse de cette réaction.<br>
+<strong>b)</strong> Si la vitesse initiale de formation de XY<sub>2</sub> est de <strong>3,8 &times; 10<sup>&minus;3</sup> mol&middot;L<sup>&minus;1</sup>&middot;s<sup>&minus;1</sup></strong> lorsque <strong>[X]<sub>0</sub> = 0,26 mol/L</strong> et <strong>[Y]<sub>0</sub> = 0,88 mol/L</strong>, calculez la constante de vitesse <em>k</em>.</p>`,
+        shortAnswer: "a) v = k[X][Y]² ; b) k = 1,9 × 10⁻² L²·mol⁻²·s⁻¹",
+        checkpoints: [
+          "En <strong>a)</strong>, puisque la réaction est élémentaire, les exposants sont les coefficients stœchiométriques (1 et 2).",
+          "En <strong>b)</strong>, n'oublie pas d'élever [Y] = 0,88 mol/L au carré et d'écrire les unités d'ordre 3 : <code>L²·mol⁻²·s⁻¹</code>."
+        ],
+        fullSolution: `<p><strong>a)</strong> <code><strong>v = k[X][Y]<sup>2</sup></strong></code> (réaction élémentaire trimoléculaire, ordre global 3).</p>
+<p><strong>b)</strong> <code>k = v / ([X][Y]<sup>2</sup>) = (3,8 &times; 10<sup>&minus;3</sup>) / [(0,26)(0,88)<sup>2</sup>] = <strong>1,9 &times; 10<sup>&minus;2</sup> L<sup>2</sup>&middot;mol<sup>&minus;2</sup>&middot;s<sup>&minus;1</sup></strong></code></p>`
+      },
+      {
+        id: "ch2-ex2.4",
+        chapter: 2,
+        section: "Lois de vitesse intégrées",
+        type: "interne",
+        title: "Ex. interne 2.4 (p. 65)",
+        statement: `<p>La transformation <strong>2 A &rarr; B</strong> est une réaction d'<strong>ordre un</strong> dont la constante de vitesse est de <strong>2,8 &times; 10<sup>&minus;2</sup> s<sup>&minus;1</sup></strong> à 80 &deg;C. Combien de temps (en secondes) faudra-t-il pour que la concentration de A diminue de <strong>0,88 mol/L</strong> à <strong>0,14 mol/L</strong> ?</p>`,
+        shortAnswer: "t = 66 s",
+        checkpoints: [
+          "Utilise l'équation d'ordre 1 : <code>ln([A]0 / [A]t) = kt</code> avec [A]<sub>0</sub> = 0,88 M et [A]<sub>t</sub> = 0,14 M."
+        ],
+        fullSolution: `<p class="chem-eq">ln([A]<sub>0</sub> / [A]<sub>t</sub>) = k &middot; t &rArr; ln(0,88 / 0,14) = (2,8 &times; 10<sup>&minus;2</sup> s<sup>&minus;1</sup>) &middot; t &rArr; <strong>t = 66 s</strong></p>`
+      },
+      {
+        id: "ch2-ex2.5",
+        chapter: 2,
+        section: "Lois de vitesse intégrées",
+        type: "interne",
+        title: "Ex. interne 2.5 (p. 66)",
+        statement: `<p>La réaction <strong>2 A &rarr; B</strong> est d'<strong>ordre deux</strong> avec <strong>k = 51 L&middot;mol<sup>&minus;1</sup>&middot;min<sup>&minus;1</sup></strong> à 24 &deg;C. En commençant avec <strong>[A]<sub>0</sub> = 0,0092 mol/L</strong>, combien de temps faudra-t-il pour que la concentration soit de <strong>[A]<sub>t</sub> = 3,7 &times; 10<sup>&minus;3</sup> mol/L</strong> ?</p>`,
+        shortAnswer: "t = 3,2 min",
+        checkpoints: [
+          "Utilise l'équation d'ordre 2 : <code>1/[A]t = 1/[A]0 + kt</code>."
+        ],
+        fullSolution: `<p class="chem-eq">1 / (3,7 &times; 10<sup>&minus;3</sup>) = 1 / 0,0092 + 51 &middot; t &rArr; 270,3 &minus; 108,7 = 51 &middot; t &rArr; <strong>t = 3,2 min</strong></p>`
+      },
+      {
+        id: "ch2-ex2.6",
+        chapter: 2,
+        section: "Lois de vitesse intégrées",
+        type: "interne",
+        title: "Ex. interne 2.6 (p. 72)",
+        statement: `<p>La décomposition de l'iodoéthane en phase gazeuse s'écrit : <strong>C<sub>2</sub>H<sub>5</sub>I(g) &rarr; C<sub>2</sub>H<sub>4</sub>(g) + HI(g)</strong>.</p>
+<table class="data-table">
+<tr><th>Temps (min)</th><td>0</td><td>15</td><td>30</td><td>48</td><td>75</td></tr>
+<tr><th>[C<sub>2</sub>H<sub>5</sub>I] (mol/L)</th><td>0,36</td><td>0,30</td><td>0,25</td><td>0,19</td><td>0,13</td></tr>
+</table>
+<p>Déterminez l'ordre de la réaction et la constante de vitesse <em>k</em>.</p>`,
+        shortAnswer: "Ordre un (1) ; k = 1,4 × 10⁻² min⁻¹",
+        checkpoints: [
+          "Vérifie avec un tableau (méthode Cahier NDC p. 107) que <code>k = ln([A]0/[A]t)/t</code> demeure constante pour tous les temps."
+        ],
+        fullSolution: `<p>Le tracé de <code>ln[C<sub>2</sub>H<sub>5</sub>I]</code> en fonction de <em>t</em> est linéaire (et <code>k = ln([A]<sub>0</sub>/[A]<sub>t</sub>)/t</code> reste constant) : la réaction est d'<strong>ordre un (1)</strong> avec <strong>k = 1,4 &times; 10<sup>&minus;2</sup> min<sup>&minus;1</sup></strong>.</p>`
+      },
+      {
+        id: "ch2-p11",
+        chapter: 2,
+        section: "Lois de vitesse intégrées",
+        type: "probleme",
+        title: "Problème 11 (p. 95)",
+        statement: `<p>Quelle est la demi-vie (en minutes) d'un composé si <strong>75 %</strong> d'un échantillon de ce composé se décompose en <strong>60 min</strong> ? Supposez une cinétique d'<strong>ordre un</strong>.</p>`,
+        shortAnswer: "t₁/₂ = 30 min",
+        checkpoints: [
+          "Si 75 % s'est décomposé, il reste <strong>25 %</strong> du composé initial (<code>[A]t = 0,25 [A]0</code>), soit exactement 2 demi-vies en 60 min !"
+        ],
+        fullSolution: `<p>Il reste 25 % du composé (100 % &rarr; 50 % &rarr; 25 %), soit 2 demi-vies en 60 min : <strong>t<sub>1/2</sub> = 30 min</strong>.<br>
+Par calcul : <code>k = ln(100/25) / 60 min = 0,0231 min<sup>&minus;1</sup> &rArr; t<sub>1/2</sub> = 0,693 / 0,0231 = <strong>30 min</strong></code>.</p>`
+      },
+      {
+        id: "ch2-p12",
+        chapter: 2,
+        section: "Lois de vitesse intégrées",
+        type: "probleme",
+        title: "Problème 12 (p. 95)",
+        statement: `<p>La décomposition thermique de PH<sub>3</sub> en P<sub>4</sub> et H<sub>2</sub> est une réaction d'<strong>ordre un</strong> (<strong>t<sub>1/2</sub> = 35,0 s</strong> à 680 &deg;C). Calculez :</p>
+<p><strong>a)</strong> la constante de vitesse <em>k</em> ;<br>
+<strong>b)</strong> le temps requis pour que <strong>95 %</strong> de la phosphine soit décomposée.</p>`,
+        shortAnswer: "a) k = 0,0198 s⁻¹ ; b) t = 151 s",
+        checkpoints: [
+          "En <strong>a)</strong>, <code>k = 0,693 / 35,0 s</code>.",
+          "En <strong>b)</strong>, si 95 % est décomposé, il reste <strong>5 %</strong> intact : <code>[A]t = 0,0500 [A]0</code>, donc <code>ln([A]0/[A]t) = ln(20)</code>."
+        ],
+        fullSolution: `<p><strong>a)</strong> <code>k = 0,693 / 35,0 s = <strong>0,0198 s<sup>&minus;1</sup></strong></code></p>
+<p><strong>b)</strong> <code>t = (1 / 0,0198 s<sup>&minus;1</sup>) &times; ln(100 / 5,00) = ln(20) / 0,0198 = <strong>151 s</strong></code></p>`
+      },
+      {
+        id: "ch2-p14",
+        chapter: 2,
+        section: "Lois de vitesse intégrées",
+        type: "probleme",
+        title: "Problème 14 (p. 95)",
+        statement: `<p>La réaction <strong>2 NO<sub>2</sub>(g) &rarr; 2 NO(g) + O<sub>2</sub>(g)</strong> est d'<strong>ordre deux</strong> avec <strong>k = 0,54 L&middot;mol<sup>&minus;1</sup>&middot;s<sup>&minus;1</sup></strong> à 300 &deg;C. Combien de temps (en secondes) faudra-t-il pour que [NO<sub>2</sub>] passe de <strong>0,62 mol/L</strong> à <strong>0,28 mol/L</strong> ?</p>`,
+        shortAnswer: "t = 3,6 s",
+        checkpoints: [
+          "Utilise l'équation d'ordre 2 : <code>1/[A]t = 1/[A]0 + kt</code>."
+        ],
+        fullSolution: `<p class="chem-eq">1 / 0,28 = 1 / 0,62 + 0,54 &middot; t &rArr; 3,571 &minus; 1,613 = 0,54 &middot; t &rArr; <strong>t = 3,6 s</strong></p>`
+      },
+      {
+        id: "ch2-p32",
+        chapter: 2,
+        section: "Lois de vitesse intégrées",
+        type: "probleme",
+        title: "Problème 32 (p. 97)",
+        statement: `<p>Pour la réaction <strong>2 ClO(g) &rarr; Cl<sub>2</sub>(g) + O<sub>2</sub>(g)</strong>, on a obtenu les données suivantes :</p>
+<table class="data-table">
+<tr><th>Temps (s)</th><td>0,12 &times; 10<sup>&minus;3</sup></td><td>0,96 &times; 10<sup>&minus;3</sup></td><td>2,24 &times; 10<sup>&minus;3</sup></td><td>3,20 &times; 10<sup>&minus;3</sup></td><td>4,00 &times; 10<sup>&minus;3</sup></td></tr>
+<tr><th>[ClO] (mol/L)</th><td>8,49 &times; 10<sup>&minus;6</sup></td><td>7,10 &times; 10<sup>&minus;6</sup></td><td>5,79 &times; 10<sup>&minus;6</sup></td><td>5,20 &times; 10<sup>&minus;6</sup></td><td>4,77 &times; 10<sup>&minus;6</sup></td></tr>
+</table>
+<p>Déterminez l'ordre de la réaction et la constante de vitesse <em>k</em>.</p>`,
+        shortAnswer: "Ordre deux (2) ; k = 2,4 × 10⁷ L·mol⁻¹·s⁻¹",
+        checkpoints: [
+          "Calcule <code>1/[ClO]</code> : tu verras que la pente <code>Δ(1/[ClO]) / Δt</code> est constante est égale à <code>2,4 × 10⁷ L·mol⁻¹·s⁻¹</code>."
+        ],
+        fullSolution: `<p>Le tracé de <code>1/[ClO]</code> en fonction du temps est une droite : la réaction est d'<strong>ordre deux (2)</strong> et la pente donne <strong>k = 2,4 &times; 10<sup>7</sup> L&middot;mol<sup>&minus;1</sup>&middot;s<sup>&minus;1</sup></strong>.</p>`
+      },
+      {
+        id: "ch2-p36",
+        chapter: 2,
+        section: "Lois de vitesse intégrées",
+        type: "probleme",
+        title: "Problème 36 (p. 97)",
+        statement: `<p>Deux substances A et B se décomposent selon une cinétique d'<strong>ordre un</strong>. La demi-vie de A est de <strong>50,0 min</strong> et celle de B est de <strong>18,0 min</strong>. Si <strong>[A]<sub>0</sub> = [B]<sub>0</sub></strong>, combien de temps faudra-t-il pour que <strong>[A]<sub>t</sub> = 4 [B]<sub>t</sub></strong> ?</p>`,
+        shortAnswer: "t = 56,4 min",
+        checkpoints: [
+          "Calcule <code>kA = 0,693/50,0 = 0,0139 min⁻¹</code> et <code>kB = 0,693/18,0 = 0,0385 min⁻¹</code>.",
+          "Pose <code>[A]t / [B]t = e^((kB - kA)t) = 4 &rArr; (kB - kA)t = ln(4)</code>."
+        ],
+        fullSolution: `<p class="chem-eq">k<sub>A</sub> = 0,0139 min<sup>&minus;1</sup> &nbsp;&nbsp;;&nbsp;&nbsp; k<sub>B</sub> = 0,0385 min<sup>&minus;1</sup><br>
+[A]<sub>t</sub> / [B]<sub>t</sub> = e<sup>(0,0385 &minus; 0,0139)t</sup> = 4 &rArr; 0,0246 &middot; t = ln(4) &rArr; <strong>t = 56,4 min</strong></p>`
+      },
+      {
+        id: "ch2-p9",
+        chapter: 2,
+        section: "Lois de vitesse intégrées avec P",
+        type: "probleme",
+        title: "Problème 9 (p. 95)",
+        statement: `<p>Le cyclobutane se décompose à 430 &deg;C et à volume constant selon <strong>C<sub>4</sub>H<sub>8</sub>(g) &rarr; 2 C<sub>2</sub>H<sub>4</sub>(g)</strong> :</p>
+<table class="data-table">
+<tr><th>Temps (s)</th><td>0</td><td>2000</td><td>4000</td><td>6000</td><td>8000</td><td>10 000</td></tr>
+<tr><th>P<sub>C<sub>4</sub>H<sub>8</sub></sub> (mm Hg)</th><td>400</td><td>316</td><td>248</td><td>196</td><td>155</td><td>122</td></tr>
+</table>
+<p>Déterminez l'ordre de la réaction et sa constante de vitesse <em>k</em>.</p>`,
+        shortAnswer: "Ordre un (1) ; k = 1,19 × 10⁻⁴ s⁻¹",
+        checkpoints: [
+          "Vérifie que <code>k = ln(P0 / Pt) / t</code> est constant pour chaque couple de points."
+        ],
+        fullSolution: `<p>Le graphique de <code>ln(P<sub>C<sub>4</sub>H<sub>8</sub></sub>)</code> en fonction du temps est une droite : la réaction est d'<strong>ordre un (1)</strong> et <strong>k = &minus;pente = 1,19 &times; 10<sup>&minus;4</sup> s<sup>&minus;1</sup></strong>.</p>`
+      },
+      {
+        id: "ch2-p10",
+        chapter: 2,
+        section: "Lois de vitesse intégrées avec P",
+        type: "probleme",
+        title: "Problème 10 (p. 95)",
+        statement: `<p>Soit la réaction à 290 &deg;C et à volume constant : <strong>ClCO<sub>2</sub>CCl<sub>3</sub>(g) &rarr; 2 COCl<sub>2</sub>(g)</strong>. On mesure la <strong>pression totale</strong> :</p>
+<table class="data-table">
+<tr><th>Temps (s)</th><td>0</td><td>181</td><td>513</td><td>1164</td></tr>
+<tr><th>P<sub>totale</sub> (mm Hg)</th><td>15,76</td><td>18,88</td><td>22,79</td><td>27,08</td></tr>
+</table>
+<p>Déterminez l'ordre de la réaction et la constante de vitesse <em>k</em>.</p>`,
+        shortAnswer: "Ordre un (1) ; k = 1,08 × 10⁻³ s⁻¹",
+        checkpoints: [
+          "Attention (Cahier NDC p. 109) : Calcule d'abord la pression partielle du réactif ! Puisque <code>Ptotale = (P0 - x) + 2x = P0 + x</code>, on a <code>x = Ptotale - 15,76</code> et <code>P(réactif) = 15,76 - x</code> (soit 15,76 ; 12,64 ; 8,73 ; 4,44 mm Hg)."
+        ],
+        fullSolution: `<p>Avec <code>x = P<sub>totale</sub> &minus; 15,76</code>, la pression du réactif <code>P(ClCO<sub>2</sub>CCl<sub>3</sub>) = 15,76 &minus; x</code> vaut : 15,76 (t=0), 12,64 (t=181), 8,73 (t=513) et 4,44 mm Hg (t=1164).<br>
+Le tracé de <code>ln(P<sub>réactif</sub>)</code> en fonction de <em>t</em> forme une droite : la réaction est d'<strong>ordre un (1)</strong> et <strong>k = 1,08 &times; 10<sup>&minus;3</sup> s<sup>&minus;1</sup></strong>.</p>`
+      },
+      {
+        id: "ch2-p33",
+        chapter: 2,
+        section: "Lois de vitesse intégrées avec P",
+        type: "probleme",
+        title: "Problème 33 (p. 97)",
+        statement: `<p>La décomposition de N<sub>2</sub>O(g) en N<sub>2</sub>(g) et O<sub>2</sub>(g) est d'<strong>ordre un</strong> : <strong>N<sub>2</sub>O(g) &rarr; N<sub>2</sub>(g) + &frac12; O<sub>2</sub>(g)</strong>. Si la pression initiale de N<sub>2</sub>O est de <strong>213 kPa</strong> à 730 &deg;C, calculez la <strong>pression totale</strong> après <strong>une demi-vie</strong> à volume constant.</p>`,
+        shortAnswer: "P_totale = 266 kPa",
+        checkpoints: [
+          "Après 1 demi-vie, la moitié de N<sub>2</sub>O a réagi (<code>x = 106,5 kPa</code>), formant <code>106,5 kPa</code> de N<sub>2</sub> et <code>53,25 kPa</code> de O<sub>2</sub>."
+        ],
+        fullSolution: `<p class="chem-eq">P<sub>totale</sub> = P(N<sub>2</sub>O)<sub>restant</sub> + P(N<sub>2</sub>) + P(O<sub>2</sub>) = 106,5 + 106,5 + 53,25 = <strong>266 kPa</strong></p>`
+      },
+      {
+        id: "ch2-p44",
+        chapter: 2,
+        section: "Lois de vitesse intégrées avec P",
+        type: "probleme",
+        title: "Problème 44 (p. 98)",
+        statement: `<p>La décomposition de l'éther diméthylique à 450 &deg;C est d'<strong>ordre un</strong> avec <strong>k = 3,2 &times; 10<sup>&minus;4</sup> s<sup>&minus;1</sup></strong> :</p>
+<p class="chem-eq">(CH<sub>3</sub>)<sub>2</sub>O(g) &rarr; CH<sub>4</sub>(g) + H<sub>2</sub>(g) + CO(g)</p>
+<p>Si la pression initiale est de <strong>36 kPa</strong>, quelle est la <strong>pression totale</strong> après <strong>8,0 min</strong> (480 s) à volume constant ?</p>`,
+        shortAnswer: "P_totale = 46 kPa",
+        checkpoints: [
+          "Après 480 s, <code>P((CH3)2O)t = 36 × e^(-3,2×10⁻⁴ × 480) = 30,9 kPa</code> (donc <code>x = 5,1 kPa</code> ont réagi).",
+          "Chaque mole qui réagit donne 3 moles de produits gazeux : <code>Ptotale = 30,9 + 3(5,1) = 46 kPa</code>."
+        ],
+        fullSolution: `<p class="chem-eq">P<sub>t</sub>((CH<sub>3</sub>)<sub>2</sub>O) = 36 &middot; e<sup>&minus;(3,2&times;10<sup>&minus;4</sup>)(480)</sup> = 30,9 kPa &rArr; x = 36 &minus; 30,9 = 5,1 kPa<br>
+P<sub>totale</sub> = 30,9 + 3(5,1) = <strong>46 kPa</strong></p>`
+      },
+      {
+        id: "ch2-p77abcd",
+        chapter: 2,
+        section: "Lois de vitesse intégrées avec P",
+        type: "probleme",
+        title: "Problème 77 a, b, c, d (p. 103)",
+        statement: `<p>Pour la réaction <strong>2 H<sub>2</sub>O<sub>2</sub>(aq) &rarr; 2 H<sub>2</sub>O(l) + O<sub>2</sub>(g)</strong> à 40 &deg;C :</p>
+<table class="data-table">
+<tr><th>Expérience</th><th>[H<sub>2</sub>O<sub>2</sub>] (mol/L)</th><th>Vitesse initiale (mol&middot;L<sup>&minus;1</sup>&middot;min<sup>&minus;1</sup>)</th></tr>
+<tr><td>1</td><td>0,100</td><td>1,93 &times; 10<sup>&minus;4</sup></td></tr>
+<tr><td>2</td><td>0,200</td><td>3,86 &times; 10<sup>&minus;4</sup></td></tr>
+<tr><td>3</td><td>0,300</td><td>5,79 &times; 10<sup>&minus;4</sup></td></tr>
+</table>
+<p><strong>a)</strong> Déterminez l'ordre de la réaction.<br>
+<strong>b)</strong> Calculez <em>k</em> à 40 &deg;C.<br>
+<strong>c)</strong> Calculez le temps de demi-vie (t<sub>1/2</sub>).<br>
+<strong>d)</strong> Temps requis pour qu'une solution à 30,0 % V/V diminue au tiers de sa valeur initiale (10,0 % V/V) ?</p>`,
+        shortAnswer: "a) Ordre 1 ; b) k = 1,93 × 10⁻³ min⁻¹ ; c) t₁/₂ = 359 min ; d) t = 570 min",
+        checkpoints: [
+          "En <strong>a)</strong>, la vitesse double quand la concentration double &rArr; ordre 1.",
+          "En <strong>d)</strong>, utilise <code>ln(30,0 / 10,0) = kt</code>."
+        ],
+        fullSolution: `<p><strong>a)</strong> <strong>Ordre un (1)</strong>. &nbsp; <strong>b)</strong> <code>k = 5,79&times;10<sup>&minus;4</sup> / 0,300 = <strong>1,93 &times; 10<sup>&minus;3</sup> min<sup>&minus;1</sup></strong></code>.<br>
+<strong>c)</strong> <code>t<sub>1/2</sub> = 0,693 / 1,93&times;10<sup>&minus;3</sup> = <strong>359 min</strong></code>. &nbsp; <strong>d)</strong> <code>t = ln(3) / 1,93&times;10<sup>&minus;3</sup> = <strong>570 min</strong></code>.</p>`
+      },
+      {
+        id: "ch2-ex2.10",
+        chapter: 2,
+        section: "Mécanismes",
+        type: "interne",
+        title: "Ex. interne 2.10 (p. 86)",
+        statement: `<p>Soit le mécanisme en deux étapes :<br>
+Étape 1 : <strong>NO<sub>2</sub> + NO<sub>2</sub> &rarr; NO + NO<sub>3</sub></strong><br>
+Étape 2 : <strong>NO<sub>3</sub> + CO &rarr; NO<sub>2</sub> + CO<sub>2</sub></strong><br>
+La loi de vitesse expérimentale est <strong>v = k[NO<sub>2</sub>]<sup>2</sup></strong>.<br>
+<strong>a)</strong> Écrivez l'équation globale. &nbsp; <strong>b)</strong> Quel est l'intermédiaire ? &nbsp; <strong>c)</strong> Comparez les vitesses relatives des étapes 1 et 2.</p>`,
+        shortAnswer: "a) NO2 + CO → NO + CO2 ; b) NO3 ; c) L'étape 1 est l'étape lente (déterminante) et l'étape 2 est rapide.",
+        checkpoints: [
+          "L'étape lente (limitante) impose sa stœchiométrie de réactifs à la loi de vitesse expérimentale."
+        ],
+        fullSolution: `<p><strong>a)</strong> <code><strong>NO<sub>2</sub>(g) + CO(g) &rarr; NO(g) + CO<sub>2</sub>(g)</strong></code><br>
+<strong>b)</strong> Intermédiaire : <strong>NO<sub>3</sub></strong>.<br>
+<strong>c)</strong> Puisque <code>v = k[NO<sub>2</sub>]<sup>2</sup></code>, <strong>l'étape 1 est l'étape lente (déterminante)</strong> et l'étape 2 est rapide.</p>`
+      },
+      {
+        id: "ch2-p23",
+        chapter: 2,
+        section: "Mécanismes",
+        type: "probleme",
+        title: "Problème 23 (p. 96)",
+        statement: `<p>La loi de vitesse de la réaction <strong>2 NO(g) + Cl<sub>2</sub>(g) &rarr; 2 NOCl(g)</strong> est <strong>v = k[NO][Cl<sub>2</sub>]</strong>.<br>
+<strong>a)</strong> Quel est l'ordre global ?<br>
+<strong>b)</strong> Proposez un mécanisme en deux étapes sachant que l'intermédiaire <strong>NOCl<sub>2</sub></strong> a été isolé.</p>`,
+        shortAnswer: "a) Ordre 2 ; b) Étape 1 (lente) : NO + Cl2 → NOCl2 ; Étape 2 (rapide) : NOCl2 + NO → 2 NOCl",
+        checkpoints: [
+          "L'étape 1 (lente) doit faire réagir 1 NO et 1 Cl<sub>2</sub> pour correspondre à <code>v = k[NO][Cl2]</code>."
+        ],
+        fullSolution: `<p><strong>a)</strong> <strong>Ordre deux (2)</strong>.<br>
+<strong>b)</strong> Étape 1 (lente) : <code>NO(g) + Cl<sub>2</sub>(g) &rarr; NOCl<sub>2</sub>(g)</code> ; Étape 2 (rapide) : <code>NOCl<sub>2</sub>(g) + NO(g) &rarr; 2 NOCl(g)</code>.</p>`
+      },
+      {
+        id: "ch2-p77ef",
+        chapter: 2,
+        section: "Mécanismes",
+        type: "probleme",
+        title: "Problème 77 e, f (p. 103)",
+        statement: `<p>Soit le mécanisme :<br>
+1) <strong>H<sub>2</sub>O<sub>2</sub>(aq) + I<sup>&minus;</sup>(aq) &rarr; HOI(aq) + OH<sup>&minus;</sup>(aq)</strong> (lente)<br>
+2) <strong>HOI(aq) + I<sup>&minus;</sup>(aq) &rarr; I<sub>2</sub>(aq) + OH<sup>&minus;</sup>(aq)</strong> (rapide)<br>
+<strong>e)</strong> Écrivez l'équation globale. &nbsp; <strong>f)</strong> Identifiez l'intermédiaire de réaction.</p>`,
+        shortAnswer: "e) H2O2(aq) + 2 I⁻(aq) → I2(aq) + 2 OH⁻(aq) ; f) HOI(aq)",
+        checkpoints: [
+          "Additionne les deux équations en annulant HOI(aq) qui est formé à l'étape 1 puis consommé à l'étape 2."
+        ],
+        fullSolution: `<p><strong>e)</strong> <code><strong>H<sub>2</sub>O<sub>2</sub>(aq) + 2 I<sup>&minus;</sup>(aq) &rarr; I<sub>2</sub>(aq) + 2 OH<sup>&minus;</sup>(aq)</strong></code><br>
+<strong>f)</strong> Intermédiaire : <strong>HOI(aq)</strong>.</p>`
+      },
+
+      // CHAPITRE 3 : L'ÉQUILIBRE CHIMIQUE
+      {
+        id: "ch3-ex3.6",
+        chapter: 3,
+        section: "Équilibre : Calculs avec Q et la constante K",
+        type: "interne",
+        title: "Ex. interne 3.6 (p. 120)",
+        statement: `<p>Au début d'une réaction, il y a <strong>0,0200 mol de NO</strong>, <strong>0,0083 mol de Cl<sub>2</sub></strong> et <strong>6,8 mol de NOCl</strong> dans un contenant de <strong>2,0 L</strong> à 35 &deg;C. Si <em>K<sub>c</sub></em> = <strong>6,5 &times; 10<sup>4</sup></strong> pour <strong>2 NO(g) + Cl<sub>2</sub>(g) &#8652; 2 NOCl(g)</strong>, dans quel sens la réaction évoluera-t-elle ?</p>`,
+        shortAnswer: "Vers la gauche (vers les réactifs), car Qc (2,8 × 10⁶) > Kc (6,5 × 10⁴)",
+        checkpoints: [
+          "Divise d'abord les moles par 2,0 L : [NO]<sub>0</sub> = 0,0100 M, [Cl<sub>2</sub>]<sub>0</sub> = 0,00415 M, [NOCl]<sub>0</sub> = 3,4 M.",
+          "Calcule <code>Qc = (3,4)² / ((0,0100)² × 0,00415) = 2,8 × 10⁶</code>."
+        ],
+        fullSolution: `<p class="chem-eq">Q<sub>c</sub> = (3,4)<sup>2</sup> / [(0,0100)<sup>2</sup>(0,00415)] = 2,8 &times; 10<sup>6</sup> &gt; K<sub>c</sub> (6,5 &times; 10<sup>4</sup>)</p>
+<p>La réaction évoluera <strong>vers la gauche (vers les réactifs)</strong>.</p>`
+      },
+      {
+        id: "ch3-ex3.7",
+        chapter: 3,
+        section: "Équilibre : Calculs avec Q et la constante K",
+        type: "interne",
+        title: "Ex. interne 3.7 (p. 123)",
+        statement: `<p>À 430 &deg;C, <em>K<sub>c</sub></em> = <strong>54,3</strong> pour <strong>H<sub>2</sub>(g) + I<sub>2</sub>(g) &#8652; 2 HI(g)</strong>. Si l'on place du HI pur à <strong>0,040 mol/L</strong> dans un récipient à 430 &deg;C, calculez les concentrations de HI, H<sub>2</sub> et I<sub>2</sub> à l'équilibre.</p>`,
+        shortAnswer: "[HI] = 0,031 mol/L ; [H2] = [I2] = 4,3 × 10⁻³ mol/L",
+        checkpoints: [
+          "Dans le tableau I-R-E, on part de HI pur : [H<sub>2</sub>]<sub>e</sub> = [I<sub>2</sub>]<sub>e</sub> = x et [HI]<sub>e</sub> = 0,040 &minus; 2x.",
+          "Prends la racine carrée de <code>54,3 = (0,040 - 2x)² / x²</code>."
+        ],
+        fullSolution: `<p class="chem-eq">(0,040 &minus; 2x) / x = &radic;54,3 = 7,37 &rArr; x = 4,3 &times; 10<sup>&minus;3</sup> mol/L<br>
+<strong>[H<sub>2</sub>] = [I<sub>2</sub>] = 4,3 &times; 10<sup>&minus;3</sup> mol/L</strong> &nbsp;et&nbsp; <strong>[HI] = 0,040 &minus; 2(0,0043) = 0,031 mol/L</strong></p>`
+      },
+      {
+        id: "ch3-ex3.8",
+        chapter: 3,
+        section: "Équilibre : Calculs avec Q et la constante K",
+        type: "interne",
+        title: "Ex. interne 3.8 (p. 124)",
+        statement: `<p>Pour <strong>Br<sub>2</sub>(g) &#8652; 2 Br(g)</strong>, <em>K<sub>c</sub></em> = <strong>1,1 &times; 10<sup>&minus;3</sup></strong> à 1280 &deg;C. Si <strong>[Br<sub>2</sub>]<sub>0</sub> = 6,3 &times; 10<sup>&minus;2</sup> mol/L</strong> et <strong>[Br]<sub>0</sub> = 1,2 &times; 10<sup>&minus;2</sup> mol/L</strong>, calculez les concentrations à l'équilibre.</p>`,
+        shortAnswer: "[Br2] = 0,065 mol/L ; [Br] = 8,4 × 10⁻³ mol/L",
+        checkpoints: [
+          "Calcule <code>Qc = (0,012)² / 0,063 = 2,3×10⁻³ > Kc</code> : l'équilibre se déplace vers la gauche (<code>[Br2]e = 0,063 + x</code> et <code>[Br]e = 0,012 - 2x</code>)."
+        ],
+        fullSolution: `<p class="chem-eq">K<sub>c</sub> = (0,012 &minus; 2x)<sup>2</sup> / (0,063 + x) = 1,1 &times; 10<sup>&minus;3</sup> &rArr; x = 1,8 &times; 10<sup>&minus;3</sup> mol/L<br>
+<strong>[Br<sub>2</sub>] = 0,065 mol/L</strong> &nbsp;et&nbsp; <strong>[Br] = 8,4 &times; 10<sup>&minus;3</sup> mol/L</strong></p>`
+      },
+      {
+        id: "ch3-p3",
+        chapter: 3,
+        section: "Équilibre : Calculs avec Q et la constante K",
+        type: "probleme",
+        title: "Problème 3 (p. 140)",
+        statement: `<p>Le système <strong>2 H<sub>2</sub>(g) + S<sub>2</sub>(g) &#8652; 2 H<sub>2</sub>S(g)</strong> est à l'équilibre à 700 &deg;C dans un ballon de <strong>12,0 L</strong> et contient <strong>2,50 mol de H<sub>2</sub></strong>, <strong>1,35 &times; 10<sup>&minus;5</sup> mol de S<sub>2</sub></strong> et <strong>8,70 mol de H<sub>2</sub>S</strong>. Calculez <em>K<sub>c</sub></em>.</p>`,
+        shortAnswer: "Kc = 1,08 × 10⁷",
+        checkpoints: [
+          "Divise chaque nombre de moles par 12,0 L avant d'appliquer <code>Kc = [H2S]² / ([H2]²[S2])</code>."
+        ],
+        fullSolution: `<p class="chem-eq">[H<sub>2</sub>] = 0,208 M ; [S<sub>2</sub>] = 1,13&times;10<sup>&minus;6</sup> M ; [H<sub>2</sub>S] = 0,725 M<br>
+K<sub>c</sub> = (0,725)<sup>2</sup> / [(0,208)<sup>2</sup>(1,13&times;10<sup>&minus;6</sup>)] = <strong>1,08 &times; 10<sup>7</sup></strong></p>`
+      },
+      {
+        id: "ch3-p11",
+        chapter: 3,
+        section: "Équilibre : Calculs avec Q et la constante K",
+        type: "probleme",
+        title: "Problème 11 (p. 140)",
+        statement: `<p>Un échantillon de <strong>1,05 mol de Br<sub>2</sub></strong> est placé dans un ballon de <strong>0,980 L</strong> à 1600 &deg;C. À l'équilibre, <strong>1,20 %</strong> de Br<sub>2</sub> est dissocié selon <strong>Br<sub>2</sub>(g) &#8652; 2 Br(g)</strong>. Calculez <em>K<sub>c</sub></em>.</p>`,
+        shortAnswer: "Kc = 6,28 × 10⁻⁴",
+        checkpoints: [
+          "<code>[Br2]0 = 1,05 / 0,980 = 1,07 mol/L</code> et <code>x = 0,0120 × 1,07 = 0,0129 mol/L</code>. Attention : <code>[Br]e = 2x = 0,0258 mol/L</code> !"
+        ],
+        fullSolution: `<p class="chem-eq">[Br<sub>2</sub>]<sub>e</sub> = 1,07 &minus; 0,0129 = 1,06 mol/L &nbsp;;&nbsp; [Br]<sub>e</sub> = 2(0,0129) = 0,0258 mol/L<br>
+K<sub>c</sub> = (0,0258)<sup>2</sup> / 1,06 = <strong>6,28 &times; 10<sup>&minus;4</sup></strong></p>`
+      },
+      {
+        id: "ch3-p14",
+        chapter: 3,
+        section: "Équilibre : Calculs avec Q et la constante K",
+        type: "probleme",
+        title: "Problème 14 (p. 140)",
+        statement: `<p>Au départ, <strong>2,50 mol de NOCl</strong> sont placées dans <strong>1,50 L</strong> à 400 &deg;C. À l'équilibre, <strong>28,0 %</strong> du NOCl s'est dissocié selon <strong>2 NOCl(g) &#8652; 2 NO(g) + Cl<sub>2</sub>(g)</strong>. Calculez <em>K<sub>c</sub></em>.</p>`,
+        shortAnswer: "Kc = 3,56 × 10⁻² (ou 0,0356)",
+        checkpoints: [
+          "<code>[NOCl]0 = 1,67 mol/L</code>. La quantité dissociée (2x) vaut <code>0,280 × 1,67 = 0,468 mol/L = [NO]e</code>, et <code>[Cl2]e = x = 0,234 mol/L</code>."
+        ],
+        fullSolution: `<p class="chem-eq">[NOCl]<sub>e</sub> = 1,20 M ; [NO]<sub>e</sub> = 0,468 M ; [Cl<sub>2</sub>]<sub>e</sub> = 0,234 M<br>
+K<sub>c</sub> = [(0,468)<sup>2</sup>(0,234)] / (1,20)<sup>2</sup> = <strong>3,56 &times; 10<sup>&minus;2</sup></strong></p>`
+      },
+      {
+        id: "ch3-p21",
+        chapter: 3,
+        section: "Équilibre : Calculs avec Q et la constante K",
+        type: "probleme",
+        title: "Problème 21 (p. 141)",
+        statement: `<p>Pour <strong>N<sub>2</sub>(g) + 3 H<sub>2</sub>(g) &#8652; 2 NH<sub>3</sub>(g)</strong>, <em>K<sub>c</sub></em> = <strong>0,65</strong> à 375 &deg;C. Si <strong>[H<sub>2</sub>]<sub>0</sub> = 0,76 M</strong>, <strong>[N<sub>2</sub>]<sub>0</sub> = 0,60 M</strong> et <strong>[NH<sub>3</sub>]<sub>0</sub> = 0,48 M</strong>, indiquez comment variera chaque concentration pour atteindre l'équilibre.</p>`,
+        shortAnswer: "Qc = 0,87 > Kc (0,65) → Réaction vers la gauche : [NH3] diminue, [N2] et [H2] augmentent.",
+        checkpoints: [
+          "Calcule <code>Qc = (0,48)² / (0,60 × 0,76³) = 0,87</code> et compare-le à 0,65."
+        ],
+        fullSolution: `<p class="chem-eq">Q<sub>c</sub> = (0,48)<sup>2</sup> / [(0,60)(0,76)<sup>3</sup>] = 0,87 &gt; K<sub>c</sub> (0,65)</p>
+<p>La réaction évolue vers la gauche : <strong>[NH<sub>3</sub>] diminue</strong> ; <strong>[N<sub>2</sub>] et [H<sub>2</sub>] augmentent</strong>.</p>`
+      },
+      {
+        id: "ch3-p23",
+        chapter: 3,
+        section: "Équilibre : Calculs avec Q et la constante K",
+        type: "probleme",
+        title: "Problème 23 (p. 141)",
+        statement: `<p>À 700 &deg;C, <em>K<sub>c</sub></em> = <strong>0,5344</strong> pour <strong>H<sub>2</sub>(g) + CO<sub>2</sub>(g) &#8652; H<sub>2</sub>O(g) + CO(g)</strong>. Calculez le nombre de moles de H<sub>2</sub> présentes à l'équilibre si l'on chauffe <strong>0,300 mol de CO</strong> et <strong>0,300 mol de H<sub>2</sub>O</strong> dans <strong>10,0 L</strong>.</p>`,
+        shortAnswer: "n(H2) = 0,173 mol",
+        checkpoints: [
+          "On part des produits (H<sub>2</sub>O et CO à 0,0300 M chacun) : <code>Kc = (0,0300 - x)² / x² = 0,5344</code>."
+        ],
+        fullSolution: `<p class="chem-eq">(0,0300 &minus; x) / x = &radic;0,5344 = 0,7310 &rArr; x = [H<sub>2</sub>] = 0,0173 mol/L<br>
+n(H<sub>2</sub>) = 0,0173 mol/L &times; 10,0 L = <strong>0,173 mol</strong></p>`
+      },
+      {
+        id: "ch3-p25",
+        chapter: 3,
+        section: "Équilibre : Calculs avec Q et la constante K",
+        type: "probleme",
+        title: "Problème 25 (p. 141)",
+        statement: `<p>Pour <strong>H<sub>2</sub>(g) + Br<sub>2</sub>(g) &#8652; 2 HBr(g)</strong>, <em>K<sub>c</sub></em> = <strong>2,18 &times; 10<sup>6</sup></strong> à 730 &deg;C. En partant de <strong>3,20 mol de HBr</strong> dans <strong>12,0 L</strong>, calculez les concentrations de H<sub>2</sub>, Br<sub>2</sub> et HBr à l'équilibre.</p>`,
+        shortAnswer: "[H2] = [Br2] = 1,80 × 10⁻⁴ mol/L ; [HBr] = 0,267 mol/L",
+        checkpoints: [
+          "<code>[HBr]0 = 3,20 / 12,0 = 0,267 mol/L</code>. Pose <code>(0,267 - 2x) / x = √(2,18×10⁶) = 1,48×10³</code>."
+        ],
+        fullSolution: `<p class="chem-eq">(0,267 &minus; 2x) / x = 1,48 &times; 10<sup>3</sup> &rArr; x = <strong>1,80 &times; 10<sup>&minus;4</sup> mol/L = [H<sub>2</sub>] = [Br<sub>2</sub>]</strong> ; <strong>[HBr] = 0,267 mol/L</strong></p>`
+      },
+      {
+        id: "ch3-p26",
+        chapter: 3,
+        section: "Équilibre : Calculs avec Q et la constante K",
+        type: "probleme",
+        title: "Problème 26 (p. 141)",
+        statement: `<p>Pour <strong>I<sub>2</sub>(g) &#8652; 2 I(g)</strong> à 1000 K, <em>K<sub>c</sub></em> = <strong>3,80 &times; 10<sup>&minus;5</sup></strong>. En partant de <strong>0,0456 mol de I<sub>2</sub></strong> dans <strong>2,30 L</strong>, calculez les concentrations à l'équilibre.</p>`,
+        shortAnswer: "[I] = 8,58 × 10⁻⁴ mol/L ; [I2] = 0,0194 mol/L",
+        checkpoints: [
+          "<code>[I2]0 = 0,0198 mol/L</code>. Résous <code>(2x)² / (0,0198 - x) = 3,80×10⁻⁵ &rArr; x = 4,29×10⁻⁴ mol/L</code>, puis calcule <code>[I] = 2x</code>."
+        ],
+        fullSolution: `<p class="chem-eq">4x<sup>2</sup> + 3,80&times;10<sup>&minus;5</sup>x &minus; 7,52&times;10<sup>&minus;7</sup> = 0 &rArr; x = 4,29&times;10<sup>&minus;4</sup> M<br>
+<strong>[I] = 2x = 8,58 &times; 10<sup>&minus;4</sup> mol/L</strong> &nbsp;;&nbsp; <strong>[I<sub>2</sub>] = 0,0194 mol/L</strong></p>`
+      },
+      {
+        id: "ch3-p28",
+        chapter: 3,
+        section: "Équilibre : Calculs avec Q et la constante K",
+        type: "probleme",
+        title: "Problème 28 (p. 141)",
+        statement: `<p>Pour <strong>CO<sub>2</sub>(g) + H<sub>2</sub>(g) &#8652; CO(g) + H<sub>2</sub>O(g)</strong> à 686 &deg;C, les concentrations à l'équilibre sont [CO] = 0,050 M, [H<sub>2</sub>] = 0,045 M, [CO<sub>2</sub>] = 0,086 M et [H<sub>2</sub>O] = 0,040 M.<br>
+<strong>a)</strong> Calculez <em>K<sub>c</sub></em>. &nbsp; <strong>b)</strong> Si [CO<sub>2</sub>] est portée à <strong>0,50 mol/L</strong>, calculez les concentrations au nouvel équilibre.</p>`,
+        shortAnswer: "a) Kc = 0,52 ; b) [CO2] = 0,48 M, [H2] = 0,020 M, [CO] = 0,075 M, [H2O] = 0,065 M",
+        checkpoints: [
+          "En <strong>b)</strong>, résous <code>((0,050+x)(0,040+x)) / ((0,50-x)(0,045-x)) = 0,52 &rArr; x = 0,025 M</code>."
+        ],
+        fullSolution: `<p><strong>a)</strong> <code>K<sub>c</sub> = (0,050)(0,040) / [(0,086)(0,045)] = <strong>0,52</strong></code><br>
+<strong>b)</strong> Avec x = 0,025 M : <strong>[CO<sub>2</sub>] = 0,48 M</strong>, <strong>[H<sub>2</sub>] = 0,020 M</strong>, <strong>[CO] = 0,075 M</strong>, <strong>[H<sub>2</sub>O] = 0,065 M</strong>.</p>`
+      },
+      {
+        id: "ch3-p30",
+        chapter: 3,
+        section: "Équilibre : Calculs avec Q et la constante K",
+        type: "probleme",
+        title: "Problème 30 (p. 142)",
+        statement: `<p>Pour <strong>H<sub>2</sub>(g) + CO<sub>2</sub>(g) &#8652; H<sub>2</sub>O(g) + CO(g)</strong>, <em>K<sub>c</sub></em> = <strong>4,2</strong> à 1650 &deg;C. On place <strong>0,80 mol de H<sub>2</sub></strong> et <strong>0,80 mol de CO<sub>2</sub></strong> dans <strong>5,0 L</strong>. Calculez les concentrations à l'équilibre.</p>`,
+        shortAnswer: "[H2] = [CO2] = 0,05 mol/L ; [H2O] = [CO] = 0,11 mol/L",
+        checkpoints: [
+          "<code>[H2]0 = [CO2]0 = 0,16 mol/L</code> et <code>x / (0,16 - x) = √4,2 = 2,05</code>."
+        ],
+        fullSolution: `<p class="chem-eq">x / (0,16 &minus; x) = 2,05 &rArr; x = 0,11 mol/L<br>
+<strong>[H<sub>2</sub>] = [CO<sub>2</sub>] = 0,05 mol/L</strong> &nbsp;;&nbsp; <strong>[H<sub>2</sub>O] = [CO] = 0,11 mol/L</strong></p>`
+      },
+      {
+        id: "ch3-p31",
+        chapter: 3,
+        section: "Équilibre : Calculs avec Q et la constante K",
+        type: "probleme",
+        title: "Problème 31 (p. 142)",
+        statement: `<p>Pour <strong>2 A(aq) &#8652; B(aq)</strong> dans <strong>4,0 L</strong> (en partant de A seul), on trouve à l'équilibre <strong>[A] = 1,2 mol/L</strong> et <strong>[B] = 0,25 mol/L</strong>.<br>
+<strong>a)</strong> Calculez <em>K<sub>c</sub></em>. &nbsp; <strong>b)</strong> Calculez le nombre de moles initiales de A.</p>`,
+        shortAnswer: "a) Kc = 0,17 ; b) n0(A) = 6,8 mol",
+        checkpoints: [
+          "En <strong>b)</strong>, <code>[A]0 = [A]e + 2[B]e = 1,2 + 2(0,25) = 1,7 mol/L</code>, puis multiplie par 4,0 L."
+        ],
+        fullSolution: `<p><strong>a)</strong> <code>K<sub>c</sub> = 0,25 / (1,2)<sup>2</sup> = <strong>0,17</strong></code><br>
+<strong>b)</strong> <code>[A]<sub>0</sub> = 1,2 + 2(0,25) = 1,7 mol/L &rArr; n<sub>0</sub>(A) = 1,7 &times; 4,0 L = <strong>6,8 mol</strong></code></p>`
+      },
+      {
+        id: "ch3-p62",
+        chapter: 3,
+        section: "Équilibre : Calculs avec Q et la constante K",
+        type: "probleme",
+        title: "Problème 62 (p. 145)",
+        statement: `<p>Pour <strong>fructose(aq) &#8652; glucose(aq)</strong> à 25 &deg;C, la concentration de fructose passe de <strong>0,244 mol/L</strong> (initiale) à <strong>0,113 mol/L</strong> (équilibre).<br>
+<strong>a)</strong> Calculez <em>K<sub>c</sub></em>. &nbsp; <strong>b)</strong> Quel pourcentage du fructose a été converti en glucose ?</p>`,
+        shortAnswer: "a) Kc = 1,16 ; b) 53,7 %",
+        checkpoints: [
+          "<code>[glucose]e = 0,244 - 0,113 = 0,131 mol/L</code>."
+        ],
+        fullSolution: `<p><strong>a)</strong> <code>K<sub>c</sub> = 0,131 / 0,113 = <strong>1,16</strong></code> &nbsp;&nbsp;;&nbsp;&nbsp; <strong>b)</strong> <code>(0,131 / 0,244) &times; 100 % = <strong>53,7 %</strong></code></p>`
+      },
+      {
+        id: "ch3-p80",
+        chapter: 3,
+        section: "Équilibre : Calculs avec Q et la constante K",
+        type: "probleme",
+        title: "Problème 80 (p. 147)",
+        statement: `<p>Pour <strong>A<sub>2</sub> + B<sub>2</sub> &#8652; 2 AB</strong>, le mélange de <strong>1,0 mol de A<sub>2</sub></strong> et <strong>3,0 mol de B<sub>2</sub></strong> donne <strong><em>x</em> mol de AB</strong> à l'équilibre. L'ajout de <strong>2,0 mol de A<sub>2</sub></strong> forme un autre <strong><em>x</em> mol de AB</strong> (total 2<em>x</em>). Calculez <em>K<sub>c</sub></em>.</p>`,
+        shortAnswer: "Kc = 4,0 (avec x = 1,5 mol)",
+        checkpoints: [
+          "Équilibre 1 : <code>Kc = x² / ((1 - x/2)(3 - x/2))</code>. Équilibre 2 : <code>Kc = (2x)² / ((3 - x)(3 - x))</code>."
+        ],
+        fullSolution: `<p>En égalant les deux expressions de K<sub>c</sub>, on trouve <code>x = 1,5 mol</code> et <code>K<sub>c</sub> = (3)<sup>2</sup> / [(1,5)(1,5)] = <strong>4,0</strong></code>.</p>`
+      },
+      {
+        id: "ch3-p4",
+        chapter: 3,
+        section: "Conversion Kc et Kp / Calculs avec Qp et Kp",
+        type: "probleme",
+        title: "Problème 4 (p. 140)",
+        statement: `<p>Pour <strong>2 CO(g) + O<sub>2</sub>(g) &#8652; 2 CO<sub>2</sub>(g)</strong>, <em>K<sub>c</sub></em> = <strong>2,24 &times; 10<sup>22</sup></strong> à 1273 &deg;C. Calculez <em>K<sub>p</sub></em> (en kPa).</p>`,
+        shortAnswer: "Kp = 1,74 × 10¹⁸ (en kPa)",
+        checkpoints: [
+          "Utilise <code>Kp = Kc(RT)^Δn</code> avec Δn = &minus;1 et T = 1546 K."
+        ],
+        fullSolution: `<p class="chem-eq">K<sub>p</sub> = (2,24 &times; 10<sup>22</sup>)(8,314 &times; 1546)<sup>&minus;1</sup> = <strong>1,74 &times; 10<sup>18</sup> (en kPa)</strong></p>`
+      },
+      {
+        id: "ch3-p12",
+        chapter: 3,
+        section: "Conversion Kc et Kp / Calculs avec Qp et Kp",
+        type: "probleme",
+        title: "Problème 12 (p. 140)",
+        statement: `<p>On place <strong>3,00 &times; 10<sup>&minus;2</sup> mol de COCl<sub>2</sub></strong> dans <strong>1,50 L</strong> à <strong>800 K</strong>. À l'équilibre, <strong>P(CO) = 50,4 kPa</strong>. Calculez <em>K<sub>p</sub></em> pour <strong>CO(g) + Cl<sub>2</sub>(g) &#8652; COCl<sub>2</sub>(g)</strong>.</p>`,
+        shortAnswer: "Kp = 3,3 × 10⁻² (en kPa)",
+        checkpoints: [
+          "Pression initiale : <code>P0(COCl2) = nRT/V = 133 kPa</code>. À l'équilibre, <code>P(COCl2) = 133 - 50,4 = 83 kPa</code>."
+        ],
+        fullSolution: `<p class="chem-eq">K<sub>p</sub> = P(COCl<sub>2</sub>) / [P(CO)P(Cl<sub>2</sub>)] = 83 / (50,4)<sup>2</sup> = <strong>3,3 &times; 10<sup>&minus;2</sup> (en kPa)</strong></p>`
+      },
+      {
+        id: "ch3-p13",
+        chapter: 3,
+        section: "Conversion Kc et Kp / Calculs avec Qp et Kp",
+        type: "probleme",
+        title: "Problème 13 (p. 140)",
+        statement: `<p>À 25 &deg;C, pour <strong>2 NOBr(g) &#8652; 2 NO(g) + Br<sub>2</sub>(g)</strong>, lorsque le NOBr se dissocie à <strong>34 %</strong>, la pression totale à l'équilibre est de <strong>25,3 kPa</strong>. Calculez <em>K<sub>p</sub></em> et <em>K<sub>c</sub></em>.</p>`,
+        shortAnswer: "Kp = 1,0 (en kPa) ; Kc = 4,0 × 10⁻⁴",
+        checkpoints: [
+          "Pose P<sub>0</sub> = x : <code>0,66x + 0,34x + 0,17x = 1,17x = 25,3 kPa &rArr; x = 21,6 kPa</code>."
+        ],
+        fullSolution: `<p class="chem-eq">P(NOBr) = 14 kPa, P(NO) = 7,3 kPa, P(Br<sub>2</sub>) = 3,7 kPa &rArr; <strong>K<sub>p</sub> = 1,0 (en kPa)</strong> ; <strong>K<sub>c</sub> = 4,0 &times; 10<sup>&minus;4</sup></strong></p>`
+      },
+      {
+        id: "ch3-p20",
+        chapter: 3,
+        section: "Conversion Kc et Kp / Calculs avec Qp et Kp",
+        type: "probleme",
+        title: "Problème 20 (p. 141)",
+        statement: `<p>Pour <strong>2 SO<sub>2</sub>(g) + O<sub>2</sub>(g) &#8652; 2 SO<sub>3</sub>(g)</strong> (<em>K<sub>p</sub></em> = 553 à 350 &deg;C), on mélange P<sub>0</sub>(SO<sub>2</sub>) = 35,5 kPa et P<sub>0</sub>(O<sub>2</sub>) = 77,2 kPa. La pression totale à l'équilibre sera-t-elle supérieure ou inférieure à 112,7 kPa ?</p>`,
+        shortAnswer: "Inférieure à 112,7 kPa",
+        checkpoints: [
+          "La réaction directe consomme 3 moles de gaz pour en former 2."
+        ],
+        fullSolution: `<p><strong>Inférieure à 112,7 kPa</strong> car le nombre total de moles de gaz diminue (3 mol &rarr; 2 mol) lorsque SO<sub>3</sub> se forme.</p>`
+      },
+      {
+        id: "ch3-p22",
+        chapter: 3,
+        section: "Conversion Kc et Kp / Calculs avec Qp et Kp",
+        type: "probleme",
+        title: "Problème 22 (p. 141)",
+        statement: `<p>Pour <strong>PCl<sub>5</sub>(g) &#8652; PCl<sub>3</sub>(g) + Cl<sub>2</sub>(g)</strong> (<em>K<sub>p</sub></em> = 105 à 250 &deg;C), les pressions initiales sont P(PCl<sub>5</sub>) = 179 kPa, P(PCl<sub>3</sub>) = 23,6 kPa et P(Cl<sub>2</sub>) = 11,2 kPa. Comment évolueront les pressions ?</p>`,
+        shortAnswer: "Qp = 1,48 < Kp (105) → P(PCl3) et P(Cl2) augmentent, P(PCl5) diminue.",
+        checkpoints: [
+          "Calcule <code>Qp = (23,6 × 11,2) / 179 = 1,48 < 105</code>."
+        ],
+        fullSolution: `<p>Puisque <code>Q<sub>p</sub> = 1,48 &lt; K<sub>p</sub> (105)</code>, la réaction avance vers la droite : <strong>P(PCl<sub>3</sub>) et P(Cl<sub>2</sub>) augmentent</strong> et <strong>P(PCl<sub>5</sub>) diminue</strong>.</p>`
+      },
+      {
+        id: "ch3-p24",
+        chapter: 3,
+        section: "Conversion Kc et Kp / Calculs avec Qp et Kp",
+        type: "probleme",
+        title: "Problème 24 (p. 141)",
+        statement: `<p>Pour <strong>2 NO<sub>2</sub>(g) &#8652; 2 NO(g) + O<sub>2</sub>(g)</strong> à 1000 K (<em>K<sub>p</sub></em> = <strong>1,60 &times; 10<sup>4</sup></strong>), on part de NO<sub>2</sub> pur et on mesure <strong>P(O<sub>2</sub>) = 25,3 kPa</strong> à l'équilibre. Calculez P(NO) et P(NO<sub>2</sub>) à l'équilibre.</p>`,
+        shortAnswer: "P(NO) = 50,6 kPa ; P(NO2) = 2,01 kPa",
+        checkpoints: [
+          "Par stœchiométrie, <code>P(NO) = 2 × 25,3 = 50,6 kPa</code>."
+        ],
+        fullSolution: `<p class="chem-eq"><strong>P(NO) = 50,6 kPa</strong> &nbsp;;&nbsp; P(NO<sub>2</sub>) = &radic;[(50,6)<sup>2</sup>(25,3) / 1,60&times;10<sup>4</sup>] = <strong>2,01 kPa</strong></p>`
+      },
+      {
+        id: "ch3-p27",
+        chapter: 3,
+        section: "Conversion Kc et Kp / Calculs avec Qp et Kp",
+        type: "probleme",
+        title: "Problème 27 (p. 141)",
+        statement: `<p>À 527 &deg;C (800 K), <em>K<sub>c</sub></em> = <strong>4,63 &times; 10<sup>&minus;3</sup></strong> pour <strong>COCl<sub>2</sub>(g) &#8652; CO(g) + Cl<sub>2</sub>(g)</strong>. Si P<sub>0</sub>(COCl<sub>2</sub>) = <strong>77,0 kPa</strong>, calculez les pressions partielles à l'équilibre.</p>`,
+        shortAnswer: "P(COCl2) = 41,4 kPa ; P(CO) = P(Cl2) = 35,6 kPa",
+        checkpoints: [
+          "Calcule d'abord <code>Kp = Kc(RT)¹ = 30,8 (en kPa)</code>, puis résous <code>x² / (77,0 - x) = 30,8</code>."
+        ],
+        fullSolution: `<p class="chem-eq">K<sub>p</sub> = 30,8 = x<sup>2</sup> / (77,0 &minus; x) &rArr; x = 35,6 kPa<br>
+<strong>P(CO) = P(Cl<sub>2</sub>) = 35,6 kPa</strong> &nbsp;;&nbsp; <strong>P(COCl<sub>2</sub>) = 41,4 kPa</strong></p>`
+      },
+      {
+        id: "ch3-p41",
+        chapter: 3,
+        section: "Conversion Kc et Kp / Calculs avec Qp et Kp",
+        type: "probleme",
+        title: "Problème 41 (p. 143)",
+        statement: `<p>On chauffe du NOCl pur à 240 &deg;C : <strong>2 NOCl(g) &#8652; 2 NO(g) + Cl<sub>2</sub>(g)</strong>. À l'équilibre, P<sub>totale</sub> = <strong>101 kPa</strong> et P(NOCl) = <strong>65 kPa</strong>.<br>
+<strong>a)</strong> Calculez P(NO) et P(Cl<sub>2</sub>). &nbsp; <strong>b)</strong> Calculez <em>K<sub>p</sub></em>.</p>`,
+        shortAnswer: "a) P(NO) = 24 kPa, P(Cl2) = 12 kPa ; b) Kp = 1,6 (en kPa)",
+        checkpoints: [
+          "<code>P(NO) + P(Cl2) = 2x + x = 101 - 65 = 36 kPa &rArr; x = 12 kPa</code>."
+        ],
+        fullSolution: `<p><strong>a)</strong> <strong>P(NO) = 24 kPa</strong> et <strong>P(Cl<sub>2</sub>) = 12 kPa</strong>.<br>
+<strong>b)</strong> <code>K<sub>p</sub> = (24)<sup>2</sup>(12) / (65)<sup>2</sup> = <strong>1,6 (en kPa)</strong></code></p>`
+      },
+      {
+        id: "ch3-p48",
+        chapter: 3,
+        section: "Conversion Kc et Kp / Calculs avec Qp et Kp",
+        type: "probleme",
+        title: "Problème 48 (p. 143)",
+        statement: `<p>Pour <strong>2 NO(g) + O<sub>2</sub>(g) &#8652; 2 NO<sub>2</sub>(g)</strong> à 430 &deg;C, l'équilibre contient <strong>0,020 mol de O<sub>2</sub></strong>, <strong>0,040 mol de NO</strong> et <strong>0,96 mol de NO<sub>2</sub></strong> pour une pression totale de <strong>20,3 kPa</strong>. Calculez <em>K<sub>p</sub></em>.</p>`,
+        shortAnswer: "Kp = 1,4 × 10³ (en kPa)",
+        checkpoints: [
+          "Utilise les fractions molaires (n<sub>total</sub> = 1,02 mol) pour calculer chaque pression partielle."
+        ],
+        fullSolution: `<p class="chem-eq">P(NO) = 0,80 kPa ; P(O<sub>2</sub>) = 0,40 kPa ; P(NO<sub>2</sub>) = 19,1 kPa<br>
+K<sub>p</sub> = (19,1)<sup>2</sup> / [(0,80)<sup>2</sup>(0,40)] = <strong>1,4 &times; 10<sup>3</sup> (en kPa)</strong></p>`
+      },
+      {
+        id: "ch3-p52",
+        chapter: 3,
+        section: "Conversion Kc et Kp / Calculs avec Qp et Kp",
+        type: "probleme",
+        title: "Problème 52 (p. 144)",
+        statement: `<p>On mélange <strong>1 mol de N<sub>2</sub></strong> et <strong>3 mol de H<sub>2</sub></strong> : <strong>N<sub>2</sub>(g) + 3 H<sub>2</sub>(g) &#8652; 2 NH<sub>3</sub>(g)</strong>. À l'équilibre, la fraction molaire de NH<sub>3</sub> vaut <strong>0,210</strong> et <em>K<sub>p</sub></em> = <strong>4,19 &times; 10<sup>&minus;8</sup></strong> (en kPa). Calculez la <strong>pression totale</strong> à l'équilibre.</p>`,
+        shortAnswer: "P_totale = 5,05 × 10³ kPa",
+        checkpoints: [
+          "Avec <code>2x / (4 - 2x) = 0,210 &rArr; x = 0,347 mol</code>, d'où χ(N<sub>2</sub>) = 0,198 et χ(H<sub>2</sub>) = 0,593."
+        ],
+        fullSolution: `<p class="chem-eq">K<sub>p</sub> = (0,210 P<sub>T</sub>)<sup>2</sup> / [(0,198 P<sub>T</sub>)(0,593 P<sub>T</sub>)<sup>3</sup>] = 4,19 &times; 10<sup>&minus;8</sup> &rArr; <strong>P<sub>T</sub> = 5,05 &times; 10<sup>3</sup> kPa</strong></p>`
+      },
+      {
+        id: "ch3-p70",
+        chapter: 3,
+        section: "Conversion Kc et Kp / Calculs avec Qp et Kp",
+        type: "probleme",
+        title: "Problème 70 (p. 146)",
+        statement: `<p>Pour <strong>SO<sub>2</sub>Cl<sub>2</sub>(g) &#8652; SO<sub>2</sub>(g) + Cl<sub>2</sub>(g)</strong> (<em>K<sub>p</sub></em> = <strong>208</strong> à 648 K), la pression totale est maintenue constante à <strong>912 kPa</strong>. Calculez les pressions partielles à l'équilibre.</p>`,
+        shortAnswer: "P(SO2) = P(Cl2) = 275 kPa ; P(SO2Cl2) = 362 kPa",
+        checkpoints: [
+          "Pose <code>P(SO2) = P(Cl2) = x</code> et <code>P(SO2Cl2) = 912 - 2x</code>."
+        ],
+        fullSolution: `<p class="chem-eq">x<sup>2</sup> / (912 &minus; 2x) = 208 &rArr; <strong>P(SO<sub>2</sub>) = P(Cl<sub>2</sub>) = 275 kPa</strong> et <strong>P(SO<sub>2</sub>Cl<sub>2</sub>) = 362 kPa</strong></p>`
+      },
+      {
+        id: "ch3-ex3.4",
+        chapter: 3,
+        section: "Équilibre hétérogène",
+        type: "interne",
+        title: "Ex. interne 3.4 (p. 116)",
+        statement: `<p>Pour <strong>NH<sub>4</sub>HS(s) &#8652; NH<sub>3</sub>(g) + H<sub>2</sub>S(g)</strong> à 295 K, la pression partielle de chaque gaz à l'équilibre est de <strong>26,85 kPa</strong>. Calculez <em>K<sub>p</sub></em> et <em>K<sub>c</sub></em>.</p>`,
+        shortAnswer: "Kp = 7,21 × 10² (en kPa) ; Kc = 1,20 × 10⁻⁴",
+        checkpoints: [
+          "<code>Kp = P(NH3) × P(H2S) = (26,85)²</code> et <code>Kc = Kp / (RT)²</code>."
+        ],
+        fullSolution: `<p class="chem-eq"><strong>K<sub>p</sub> = 7,21 &times; 10<sup>2</sup> (en kPa)</strong> &nbsp;;&nbsp; <strong>K<sub>c</sub> = 1,20 &times; 10<sup>&minus;4</sup></strong></p>`
+      },
+      {
+        id: "ch3-p7",
+        chapter: 3,
+        section: "Équilibre hétérogène",
+        type: "probleme",
+        title: "Problème 7 (p. 140)",
+        statement: `<p>Pour <strong>CaCO<sub>3</sub>(s) &#8652; CaO(s) + CO<sub>2</sub>(g)</strong> à 350 &deg;C, la pression à l'équilibre est de <strong>10,6 kPa</strong>. Calculez <em>K<sub>p</sub></em> et <em>K<sub>c</sub></em>.</p>`,
+        shortAnswer: "Kp = 10,6 (en kPa) ; Kc = 2,05 × 10⁻³",
+        checkpoints: [
+          "<code>Kp = P(CO2) = 10,6 (en kPa)</code> et <code>Kc = 10,6 / (8,314 × 623)</code>."
+        ],
+        fullSolution: `<p class="chem-eq"><strong>K<sub>p</sub> = 10,6 (en kPa)</strong> &nbsp;;&nbsp; <strong>K<sub>c</sub> = 2,05 &times; 10<sup>&minus;3</sup></strong></p>`
+      },
+      {
+        id: "ch3-p10",
+        chapter: 3,
+        section: "Équilibre hétérogène",
+        type: "probleme",
+        title: "Problème 10 (p. 140)",
+        statement: `<p>Pour <strong>NH<sub>4</sub>CO<sub>2</sub>NH<sub>2</sub>(s) &#8652; 2 NH<sub>3</sub>(g) + CO<sub>2</sub>(g)</strong> à 40 &deg;C, la pression totale à l'équilibre (en partant du solide seul) est de <strong>36,8 kPa</strong>. Calculez <em>K<sub>p</sub></em>.</p>`,
+        shortAnswer: "Kp = 7,38 × 10³ (en kPa)",
+        checkpoints: [
+          "<code>P(NH3) = 2x</code> et <code>P(CO2) = x</code> avec <code>3x = 36,8 kPa &rArr; x = 12,3 kPa</code>. Puis <code>Kp = (2x)²(x)</code>."
+        ],
+        fullSolution: `<p class="chem-eq">K<sub>p</sub> = (24,6)<sup>2</sup>(12,3) = <strong>7,38 &times; 10<sup>3</sup> (en kPa)</strong></p>`
+      },
+      {
+        id: "ch3-p29",
+        chapter: 3,
+        section: "Équilibre hétérogène",
+        type: "probleme",
+        title: "Problème 29 (p. 141)",
+        statement: `<p>Pour <strong>C(s) + CO<sub>2</sub>(g) &#8652; 2 CO(g)</strong> (<em>K<sub>p</sub></em> = <strong>1,54 &times; 10<sup>2</sup></strong> à 700 &deg;C), la pression totale à l'équilibre est de <strong>456 kPa</strong>. Calculez P(CO) et P(CO<sub>2</sub>).</p>`,
+        shortAnswer: "P(CO) = 199 kPa ; P(CO2) = 257 kPa",
+        checkpoints: [
+          "Pose <code>P(CO) = x</code> et <code>P(CO2) = 456 - x</code> dans <code>x² / (456 - x) = 154</code>."
+        ],
+        fullSolution: `<p class="chem-eq">x<sup>2</sup> / (456 &minus; x) = 154 &rArr; <strong>P(CO) = 199 kPa</strong> et <strong>P(CO<sub>2</sub>) = 257 kPa</strong></p>`
+      },
+      {
+        id: "ch3-p47",
+        chapter: 3,
+        section: "Équilibre hétérogène",
+        type: "probleme",
+        title: "Problème 47 (p. 143)",
+        statement: `<p>On place <strong>6,1589 g de NH<sub>4</sub>HS(s)</strong> (M = 51,12 g/mol) dans <strong>4,000 L</strong> à 24,000 &deg;C : <strong>NH<sub>4</sub>HS(s) &#8652; NH<sub>3</sub>(g) + H<sub>2</sub>S(g)</strong>. À l'équilibre, P<sub>totale</sub> = <strong>71,8 kPa</strong>.<br>
+<strong>a)</strong> Calculez <em>K<sub>p</sub></em>. &nbsp; <strong>b)</strong> Quel % du solide s'est décomposé ? &nbsp; <strong>c)</strong> Si on double le volume à T constante, combien de moles de solide restera-t-il ?</p>`,
+        shortAnswer: "a) Kp = 1,29 × 10³ (en kPa) ; b) 48,2 % ; c) 0,0041 mol",
+        checkpoints: [
+          "En <strong>b)</strong>, <code>n(NH3) = PV/RT = (35,9 × 4,000)/(8,314 × 297,15) = 0,0581 mol</code> sur <code>0,1205 mol</code> initiales."
+        ],
+        fullSolution: `<p><strong>a)</strong> <code>K<sub>p</sub> = (35,9)<sup>2</sup> = <strong>1,29 &times; 10<sup>3</sup> (en kPa)</strong></code><br>
+<strong>b)</strong> <code>(0,0581 mol / 0,1205 mol) &times; 100 % = <strong>48,2 %</strong></code><br>
+<strong>c)</strong> <code>0,1205 &minus; 2(0,0582) = <strong>0,0041 mol</strong></code></p>`
+      },
+      {
+        id: "ch3-p6",
+        chapter: 3,
+        section: "Expression de K selon la réaction d'équilibre",
+        type: "probleme",
+        title: "Problème 6 (p. 140)",
+        statement: `<p>Si <em>K<sub>c</sub></em> = <strong>4,17 &times; 10<sup>&minus;34</sup></strong> pour <strong>2 HCl(g) &#8652; H<sub>2</sub>(g) + Cl<sub>2</sub>(g)</strong> à 25 &deg;C, quelle est la constante d'équilibre de <strong>H<sub>2</sub>(g) + Cl<sub>2</sub>(g) &#8652; 2 HCl(g)</strong> ?</p>`,
+        shortAnswer: "K'c = 2,40 × 10³³",
+        checkpoints: [
+          "Prends l'inverse : <code>K'c = 1 / Kc</code>."
+        ],
+        fullSolution: `<p class="chem-eq">K'<sub>c</sub> = 1 / (4,17 &times; 10<sup>&minus;34</sup>) = <strong>2,40 &times; 10<sup>33</sup></strong></p>`
+      },
+      {
+        id: "ch3-p8",
+        chapter: 3,
+        section: "Expression de K selon la réaction d'équilibre",
+        type: "probleme",
+        title: "Problème 8 (p. 140)",
+        statement: `<p>À l'équilibre, [NH<sub>3</sub>] = 0,25 M, [N<sub>2</sub>] = 0,11 M et [H<sub>2</sub>] = 1,91 M. Calculez <em>K<sub>c</sub></em> pour :<br>
+<strong>a)</strong> N<sub>2</sub>(g) + 3 H<sub>2</sub>(g) &#8652; 2 NH<sub>3</sub>(g)<br>
+<strong>b)</strong> &frac12; N<sub>2</sub>(g) + &frac32; H<sub>2</sub>(g) &#8652; NH<sub>3</sub>(g)</p>`,
+        shortAnswer: "a) Kc = 0,082 ; b) K'c = 0,29",
+        checkpoints: [
+          "En <strong>b)</strong>, <code>K'c = √Kc</code>."
+        ],
+        fullSolution: `<p><strong>a)</strong> <code>K<sub>c</sub> = (0,25)<sup>2</sup> / [(0,11)(1,91)<sup>3</sup>] = <strong>0,082</strong></code> &nbsp;;&nbsp; <strong>b)</strong> <code>K'<sub>c</sub> = &radic;0,082 = <strong>0,29</strong></code></p>`
+      },
+      {
+        id: "ch3-p40",
+        chapter: 3,
+        section: "Expression de K selon la réaction d'équilibre",
+        type: "probleme",
+        title: "Problème 40 (p. 143)",
+        statement: `<p>Soit l'affirmation : <em>« La constante d'équilibre d'un mélange de NH<sub>4</sub>Cl(s), NH<sub>3</sub>(g) et HCl(g) vaut 0,316. »</em> Quels sont les <strong>3 renseignements importants</strong> qui manquent ?</p>`,
+        shortAnswer: "1) La température ; 2) S'il s'agit de Kp (et ses unités) ou Kc ; 3) L'équation équilibrée.",
+        checkpoints: [
+          "Pense à T, à la nature de K (K<sub>p</sub> vs K<sub>c</sub>) et à l'écriture de l'équation chimique."
+        ],
+        fullSolution: `<p>1) La <strong>température</strong> ; 2) S'il s'agit de <strong>K<sub>p</sub> ou K<sub>c</sub></strong> ; 3) L'<strong>équation chimique équilibrée</strong>.</p>`
+      },
+      {
+        id: "ch3-ex3.10",
+        chapter: 3,
+        section: "Principe Le Chatelier",
+        type: "interne",
+        title: "Ex. interne 3.10 (p. 129)",
+        statement: `<p>Pour <strong>2 NOCl(g) &#8652; 2 NO(g) + Cl<sub>2</sub>(g)</strong>, prédisez le sens de la réaction nette causée par une <strong>diminution de la pression</strong> (augmentation de volume) à T constante.</p>`,
+        shortAnswer: "De gauche à droite (vers les produits)",
+        checkpoints: [
+          "Une baisse de pression déplace l'équilibre vers le côté comptant le plus de moles de gaz (3 mol à droite vs 2 mol à gauche)."
+        ],
+        fullSolution: `<p>Déplacement <strong>de gauche à droite</strong> (2 moles de gaz &rarr; 3 moles de gaz).</p>`
+      },
+      {
+        id: "ch3-ex3.11",
+        chapter: 3,
+        section: "Principe Le Chatelier",
+        type: "interne",
+        title: "Ex. interne 3.11 (p. 135)",
+        statement: `<p>Pour <strong>3 O<sub>2</sub>(g) &#8652; 2 O<sub>3</sub>(g)</strong> (&Delta;H&deg; = +284 kJ), prédisez l'effet sur l'équilibre :<br>
+<strong>a)</strong> augmentation de P (diminution de V) ; <strong>b)</strong> ajout de O<sub>2</sub> ; <strong>c)</strong> diminution de T ; <strong>d)</strong> ajout d'un catalyseur.</p>`,
+        shortAnswer: "a) Vers la droite ; b) Vers la droite ; c) Vers la gauche ; d) Aucun effet.",
+        checkpoints: [
+          "La réaction directe est endothermique (+284 kJ du côté des réactifs)."
+        ],
+        fullSolution: `<p><strong>a)</strong> Vers la droite ; <strong>b)</strong> Vers la droite ; <strong>c)</strong> Vers la gauche ; <strong>d)</strong> Aucun effet.</p>`
+      },
+      {
+        id: "ch3-p33",
+        chapter: 3,
+        section: "Principe Le Chatelier",
+        type: "probleme",
+        title: "Problème 33 (p. 142)",
+        statement: `<p>Pour <strong>2 NaHCO<sub>3</sub>(s) &#8652; Na<sub>2</sub>CO<sub>3</sub>(s) + H<sub>2</sub>O(g) + CO<sub>2</sub>(g)</strong>, quel est l'effet :<br>
+<strong>a)</strong> du retrait de CO<sub>2</sub>(g) ? &nbsp; <strong>b)</strong> de l'ajout de Na<sub>2</sub>CO<sub>3</sub>(s) ? &nbsp; <strong>c)</strong> du retrait d'un peu de NaHCO<sub>3</sub>(s) ?</p>`,
+        shortAnswer: "a) Vers la droite ; b) Aucun effet ; c) Aucun effet.",
+        checkpoints: [
+          "Les solides purs n'influencent pas la position d'équilibre."
+        ],
+        fullSolution: `<p><strong>a)</strong> Vers la droite ; <strong>b)</strong> Aucun effet ; <strong>c)</strong> Aucun effet.</p>`
+      },
+      {
+        id: "ch3-p34",
+        chapter: 3,
+        section: "Principe Le Chatelier",
+        type: "probleme",
+        title: "Problème 34 (p. 142)",
+        statement: `<p>Quel est l'effet d'une <strong>augmentation de pression</strong> sur :<br>
+<strong>a)</strong> A(s) &#8652; 2 B(s) &nbsp;|&nbsp; <strong>b)</strong> 2 A(l) &#8652; B(l) &nbsp;|&nbsp; <strong>c)</strong> A(s) &#8652; B(g) &nbsp;|&nbsp; <strong>d)</strong> A(g) &#8652; B(g) &nbsp;|&nbsp; <strong>e)</strong> A(g) &#8652; 2 B(g)</p>`,
+        shortAnswer: "a) Aucun ; b) Aucun ; c) Vers la gauche ; d) Aucun ; e) Vers la gauche.",
+        checkpoints: [
+          "Regarde uniquement les moles de gaz (g)."
+        ],
+        fullSolution: `<p><strong>a)</strong> Aucun ; <strong>b)</strong> Aucun ; <strong>c)</strong> Vers la gauche ; <strong>d)</strong> Aucun ; <strong>e)</strong> Vers la gauche.</p>`
+      },
+      {
+        id: "ch3-p35",
+        chapter: 3,
+        section: "Principe Le Chatelier",
+        type: "probleme",
+        title: "Problème 35 (p. 142)",
+        statement: `<p>Pour <strong>PCl<sub>5</sub>(g) &#8652; PCl<sub>3</sub>(g) + Cl<sub>2</sub>(g)</strong> (&Delta;H&deg; = +92,5 kJ/mol), sens de déplacement si :<br>
+<strong>a)</strong> T augmente ; <strong>b)</strong> ajout de Cl<sub>2</sub> ; <strong>c)</strong> retrait de PCl<sub>3</sub> ; <strong>d)</strong> P augmente ; <strong>e)</strong> ajout d'un catalyseur.</p>`,
+        shortAnswer: "a) Droite ; b) Gauche ; c) Droite ; d) Gauche ; e) Aucun effet.",
+        checkpoints: [
+          "Endothermique vers la droite (1 mol gaz &rarr; 2 mol gaz)."
+        ],
+        fullSolution: `<p><strong>a)</strong> Vers la droite ; <strong>b)</strong> Vers la gauche ; <strong>c)</strong> Vers la droite ; <strong>d)</strong> Vers la gauche ; <strong>e)</strong> Aucun effet.</p>`
+      },
+      {
+        id: "ch3-p36",
+        chapter: 3,
+        section: "Principe Le Chatelier",
+        type: "probleme",
+        title: "Problème 36 (p. 142)",
+        statement: `<p>Pour <strong>N<sub>2</sub>O<sub>4</sub>(g) &#8652; 2 NO<sub>2</sub>(g)</strong> à l'équilibre (P(N<sub>2</sub>O<sub>4</sub>) = 38,2 kPa, P(NO<sub>2</sub>) = 158 kPa), quel est l'effet de l'ajout d'un catalyseur sur ces pressions ?</p>`,
+        shortAnswer: "Aucune variation de pression.",
+        checkpoints: [
+          "Un catalyseur ne déplace jamais un système déjà à l'équilibre."
+        ],
+        fullSolution: `<p><strong>Aucune variation de pression.</strong></p>`
+      },
+      {
+        id: "ch3-p38",
+        chapter: 3,
+        section: "Principe Le Chatelier",
+        type: "probleme",
+        title: "Problème 38 a, b, c, d, g (p. 142)",
+        statement: `<p>Pour la décomposition endothermique <strong>CaCO<sub>3</sub>(s) &#8652; CaO(s) + CO<sub>2</sub>(g)</strong>, effet si :<br>
+<strong>a)</strong> V augmente ; <strong>b)</strong> ajout de CaO(s) ; <strong>c)</strong> retrait de CaCO<sub>3</sub>(s) ; <strong>d)</strong> ajout de CO<sub>2</sub>(g) ; <strong>g)</strong> T augmente.</p>`,
+        shortAnswer: "a) Vers la droite ; b) Aucun ; c) Aucun ; d) Vers la gauche ; g) Vers la droite.",
+        checkpoints: [
+          "Seuls V, P(CO<sub>2</sub>) et T déplacent cet équilibre hétérogène."
+        ],
+        fullSolution: `<p><strong>a)</strong> Vers la droite ; <strong>b)</strong> Aucun ; <strong>c)</strong> Aucun ; <strong>d)</strong> Vers la gauche ; <strong>g)</strong> Vers la droite.</p>`
+      },
+      {
+        id: "ch3-p76",
+        chapter: 3,
+        section: "Principe Le Chatelier",
+        type: "probleme",
+        title: "Problème 76 (p. 146)",
+        statement: `<p>Soit deux réactions A &#8652; B (la 1<sup>re</sup> exothermique, la 2<sup>e</sup> endothermique).<br>
+<strong>a)</strong> Effet d'un catalyseur sur les vitesses directe et inverse ?<br>
+<strong>b)</strong> Effet d'un catalyseur sur l'énergie des réactifs et produits ?<br>
+<strong>c)</strong> Effet d'une hausse de T sur <em>K</em> pour chacune ?<br>
+<strong>d)</strong> Effet global du catalyseur sur l'équilibre ?</p>`,
+        shortAnswer: "a) Augmente autant les deux vitesses ; b) Aucun effet ; c) K diminue (1re, exo) et K augmente (2e, endo) ; d) Équilibre atteint plus vite sans changer les quantités.",
+        checkpoints: [
+          "Seule la température fait varier la constante d'équilibre K (Cahier NDC p. 160-162)."
+        ],
+        fullSolution: `<p><strong>a)</strong> Augmente autant v<sub>d</sub> et v<sub>i</sub> ; <strong>b)</strong> Aucun effet ; <strong>c)</strong> K diminue (exothermique) et K augmente (endothermique) ; <strong>d)</strong> Atteinte plus rapide du même état d'équilibre.</p>`
+      },
+      {
+        id: "ch3-p77",
+        chapter: 3,
+        section: "Principe Le Chatelier",
+        type: "probleme",
+        title: "Problème 77 (p. 147)",
+        statement: `<p>Vrai ou Faux :<br>
+<strong>a)</strong> À l'équilibre, les concentrations des réactifs et produits sont égales.<br>
+<strong>b)</strong> La quantité de produits à l'équilibre dépend de la vitesse.<br>
+<strong>c)</strong> La réaction inverse débute dès que des produits sont formés.<br>
+<strong>d)</strong> Un <em>K</em> très élevé signifie peu de réactifs à l'équilibre.<br>
+<strong>e)</strong> <em>K</em> et <em>Q</em> utilisent exactement les mêmes concentrations.</p>`,
+        shortAnswer: "a) Faux ; b) Faux ; c) Vrai ; d) Vrai ; e) Faux",
+        checkpoints: [
+          "En <strong>e)</strong>, même formule, mais Q utilise les concentrations initiales/ponctuelles et K celles à l'équilibre."
+        ],
+        fullSolution: `<p><strong>a)</strong> Faux ; <strong>b)</strong> Faux ; <strong>c)</strong> Vrai ; <strong>d)</strong> Vrai ; <strong>e)</strong> Faux.</p>`
+      },
+
+      // CHAPITRE 4 : LES ACIDES ET LES BASES (Début)
+      {
+        id: "ch4-ex4.1",
+        chapter: 4,
+        section: "Réactions générales Acides et Bases",
+        type: "interne",
+        title: "Ex. interne 4.1 (p. 152)",
+        statement: `<p>Dites si chacune des espèces suivantes est un <strong>acide</strong> de Brønsted-Lowry, une <strong>base</strong> ou <strong>les deux</strong> :<br>
+<strong>a)</strong> SO<sub>4</sub><sup>2&minus;</sup> &nbsp;&nbsp;&nbsp; <strong>b)</strong> HI &nbsp;&nbsp;&nbsp; <strong>c)</strong> H<sub>2</sub>PO<sub>4</sub><sup>&minus;</sup></p>`,
+        shortAnswer: "a) Base ; b) Acide ; c) Les deux (amphotère)",
+        checkpoints: [
+          "Vérifie la présence d'un H<sup>+</sup> ionisable et la capacité à capter un H<sup>+</sup>."
+        ],
+        fullSolution: `<p><strong>a)</strong> Base ; <strong>b)</strong> Acide ; <strong>c)</strong> Les deux (amphotère).</p>`
+      },
+      {
+        id: "ch4-ex4.2",
+        chapter: 4,
+        section: "Réactions générales Acides et Bases",
+        type: "interne",
+        title: "Ex. interne 4.2 (p. 153)",
+        statement: `<p>Identifiez les couples acide-base conjugués dans : <strong>CN<sup>&minus;</sup> + H<sub>2</sub>O &#8652; HCN + OH<sup>&minus;</sup></strong></p>`,
+        shortAnswer: "HCN (acide) / CN⁻ (base) et H2O (acide) / OH⁻ (base)",
+        checkpoints: [
+          "CN<sup>&minus;</sup> capte un H<sup>+</sup> (base) et H<sub>2</sub>O cède un H<sup>+</sup> (acide)."
+        ],
+        fullSolution: `<p>Couple 1 : <strong>HCN (acide conjugué) et CN<sup>&minus;</sup> (base)</strong> ; Couple 2 : <strong>H<sub>2</sub>O (acide) et OH<sup>&minus;</sup> (base conjuguée)</strong>.</p>`
+      },
+      {
+        id: "ch4-p1",
+        chapter: 4,
+        section: "Réactions générales Acides et Bases",
+        type: "probleme",
+        title: "Problème 1 (p. 187)",
+        statement: `<p>Classez chaque espèce comme acide de Brønsted-Lowry, base ou les deux :<br>
+<strong>a)</strong> H<sub>2</sub>O &nbsp; <strong>b)</strong> OH<sup>&minus;</sup> &nbsp; <strong>c)</strong> H<sub>3</sub>O<sup>+</sup> &nbsp; <strong>d)</strong> NH<sub>3</sub> &nbsp; <strong>e)</strong> NH<sub>4</sub><sup>+</sup> &nbsp; <strong>f)</strong> NH<sub>2</sub><sup>&minus;</sup> &nbsp; <strong>g)</strong> NO<sub>3</sub><sup>&minus;</sup> &nbsp; <strong>h)</strong> CO<sub>3</sub><sup>2&minus;</sup> &nbsp; <strong>i)</strong> HBr</p>`,
+        shortAnswer: "a) Les deux ; b) Base ; c) Acide ; d) Base ; e) Acide ; f) Base ; g) Base ; h) Base (ou Acide selon énoncé) ; i) Acide",
+        checkpoints: [
+          "Rappel : H<sub>2</sub>O est amphotère ; H<sub>3</sub>O<sup>+</sup>, NH<sub>4</sub><sup>+</sup> et HBr sont des acides."
+        ],
+        fullSolution: `<p><strong>a)</strong> Les deux ; <strong>b)</strong> Base ; <strong>c)</strong> Acide ; <strong>d)</strong> Base ; <strong>e)</strong> Acide ; <strong>f)</strong> Base ; <strong>g)</strong> Base ; <strong>h)</strong> Base/Acide ; <strong>i)</strong> Acide.</p>`
+      },
+      {
+        id: "ch4-p2",
+        chapter: 4,
+        section: "Réactions générales Acides et Bases",
+        type: "probleme",
+        title: "Problème 2 (p. 187)",
+        statement: `<p>Indiquez si chaque espèce agit comme acide, base ou les deux en solution aqueuse :<br>
+<strong>a)</strong> HI &nbsp; <strong>b)</strong> CH<sub>3</sub>COO<sup>&minus;</sup> &nbsp; <strong>c)</strong> H<sub>2</sub>PO<sub>4</sub><sup>&minus;</sup> &nbsp; <strong>d)</strong> HSO<sub>4</sub><sup>&minus;</sup> &nbsp; <strong>e)</strong> PO<sub>4</sub><sup>3&minus;</sup> &nbsp; <strong>f)</strong> ClO<sub>2</sub><sup>&minus;</sup> &nbsp; <strong>g)</strong> NH<sub>4</sub><sup>+</sup> &nbsp; <strong>h)</strong> HCO<sub>3</sub><sup>&minus;</sup></p>`,
+        shortAnswer: "a) Acide ; b) Base ; c) Les deux ; d) Les deux ; e) Base ; f) Base ; g) Acide ; h) Les deux",
+        checkpoints: [
+          "Les anions hydrogénés polyprotiques (H<sub>2</sub>PO<sub>4</sub><sup>&minus;</sup>, HSO<sub>4</sub><sup>&minus;</sup>, HCO<sub>3</sub><sup>&minus;</sup>) sont amphotères."
+        ],
+        fullSolution: `<p><strong>a)</strong> Acide ; <strong>b)</strong> Base ; <strong>c)</strong> Les deux ; <strong>d)</strong> Les deux ; <strong>e)</strong> Base ; <strong>f)</strong> Base ; <strong>g)</strong> Acide ; <strong>h)</strong> Les deux.</p>`
+      },
+      {
+        id: "ch4-p3",
+        chapter: 4,
+        section: "Réactions générales Acides et Bases",
+        type: "probleme",
+        title: "Problème 3 (p. 188)",
+        statement: `<p>Identifiez les couples acide-base conjugués :<br>
+<strong>a)</strong> CH<sub>3</sub>COO<sup>&minus;</sup> + HCN &#8652; CH<sub>3</sub>COOH + CN<sup>&minus;</sup><br>
+<strong>b)</strong> H<sub>2</sub>PO<sub>4</sub><sup>&minus;</sup> + NH<sub>3</sub> &#8652; HPO<sub>4</sub><sup>2&minus;</sup> + NH<sub>4</sub><sup>+</sup><br>
+<strong>c)</strong> HClO + CH<sub>3</sub>NH<sub>2</sub> &#8652; CH<sub>3</sub>NH<sub>3</sub><sup>+</sup> + ClO<sup>&minus;</sup><br>
+<strong>d)</strong> CO<sub>3</sub><sup>2&minus;</sup> + H<sub>2</sub>O &#8652; HCO<sub>3</sub><sup>&minus;</sup> + OH<sup>&minus;</sup><br>
+<strong>e)</strong> CH<sub>3</sub>COO<sup>&minus;</sup> + H<sub>2</sub>O &#8652; CH<sub>3</sub>COOH + OH<sup>&minus;</sup></p>`,
+        shortAnswer: "a) HCN/CN⁻ et CH3COOH/CH3COO⁻ ; b) H2PO4⁻/HPO4²⁻ et NH4⁺/NH3 ; c) HClO/ClO⁻ et CH3NH3⁺/CH3NH2 ; d) H2O/OH⁻ et HCO3⁻/CO3²⁻ ; e) H2O/OH⁻ et CH3COOH/CH3COO⁻",
+        checkpoints: [
+          "L'acide a toujours un H<sup>+</sup> de plus que sa base conjuguée."
+        ],
+        fullSolution: `<p><strong>a)</strong> HCN/CN<sup>&minus;</sup> et CH<sub>3</sub>COOH/CH<sub>3</sub>COO<sup>&minus;</sup> ; <strong>b)</strong> H<sub>2</sub>PO<sub>4</sub><sup>&minus;</sup>/HPO<sub>4</sub><sup>2&minus;</sup> et NH<sub>4</sub><sup>+</sup>/NH<sub>3</sub> ; <strong>c)</strong> HClO/ClO<sup>&minus;</sup> et CH<sub>3</sub>NH<sub>3</sub><sup>+</sup>/CH<sub>3</sub>NH<sub>2</sub> ; <strong>d)</strong> H<sub>2</sub>O/OH<sup>&minus;</sup> et HCO<sub>3</sub><sup>&minus;</sup>/CO<sub>3</sub><sup>2&minus;</sup> ; <strong>e)</strong> H<sub>2</sub>O/OH<sup>&minus;</sup> et CH<sub>3</sub>COOH/CH<sub>3</sub>COO<sup>&minus;</sup>.</p>`
+      },
+      {
+        id: "ch4-p4",
+        chapter: 4,
+        section: "Réactions générales Acides et Bases",
+        type: "probleme",
+        title: "Problème 4 (p. 188)",
+        statement: `<p>Donnez l'<strong>acide conjugué</strong> de chacune des bases suivantes :<br>
+<strong>a)</strong> HS<sup>&minus;</sup> &nbsp; <strong>b)</strong> HCO<sub>3</sub><sup>&minus;</sup> &nbsp; <strong>c)</strong> CO<sub>3</sub><sup>2&minus;</sup> &nbsp; <strong>d)</strong> H<sub>2</sub>PO<sub>4</sub><sup>&minus;</sup> &nbsp; <strong>e)</strong> HPO<sub>4</sub><sup>2&minus;</sup> &nbsp; <strong>f)</strong> PO<sub>4</sub><sup>3&minus;</sup> &nbsp; <strong>g)</strong> SO<sub>4</sub><sup>2&minus;</sup> &nbsp; <strong>h)</strong> HSO<sub>3</sub><sup>&minus;</sup> &nbsp; <strong>i)</strong> SO<sub>3</sub><sup>2&minus;</sup></p>`,
+        shortAnswer: "a) H2S ; b) H2CO3 ; c) HCO3⁻ ; d) H3PO4 ; e) H2PO4⁻ ; f) HPO4²⁻ ; g) HSO4⁻ ; h) H2SO3 ; i) HSO3⁻",
+        checkpoints: [
+          "Ajoute un H<sup>+</sup> (et augmente la charge de +1)."
+        ],
+        fullSolution: `<p><strong>a)</strong> H<sub>2</sub>S ; <strong>b)</strong> H<sub>2</sub>CO<sub>3</sub> ; <strong>c)</strong> HCO<sub>3</sub><sup>&minus;</sup> ; <strong>d)</strong> H<sub>3</sub>PO<sub>4</sub> ; <strong>e)</strong> H<sub>2</sub>PO<sub>4</sub><sup>&minus;</sup> ; <strong>f)</strong> HPO<sub>4</sub><sup>2&minus;</sup> ; <strong>g)</strong> HSO<sub>4</sub><sup>&minus;</sup> ; <strong>h)</strong> H<sub>2</sub>SO<sub>3</sub> ; <strong>i)</strong> HSO<sub>3</sub><sup>&minus;</sup>.</p>`
+      },
+      {
+        id: "ch4-p5",
+        chapter: 4,
+        section: "Réactions générales Acides et Bases",
+        type: "probleme",
+        title: "Problème 5 (p. 188)",
+        statement: `<p>Donnez la <strong>base conjuguée</strong> de chacun des acides suivants :<br>
+<strong>a)</strong> CH<sub>2</sub>ClCOOH &nbsp; <strong>b)</strong> HIO<sub>4</sub> &nbsp; <strong>c)</strong> H<sub>3</sub>PO<sub>4</sub> &nbsp; <strong>d)</strong> H<sub>2</sub>PO<sub>4</sub><sup>&minus;</sup> &nbsp; <strong>e)</strong> HPO<sub>4</sub><sup>2&minus;</sup> &nbsp; <strong>f)</strong> H<sub>2</sub>SO<sub>4</sub> &nbsp; <strong>g)</strong> HSO<sub>4</sub><sup>&minus;</sup> &nbsp; <strong>h)</strong> HCOOH &nbsp; <strong>i)</strong> HSO<sub>3</sub><sup>&minus;</sup> &nbsp; <strong>j)</strong> NH<sub>4</sub><sup>+</sup> &nbsp; <strong>k)</strong> H<sub>2</sub>S &nbsp; <strong>l)</strong> HS<sup>&minus;</sup> &nbsp; <strong>m)</strong> HClO</p>`,
+        shortAnswer: "a) CH2ClCOO⁻ ; b) IO4⁻ ; c) H2PO4⁻ ; d) HPO4²⁻ ; e) PO4³⁻ ; f) HSO4⁻ ; g) SO4²⁻ ; h) HCOO⁻ ; i) SO3²⁻ ; j) NH3 ; k) HS⁻ ; l) S²⁻ ; m) ClO⁻",
+        checkpoints: [
+          "Retire un H<sup>+</sup> (et diminue la charge de 1)."
+        ],
+        fullSolution: `<p><strong>a)</strong> CH<sub>2</sub>ClCOO<sup>&minus;</sup> ; <strong>b)</strong> IO<sub>4</sub><sup>&minus;</sup> ; <strong>c)</strong> H<sub>2</sub>PO<sub>4</sub><sup>&minus;</sup> ; <strong>d)</strong> HPO<sub>4</sub><sup>2&minus;</sup> ; <strong>e)</strong> PO<sub>4</sub><sup>3&minus;</sup> ; <strong>f)</strong> HSO<sub>4</sub><sup>&minus;</sup> ; <strong>g)</strong> SO<sub>4</sub><sup>2&minus;</sup> ; <strong>h)</strong> HCOO<sup>&minus;</sup> ; <strong>i)</strong> SO<sub>3</sub><sup>2&minus;</sup> ; <strong>j)</strong> NH<sub>3</sub> ; <strong>k)</strong> HS<sup>&minus;</sup> ; <strong>l)</strong> S<sup>2&minus;</sup> ; <strong>m)</strong> ClO<sup>&minus;</sup>.</p>`
+      },
+      {
+        id: "ch4-p7",
+        chapter: 4,
+        section: "Réactions générales Acides et Bases",
+        type: "probleme",
+        title: "Problème 7 (p. 188)",
+        statement: `<p>Donnez l'acide conjugué et la base conjuguée de :<br>
+<strong>a)</strong> HCO<sub>3</sub><sup>&minus;</sup> &nbsp;&nbsp; <strong>b)</strong> HPO<sub>4</sub><sup>2&minus;</sup> &nbsp;&nbsp; <strong>c)</strong> HSO<sub>4</sub><sup>&minus;</sup> &nbsp;&nbsp; <strong>d)</strong> H<sub>2</sub>O</p>`,
+        shortAnswer: "a) H2CO3 et CO3²⁻ ; b) H2PO4⁻ et PO4³⁻ ; c) H2SO4 et SO4²⁻ ; d) H3O⁺ et OH⁻",
+        checkpoints: [
+          "Acide conjugué = +H<sup>+</sup> ; Base conjuguée = &minus;H<sup>+</sup>."
+        ],
+        fullSolution: `<p><strong>a)</strong> H<sub>2</sub>CO<sub>3</sub> / CO<sub>3</sub><sup>2&minus;</sup> ; <strong>b)</strong> H<sub>2</sub>PO<sub>4</sub><sup>&minus;</sup> / PO<sub>4</sub><sup>3&minus;</sup> ; <strong>c)</strong> H<sub>2</sub>SO<sub>4</sub> / SO<sub>4</sub><sup>2&minus;</sup> ; <strong>d)</strong> H<sub>3</sub>O<sup>+</sup> / OH<sup>&minus;</sup>.</p>`
+      },
+      {
+        id: "ch4-ex4.4",
+        chapter: 4,
+        section: "Ke = [H3O+][OH-]",
+        type: "interne",
+        title: "Ex. interne 4.4 (p. 157)",
+        statement: `<p>Calculez [OH<sup>&minus;</sup>] dans une solution de HCl où <strong>[H<sub>3</sub>O<sup>+</sup>] = 1,3 mol/L</strong> à 25 &deg;C.</p>`,
+        shortAnswer: "[OH⁻] = 7,7 × 10⁻¹⁵ mol/L",
+        checkpoints: [
+          "<code>[OH-] = Ke / [H3O+] = (1,0 × 10⁻¹⁴) / 1,3</code>."
+        ],
+        fullSolution: `<p class="chem-eq">[OH<sup>&minus;</sup>] = (1,0 &times; 10<sup>&minus;14</sup>) / 1,3 = <strong>7,7 &times; 10<sup>&minus;15</sup> mol/L</strong></p>`
+      },
+      {
+        id: "ch4-p14",
+        chapter: 4,
+        section: "Ke = [H3O+][OH-]",
+        type: "probleme",
+        title: "Problème 14 (p. 188)",
+        statement: `<p>À 40 &deg;C, <em>K<sub>e</sub></em> = <strong>3,8 &times; 10<sup>&minus;14</sup></strong>. Quel est le <strong>pH de l'eau pure</strong> à 40 &deg;C ?</p>`,
+        shortAnswer: "pH = 6,72",
+        checkpoints: [
+          "Dans l'eau pure, <code>[H3O+] = √Ke = √(3,8 × 10⁻¹⁴) = 1,9 × 10⁻⁷ mol/L</code>."
+        ],
+        fullSolution: `<p class="chem-eq">[H<sub>3</sub>O<sup>+</sup>] = &radic;(3,8 &times; 10<sup>&minus;14</sup>) = 1,9 &times; 10<sup>&minus;7</sup> M &rArr; pH = &minus;log(1,9 &times; 10<sup>&minus;7</sup>) = <strong>6,72</strong></p>`
+      },
+      {
+        id: "ch4-p15",
+        chapter: 4,
+        section: "Ke = [H3O+][OH-]",
+        type: "probleme",
+        title: "Problème 15 (p. 188)",
+        statement: `<p>Complétez la relation entre pH, [H<sub>3</sub>O<sup>+</sup>] et la nature de la solution à 25 &deg;C :<br>
+1) pH &lt; 7 ; 2) [H<sub>3</sub>O<sup>+</sup>] &lt; 1,0 &times; 10<sup>&minus;7</sup> M ; 3) Solution neutre.</p>`,
+        shortAnswer: "1) [H3O⁺] > 1,0×10⁻⁷ M, acide ; 2) pH > 7, basique ; 3) pH = 7 et [H3O⁺] = 1,0×10⁻⁷ M.",
+        checkpoints: [
+          "À 25 °C, la neutralité est à pH = 7 et [H<sub>3</sub>O<sup>+</sup>] = 1,0 &times; 10<sup>&minus;7</sup> mol/L."
+        ],
+        fullSolution: `<p>1) <code>[H<sub>3</sub>O<sup>+</sup>] &gt; 1,0&times;10<sup>&minus;7</sup> M</code> (acide) ; 2) <code>pH &gt; 7</code> (basique) ; 3) <code>pH = 7</code> et <code>[H<sub>3</sub>O<sup>+</sup>] = 1,0&times;10<sup>&minus;7</sup> M</code>.</p>`
+      },
+      {
+        id: "ch4-p16",
+        chapter: 4,
+        section: "Ke = [H3O+][OH-]",
+        type: "probleme",
+        title: "Problème 16 (p. 188)",
+        statement: `<p>La solution est-elle acide, basique ou neutre si :<br>
+<strong>a)</strong> pOH &gt; 7 &nbsp;&nbsp;&nbsp; <strong>b)</strong> pOH = 7 &nbsp;&nbsp;&nbsp; <strong>c)</strong> pOH &lt; 7</p>`,
+        shortAnswer: "a) Acide ; b) Neutre ; c) Basique",
+        checkpoints: [
+          "Si pOH > 7, alors pH = 14 &minus; pOH < 7 (donc acide)."
+        ],
+        fullSolution: `<p><strong>a)</strong> Acide ; <strong>b)</strong> Neutre ; <strong>c)</strong> Basique.</p>`
+      },
+      {
+        id: "ch4-ex4.5",
+        chapter: 4,
+        section: "pH - mesure de l'acidité",
+        type: "interne",
+        title: "Ex. interne 4.5 (p. 159)",
+        statement: `<p>Calculez le pH d'une solution de HNO<sub>3</sub> où <strong>[H<sub>3</sub>O<sup>+</sup>] = 0,76 mol/L</strong>.</p>`,
+        shortAnswer: "pH = 0,12",
+        checkpoints: [
+          "<code>pH = -log(0,76)</code>."
+        ],
+        fullSolution: `<p class="chem-eq">pH = &minus;log(0,76) = <strong>0,12</strong></p>`
+      },
+      {
+        id: "ch4-ex4.6",
+        chapter: 4,
+        section: "pH - mesure de l'acidité",
+        type: "interne",
+        title: "Ex. interne 4.6 (p. 160)",
+        statement: `<p>Le pH d'un jus de fruits est de <strong>3,33</strong>. Calculez <strong>[H<sub>3</sub>O<sup>+</sup>]</strong>.</p>`,
+        shortAnswer: "[H3O⁺] = 4,7 × 10⁻⁴ mol/L",
+        checkpoints: [
+          "<code>[H3O+] = 10^(-3,33)</code>."
+        ],
+        fullSolution: `<p class="chem-eq">[H<sub>3</sub>O<sup>+</sup>] = 10<sup>&minus;3,33</sup> = <strong>4,7 &times; 10<sup>&minus;4</sup> mol/L</strong></p>`
+      },
+      {
+        id: "ch4-ex4.7",
+        chapter: 4,
+        section: "pH - mesure de l'acidité",
+        type: "interne",
+        title: "Ex. interne 4.7 (p. 160)",
+        statement: `<p>Dans un échantillon sanguin, <strong>[OH<sup>&minus;</sup>] = 2,5 &times; 10<sup>&minus;7</sup> mol/L</strong> à 25 &deg;C. Calculez le <strong>pH</strong>.</p>`,
+        shortAnswer: "pH = 7,40",
+        checkpoints: [
+          "<code>pOH = -log(2,5×10⁻⁷) = 6,60 &rArr; pH = 14,00 - 6,60</code>."
+        ],
+        fullSolution: `<p class="chem-eq">pOH = 6,60 &rArr; pH = 14,00 &minus; 6,60 = <strong>7,40</strong></p>`
+      },
+      {
+        id: "ch4-p12",
+        chapter: 4,
+        section: "pH - mesure de l'acidité",
+        type: "probleme",
+        title: "Problème 12 (p. 188)",
+        statement: `<p>Calculez <strong>[H<sub>3</sub>O<sup>+</sup>]</strong> à 25 &deg;C pour :<br>
+<strong>a)</strong> pH = 5,20 &nbsp;&nbsp; <strong>b)</strong> pH = 16,00 &nbsp;&nbsp; <strong>c)</strong> [OH<sup>&minus;</sup>] = 3,7 &times; 10<sup>&minus;9</sup> mol/L</p>`,
+        shortAnswer: "a) 6,3 × 10⁻⁶ M ; b) 1,0 × 10⁻¹⁶ M ; c) 2,7 × 10⁻⁶ M",
+        checkpoints: [
+          "Utilise <code>[H3O+] = 10^(-pH)</code> en a) et b), et <code>[H3O+] = 1,0×10⁻¹⁴ / [OH-]</code> en c)."
+        ],
+        fullSolution: `<p><strong>a)</strong> <strong>6,3 &times; 10<sup>&minus;6</sup> mol/L</strong> ; <strong>b)</strong> <strong>1,0 &times; 10<sup>&minus;16</sup> mol/L</strong> ; <strong>c)</strong> <strong>2,7 &times; 10<sup>&minus;6</sup> mol/L</strong>.</p>`
+      },
+      {
+        id: "ch4-ex4.8",
+        chapter: 4,
+        section: "Calcul pH A/B forts",
+        type: "interne",
+        title: "Ex. interne 4.8 (p. 164)",
+        statement: `<p>Calculez le pH d'une solution de <strong>Ba(OH)<sub>2</sub> à 1,5 &times; 10<sup>&minus;2</sup> mol/L</strong> à 25 &deg;C.</p>`,
+        shortAnswer: "pH = 12,48",
+        checkpoints: [
+          "Attention : 1 mol de Ba(OH)<sub>2</sub> libère <strong>2 mol de OH<sup>&minus;</sup></strong> (<code>[OH-] = 3,0 × 10⁻² M</code>)."
+        ],
+        fullSolution: `<p class="chem-eq">[OH<sup>&minus;</sup>] = 2(1,5 &times; 10<sup>&minus;2</sup>) = 3,0 &times; 10<sup>&minus;2</sup> M &rArr; pOH = 1,52 &rArr; <strong>pH = 12,48</strong></p>`
+      },
+      {
+        id: "ch4-p13",
+        chapter: 4,
+        section: "Calcul pH A/B forts",
+        type: "probleme",
+        title: "Problème 13 (p. 188)",
+        statement: `<p>Calculez le pH à 25 &deg;C de :<br>
+<strong>a)</strong> HCl à 0,0010 mol/L &nbsp;&nbsp; <strong>b)</strong> KOH à 0,76 mol/L<br>
+<strong>c)</strong> Ba(OH)<sub>2</sub> à 2,8 &times; 10<sup>&minus;4</sup> mol/L &nbsp;&nbsp; <strong>d)</strong> HNO<sub>3</sub> à 5,2 &times; 10<sup>&minus;4</sup> mol/L</p>`,
+        shortAnswer: "a) 3,00 ; b) 13,89 ; c) 10,74 ; d) 3,28",
+        checkpoints: [
+          "En <strong>c)</strong>, <code>[OH-] = 2 × 2,8×10⁻⁴ = 5,6×10⁻⁴ mol/L</code>."
+        ],
+        fullSolution: `<p><strong>a)</strong> pH = <strong>3,00</strong> ; <strong>b)</strong> pH = <strong>13,89</strong> ; <strong>c)</strong> pH = <strong>10,74</strong> ; <strong>d)</strong> pH = <strong>3,28</strong>.</p>`
+      },
+      {
+        id: "ch4-p19",
+        chapter: 4,
+        section: "Calcul pH A/B forts",
+        type: "probleme",
+        title: "Problème 19 (p. 188)",
+        statement: `<p>Calculez la <strong>masse de NaOH</strong> (M = 40,00 g/mol) nécessaire pour préparer <strong>546 mL</strong> d'une solution de <strong>pH = 10,00</strong>.</p>`,
+        shortAnswer: "m(NaOH) = 2,2 × 10⁻³ g",
+        checkpoints: [
+          "<code>pOH = 4,00 &rArr; [OH-] = [NaOH] = 1,0 × 10⁻⁴ mol/L</code>."
+        ],
+        fullSolution: `<p class="chem-eq">m = 0,546 L &times; 1,0&times;10<sup>&minus;4</sup> mol/L &times; 40,00 g/mol = <strong>2,2 &times; 10<sup>&minus;3</sup> g</strong></p>`
+      },
+      {
+        id: "ch4-ex4.10",
+        chapter: 4,
+        section: "Calcul du pH des acides faibles",
+        type: "interne",
+        title: "Ex. interne 4.10 (p. 171)",
+        statement: `<p>Quel est le pH d'une solution d'un monoacide faible (HA) à <strong>0,122 mol/L</strong> dont <strong><em>K<sub>a</sub></em> = 5,7 &times; 10<sup>&minus;4</sup></strong> ?</p>`,
+        shortAnswer: "pH = 2,09 (ou 2,08 avec l'approximation Ci/Ka >= 100)",
+        checkpoints: [
+          "Tableau I-R-E : <code>Ka = x² / (0,122 - x) = 5,7 × 10⁻⁴ &rArr; x = 8,1 × 10⁻³ M</code>."
+        ],
+        fullSolution: `<p class="chem-eq">x = [H<sub>3</sub>O<sup>+</sup>] = 8,1 &times; 10<sup>&minus;3</sup> M &rArr; <strong>pH = 2,09</strong> (ou 2,08 par approximation NDC)</p>`
+      },
+      {
+        id: "ch4-p25",
+        chapter: 4,
+        section: "Calcul du pH des acides faibles",
+        type: "probleme",
+        title: "Problème 25 (p. 189)",
+        statement: `<p>Pour l'acide benzoïque (C<sub>6</sub>H<sub>5</sub>COOH, <strong><em>K<sub>a</sub></em> = 6,5 &times; 10<sup>&minus;5</sup></strong>) à <strong>0,10 mol/L</strong>, calculez les concentrations à l'équilibre de C<sub>6</sub>H<sub>5</sub>COOH, C<sub>6</sub>H<sub>5</sub>COO<sup>&minus;</sup>, H<sub>3</sub>O<sup>+</sup> et OH<sup>&minus;</sup>.</p>`,
+        shortAnswer: "[H3O⁺] = [C6H5COO⁻] = 2,5 × 10⁻³ M ; [C6H5COOH] = 0,10 M ; [OH⁻] = 4,0 × 10⁻¹² M",
+        checkpoints: [
+          "<code>x = √(0,10 × 6,5×10⁻⁵) = 2,5 × 10⁻³ M</code> et <code>[OH-] = 1,0×10⁻¹⁴ / 2,5×10⁻³</code>."
+        ],
+        fullSolution: `<p><strong>[H<sub>3</sub>O<sup>+</sup>] = [C<sub>6</sub>H<sub>5</sub>COO<sup>&minus;</sup>] = 2,5 &times; 10<sup>&minus;3</sup> mol/L</strong> ; <strong>[C<sub>6</sub>H<sub>5</sub>COOH] = 0,10 mol/L</strong> ; <strong>[OH<sup>&minus;</sup>] = 4,0 &times; 10<sup>&minus;12</sup> mol/L</strong>.</p>`
+      },
+      {
+        id: "ch4-p26",
+        chapter: 4,
+        section: "Calcul du pH des acides faibles",
+        type: "probleme",
+        title: "Problème 26 (p. 189)",
+        statement: `<p>Une solution à <strong>0,010 mol/L</strong> d'un monoacide HA a un <strong>pH de 6,20</strong>. Calculez son <em>K<sub>a</sub></em>.</p>`,
+        shortAnswer: "Ka = 4,0 × 10⁻¹¹",
+        checkpoints: [
+          "<code>x = [H3O+] = 10^(-6,20) = 6,3 × 10⁻⁷ M</code>, puis <code>Ka = x² / 0,010</code>."
+        ],
+        fullSolution: `<p class="chem-eq">K<sub>a</sub> = (6,3 &times; 10<sup>&minus;7</sup>)<sup>2</sup> / 0,010 = <strong>4,0 &times; 10<sup>&minus;11</sup></strong></p>`
+      },
+      {
+        id: "ch4-p27",
+        chapter: 4,
+        section: "Calcul du pH des acides faibles",
+        type: "probleme",
+        title: "Problème 27 (p. 189)",
+        statement: `<p>Quelle est la <strong>concentration initiale</strong> d'une solution d'acide formique (HCOOH, <strong><em>K<sub>a</sub></em> = 1,7 &times; 10<sup>&minus;4</sup></strong>) dont le <strong>pH est de 3,26</strong> ?</p>`,
+        shortAnswer: "[HCOOH]0 = 2,3 × 10⁻³ mol/L",
+        checkpoints: [
+          "<code>x = [H3O+] = 10^(-3,26) = 5,5 × 10⁻⁴ M</code>. Attention : <code>1,7×10⁻⁴ = x² / (Ci - x)</code> (n'oublie pas le <code>- x</code> au dénominateur !)."
+        ],
+        fullSolution: `<p class="chem-eq">1,7 &times; 10<sup>&minus;4</sup> = (5,5 &times; 10<sup>&minus;4</sup>)<sup>2</sup> / (C<sub>i</sub> &minus; 5,5 &times; 10<sup>&minus;4</sup>) &rArr; <strong>C<sub>i</sub> = 2,3 &times; 10<sup>&minus;3</sup> mol/L</strong></p>`
+      },
+      {
+        id: "ch4-p29",
+        chapter: 4,
+        section: "Calcul du pH des acides faibles",
+        type: "probleme",
+        title: "Problème 29 (p. 189)",
+        statement: `<p>Une solution à <strong>0,040 mol/L</strong> d'un monoacide est ionisée à <strong>14 %</strong>. Calculez <em>K<sub>a</sub></em>.</p>`,
+        shortAnswer: "Ka = 9,2 × 10⁻⁴",
+        checkpoints: [
+          "<code>x = 0,14 × 0,040 = 0,0056 M</code> et <code>[HA]e = 0,040 - 0,0056 = 0,034 M</code>."
+        ],
+        fullSolution: `<p class="chem-eq">K<sub>a</sub> = (0,0056)<sup>2</sup> / (0,040 &minus; 0,0056) = <strong>9,2 &times; 10<sup>&minus;4</sup></strong></p>`
+      },
+      {
+        id: "ch4-p31",
+        chapter: 4,
+        section: "Calcul du pH des acides faibles",
+        type: "probleme",
+        title: "Problème 31 (p. 189)",
+        statement: `<p>Calculez les concentrations de <strong>HSO<sub>4</sub><sup>&minus;</sup></strong>, <strong>SO<sub>4</sub><sup>2&minus;</sup></strong> et <strong>H<sub>3</sub>O<sup>+</sup></strong> dans une solution de <strong>KHSO<sub>4</sub> à 0,20 mol/L</strong> (<em>K<sub>a</sub></em>(HSO<sub>4</sub><sup>&minus;</sup>) = <strong>1,3 &times; 10<sup>&minus;2</sup></strong>).</p>`,
+        shortAnswer: "[H3O⁺] = [SO4²⁻] = 0,045 mol/L ; [HSO4⁻] = 0,16 mol/L",
+        checkpoints: [
+          "Ici <code>Ci / Ka = 0,20 / 0,013 = 15,4 < 100</code> : utilise la formule quadratique sur <code>x² / (0,20 - x) = 0,013</code> !"
+        ],
+        fullSolution: `<p class="chem-eq">x<sup>2</sup> + 0,013x &minus; 0,0026 = 0 &rArr; <strong>x = [H<sub>3</sub>O<sup>+</sup>] = [SO<sub>4</sub><sup>2&minus;</sup>] = 0,045 mol/L</strong> et <strong>[HSO<sub>4</sub><sup>&minus;</sup>] = 0,16 mol/L</strong></p>`
+      },
+      {
+        id: "ch4-p49",
+        chapter: 4,
+        section: "Calcul du pH des acides faibles",
+        type: "probleme",
+        title: "Problème 49 (p. 190)",
+        statement: `<p>Un échantillon de <strong>1,87 g de Mg</strong> (24,31 g/mol) réagit avec <strong>80,0 mL</strong> d'une solution de HCl de <strong>pH = &minus;0,544</strong> : <strong>Mg(s) + 2 HCl(aq) &rarr; MgCl<sub>2</sub>(aq) + H<sub>2</sub>(g)</strong>. Quel est le pH final ?</p>`,
+        shortAnswer: "pH = -0,197",
+        checkpoints: [
+          "<code>n(Mg) = 0,0769 mol</code> consomme <code>0,154 mol de HCl</code> sur les <code>0,280 mol</code> initiales."
+        ],
+        fullSolution: `<p class="chem-eq">n(HCl)<sub>restant</sub> = 0,280 &minus; 0,154 = 0,126 mol &rArr; C = 0,126 / 0,0800 L = 1,58 M &rArr; <strong>pH = &minus;0,197</strong></p>`
+      },
+      {
+        id: "ch4-p52",
+        chapter: 4,
+        section: "Calcul du pH des acides faibles",
+        type: "probleme",
+        title: "Problème 52 (p. 190)",
+        statement: `<p>Le pH d'une solution d'acide formique (HCOOH, M = 46,03 g/mol, <strong><em>K<sub>a</sub></em> = 1,7 &times; 10<sup>&minus;4</sup></strong>) est de <strong>2,53</strong>. Quelle masse (en g) de HCOOH y a-t-il dans <strong>100,00 mL</strong> ?</p>`,
+        shortAnswer: "m(HCOOH) = 0,25 g",
+        checkpoints: [
+          "<code>[H3O+] = 10^(-2,53) = 3,0×10⁻³ M &rArr; Ci = 0,054 mol/L</code>, puis multiplie par 0,10000 L et par 46,03 g/mol."
+        ],
+        fullSolution: `<p class="chem-eq">C<sub>i</sub> = 0,054 mol/L &rArr; m = 0,054 &times; 0,10000 L &times; 46,03 g/mol = <strong>0,25 g</strong></p>`
+      },
+      {
+        id: "ch4-p59",
+        chapter: 4,
+        section: "Calcul du pH des acides faibles",
+        type: "probleme",
+        title: "Problème 59 (p. 190)",
+        statement: `<p>Un échantillon de <strong>1,294 g de MCO<sub>3</sub></strong> réagit avec <strong>500 mL de HCl à 0,100 mol/L</strong>. L'excès d'acide est neutralisé par <strong>32,80 mL de NaOH à 0,588 mol/L</strong>. Identifiez le métal <strong>M</strong>.</p>`,
+        shortAnswer: "M est le magnésium (Mg, M = 24,3 g/mol)",
+        checkpoints: [
+          "<code>n(HCl)réagi = 0,0500 - 0,0193 = 0,0307 mol</code>, donc <code>n(MCO3) = 0,0307 / 2 = 0,0154 mol</code>."
+        ],
+        fullSolution: `<p class="chem-eq">M(MCO<sub>3</sub>) = 1,294 g / 0,0154 mol = 84,3 g/mol &rArr; M(M) = 84,3 &minus; 60,01 = 24,3 g/mol &rArr; <strong>Magnésium (Mg)</strong></p>`
+      }
+    ];
+
+    // =========================================================================
+    // ICÔNES
+    // =========================================================================
+    const ICONS = {
+      menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
+      left: '<path d="m15 18-6-6 6-6"/>',
+      right: '<path d="m9 18 6-6-6-6"/>',
+      check: '<path d="M20 6 9 17l-5-5"/>',
+      flag: '<path d="M5 21V4"/><path d="M5 4h12l-2.5 4.5L17 13H5"/>',
+      book: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15z"/><path d="M6.5 17A2.5 2.5 0 0 0 4 19.5 2.5 2.5 0 0 0 6.5 22H20v-5"/>',
+      pen: '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>',
+      highlighter: '<path d="m9 11-6 6v3h9l3-3"/><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/>',
+      line: '<path d="M5 19 19 5"/><circle cx="5" cy="19" r="1.6"/><circle cx="19" cy="5" r="1.6"/>',
+      eraser: '<path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/>',
+      undo: '<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
+      redo: '<path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/>',
+      more: '<circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/>',
+      maximize: '<path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/>',
+      minimize: '<path d="M8 3v3a2 2 0 0 1-2 2H3M21 8h-3a2 2 0 0 1-2-2V3M3 16h3a2 2 0 0 1 2 2v3M16 21v-3a2 2 0 0 1 2-2h3"/>',
+      plus: '<path d="M12 5v14M5 12h14"/>',
+      search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+      bulb: '<path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2z"/>',
+      x: '<path d="M18 6 6 18M6 6l12 12"/>',
+      table: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/>',
+      hand: '<path d="M18 11V6a2 2 0 0 0-4 0v5M14 10V4a2 2 0 0 0-4 0v6M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15"/>',
+      share: '<path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="m16 6-4-4-4 4"/><path d="M12 2v13"/>',
+      save: '<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/>',
+      trash: '<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>'
+    };
+    function setIcon(el, name) {
+      el.dataset.ic = name;
+      el.style.display = "inline-flex";
+      el.innerHTML = `<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name] || ""}</svg>`;
+    }
+    function injectIcons(root) {
+      (root || document).querySelectorAll("[data-ic]").forEach(el => setIcon(el, el.dataset.ic));
+    }
+
+    // =========================================================================
+    // ÉTAT
+    // =========================================================================
+    const PAGE_W = 1000;           // largeur logique de la feuille : le dessin suit la largeur de l'écran
+    const MIN_PAGE_H = 1400;
+    const HL_ALPHA = 0.35;
+    const SIZES = [2.2, 3.6, 6];   // fin, moyen, épais (unités de la feuille)
+    const COLORS = [["#0f172a", "Noir"], ["#2563eb", "Bleu"], ["#dc2626", "Rouge"], ["#16a34a", "Vert"], ["#9333ea", "Violet"]];
+    const LS = {
+      status: "sn2_ex_status", notes: "sn2_ex_notes", key: "sn2_gemini_api_key", model: "sn2_gemini_model",
+      prefs: "sn2v2_prefs", ink: "sn2v2_ink_", migrated: "sn2v2_migrated"
+    };
+    const IS_APPLE_TOUCH = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+    let currentChapter = 2;
+    let currentExId = null;
+    let exStatusMap = {};
+    let prefs = {
+      tool: "pen", color: "#0f172a", size: 1, paper: "grid", eraserMode: "stroke",
+      fingerDraw: false, statementCollapsed: false, lastEx: null, drawerOpen: null
+    };
+
+    const sessions = {};   // exId -> { doc: {strokes, pageH}, undo: [], redo: [] }
+    const dirty = new Set();
+    let doc = null;
+    let act = null;        // trait en cours (un seul pointeur à la fois)
+    let saveTimer = null;
+    let warnedQuota = false;
+
+    const $ = id => document.getElementById(id);
+    const pageEl = $("page"), paperEl = $("paper");
+    const inkC = $("inkCanvas"), liveC = $("liveCanvas");
+    const inkX = inkC.getContext("2d"), liveX = liveC.getContext("2d");
+    const tile = { top: 0, h: 0, w: 0, dpr: 1, s: 1 };
+
+    function safeGet(key, fallback) {
+      try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch (e) { return fallback; }
+    }
+    function safeSet(key, val) {
+      try { localStorage.setItem(key, JSON.stringify(val)); return true; } catch (e) { return false; }
+    }
+    function savePrefs() { safeSet(LS.prefs, prefs); }
+
+    function showToast(msg) {
+      const el = $("toast");
+      el.textContent = msg;
+      el.classList.add("show");
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => el.classList.remove("show"), 2800);
+    }
+    function openModal(id) { $(id).classList.add("open"); }
+    function closeModal(id) { $(id).classList.remove("open"); }
+    function isWide() { return window.innerWidth >= 1100; }
+
+    // =========================================================================
+    // INITIALISATION
+    // =========================================================================
+    function initApp() {
+      injectIcons();
+      prefs = Object.assign(prefs, safeGet(LS.prefs, {}));
+      exStatusMap = safeGet(LS.status, {});
+      $("apiKeyInput").value = safeGet(LS.key, "");
+      $("modelInput").value = safeGet(LS.model, "gemini-flash-latest");
+      updateApiBadge();
+
+      buildToolbar();
+      setTool(prefs.tool, true);
+      setPaper(prefs.paper, true);
+      applyFingerDraw();
+      applyEraserMode();
+      $("statementCard").classList.toggle("collapsed", !!prefs.statementCollapsed);
+      $("statementToggle").textContent = prefs.statementCollapsed ? "Afficher" : "Masquer";
+      document.body.classList.toggle("drawer-open", prefs.drawerOpen === null ? isWide() : (prefs.drawerOpen && isWide()));
+
+      migrateOldDrawings();
+      setupInput();
+
+      $("noteInput").addEventListener("input", function () {
+        const notes = safeGet(LS.notes, {});
+        notes[currentExId] = this.value;
+        safeSet(LS.notes, notes);
+      });
+
+      const last = EXERCISES.find(e => e.id === prefs.lastEx);
+      currentExId = last ? last.id : null;
+      selectChapter(last ? last.chapter : 2);
+
+      // Demande à l'iPad de ne jamais effacer les données de l'app
+      try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch (e) {}
+      // Mode hors ligne : seulement quand la page est servie comme app (https), pas en fichier local
+      if ("serviceWorker" in navigator && location.protocol === "https:" && window.self === window.top) {
+        navigator.serviceWorker.register("sw.js").catch(() => {});
+      }
+    }
+
+    // =========================================================================
+    // SAUVEGARDE / RESTAURATION
+    // =========================================================================
+    function collectBackup() {
+      saveNow();
+      const items = {};
+      try {
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (/^sn2/.test(k) && k !== LS.key) items[k] = localStorage.getItem(k);  // jamais la clé API
+        }
+      } catch (e) {}
+      return { app: "cahier-chimie-sn2", v: 2, date: new Date().toISOString(), items };
+    }
+    function backupName() {
+      return `sauvegarde_chimie_SN2_${new Date().toISOString().slice(0, 10)}.json`;
+    }
+    function openBackup() {
+      const n = EXERCISES.filter(e => hasInk(e.id)).length;
+      const last = safeGet("sn2v2_last_backup", null);
+      $("backupInfo").textContent = `${n} exercice(s) avec une démarche. Dernière copie : ${last ? new Date(last).toLocaleDateString("fr-CA") : "jamais"}.`;
+      $("backupText").value = "";
+      $("backupFile").value = "";
+      openModal("backupModal");
+    }
+    async function exportBackup() {
+      const text = JSON.stringify(collectBackup());
+      const name = backupName();
+      try {
+        const file = new File([text], name, { type: "application/json" });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: name });
+          safeSet("sn2v2_last_backup", Date.now());
+          showToast("Choisis « Enregistrer dans Fichiers » pour garder la copie.");
+          return;
+        }
+      } catch (e) {
+        if (e && e.name === "AbortError") return;
+      }
+      if (window.self === window.top) {
+        const url = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+        const a = document.createElement("a");
+        a.href = url; a.download = name;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 4000);
+        safeSet("sn2v2_last_backup", Date.now());
+        showToast("Sauvegarde enregistrée.");
+      } else {
+        copyBackup();
+      }
+    }
+    async function copyBackup() {
+      const text = JSON.stringify(collectBackup());
+      try {
+        await navigator.clipboard.writeText(text);
+        safeSet("sn2v2_last_backup", Date.now());
+        showToast("Sauvegarde copiée : colle-la dans Notes ou dans l'app.");
+      } catch (e) {
+        const ta = $("backupText");
+        ta.value = text;
+        ta.focus();
+        ta.select();
+        showToast("Sélectionne le texte et fais Copier.");
+      }
+    }
+    function restoreBackup(text) {
+      let data;
+      try { data = JSON.parse(text); } catch (e) { showToast("Ce n'est pas une sauvegarde valide."); return; }
+      if (!data || data.app !== "cahier-chimie-sn2" || typeof data.items !== "object") { showToast("Ce n'est pas une sauvegarde du cahier."); return; }
+      let n = 0;
+      try {
+        Object.entries(data.items).forEach(([k, v]) => {
+          if (/^sn2/.test(k) && k !== LS.key && typeof v === "string") { localStorage.setItem(k, v); n++; }
+        });
+      } catch (e) { showToast("Mémoire pleine : restauration incomplète."); }
+      Object.keys(sessions).forEach(id => delete sessions[id]);
+      dirty.clear();
+      exStatusMap = safeGet(LS.status, {});
+      doc = null;
+      closeModal("backupModal");
+      selectExercise(currentExId, true);
+      showToast(`Sauvegarde du ${new Date(data.date).toLocaleDateString("fr-CA")} restaurée.`);
+    }
+    function importBackupFile(input) {
+      const f = input.files && input.files[0];
+      if (!f) return;
+      const r = new FileReader();
+      r.onload = () => restoreBackup(String(r.result));
+      r.readAsText(f);
+    }
+    function importBackupText() {
+      const t = $("backupText").value.trim();
+      if (!t) { showToast("Colle d'abord le texte de la sauvegarde."); return; }
+      restoreBackup(t);
+    }
+
+    function buildToolbar() {
+      $("swatches").innerHTML = COLORS.map(([c, n]) =>
+        `<button class="sw" data-color="${c}" style="--c:${c}" onclick="setColor('${c}')" title="${n}" aria-label="${n}"><i></i></button>`).join("");
+      const dots = [5, 8, 12];
+      $("sizes").innerHTML = SIZES.map((_, i) =>
+        `<button class="sz" data-size="${i}" onclick="setSize(${i})" aria-label="Épaisseur ${i + 1}"><i style="width:${dots[i]}px;height:${dots[i]}px"></i></button>`).join("");
+      setColor(prefs.color, true);
+      setSize(prefs.size, true);
+    }
+
+    // =========================================================================
+    // CHAPITRES & EXERCICES
+    // =========================================================================
+    function toggleDrawer(force) {
+      const open = typeof force === "boolean" ? force : !document.body.classList.contains("drawer-open");
+      document.body.classList.toggle("drawer-open", open);
+      if (isWide()) { prefs.drawerOpen = open; savePrefs(); }
+      if (open) {
+        const sel = document.querySelector(".ex-item.on");
+        if (sel) sel.scrollIntoView({ block: "nearest" });
+      }
+    }
+
+    function selectChapter(ch) {
+      currentChapter = ch;
+      [2, 3, 4].forEach(c => $("tabCh" + c).classList.toggle("on", c === ch));
+      const chExercises = EXERCISES.filter(e => e.chapter === ch);
+      const sections = [...new Set(chExercises.map(e => e.section))];
+      $("sectionFilter").innerHTML = `<option value="ALL">Toutes les sections (${chExercises.length})</option>` +
+        sections.map(s => `<option value="${s}">${s}</option>`).join("");
+      renderExerciseList();
+      const curr = EXERCISES.find(e => e.id === currentExId);
+      if ((!curr || curr.chapter !== ch) && chExercises.length) selectExercise(chExercises[0].id, true);
+      else if (curr && !doc) selectExercise(curr.id, true);
+    }
+
+    function getFilteredExercises() {
+      const sec = $("sectionFilter").value;
+      const typ = $("typeFilter").value;
+      const q = $("searchInput").value.trim().toLowerCase();
+      return EXERCISES.filter(ex => {
+        if (ex.chapter !== currentChapter) return false;
+        if (sec && sec !== "ALL" && ex.section !== sec) return false;
+        if (typ !== "ALL" && ex.type !== typ) return false;
+        if (q && !(ex.title + " " + ex.section + " " + ex.statement).toLowerCase().includes(q)) return false;
+        return true;
+      });
+    }
+
+    function hasInk(id) {
+      if (sessions[id]) return sessions[id].doc.strokes.length > 0;
+      try { return localStorage.getItem(LS.ink + id) !== null; } catch (e) { return false; }
+    }
+
+    function renderExerciseList() {
+      const filtered = getFilteredExercises();
+      const doneCount = EXERCISES.filter(e => exStatusMap[e.id] === "done").length;
+      $("countText").textContent = `${filtered.length} exos`;
+      $("progressText").textContent = `Réussis : ${doneCount} / ${EXERCISES.length}`;
+      $("progressFill").style.width = `${Math.round(doneCount / EXERCISES.length * 100)}%`;
+
+      let html = "", lastSection = "";
+      filtered.forEach(ex => {
+        if (ex.section !== lastSection) {
+          lastSection = ex.section;
+          html += `<div class="ex-sec">${ex.section}</div>`;
+        }
+        const st = exStatusMap[ex.id];
+        const icon = st === "done" ? "✅" : st === "review" ? "⚠️" : (hasInk(ex.id) ? "✏️" : "");
+        html += `<button class="ex-item${ex.id === currentExId ? " on" : ""}" onclick="selectExercise('${ex.id}')">
+            <span class="tag${ex.type === "interne" ? " int" : ""}">${ex.type === "interne" ? "Int." : "Prob."}</span>
+            <span class="t">${ex.title}</span><span>${icon}</span></button>`;
+      });
+      $("exList").innerHTML = html || `<div style="padding:20px;text-align:center;color:#94a3b8">Aucun exercice trouvé.</div>`;
+    }
+
+    function selectExercise(exId, keepDrawer) {
+      const ex = EXERCISES.find(e => e.id === exId);
+      if (!ex) return;
+      if (act) cancelStroke();
+      saveNow();
+      currentExId = exId;
+      prefs.lastEx = exId;
+      savePrefs();
+
+      const isInt = ex.type === "interne";
+      $("exTypePill").textContent = isInt ? "Ex. interne" : "Problème";
+      $("exTypePill").className = "pill" + (isInt ? "" : " prob");
+      $("exTitle").textContent = ex.title;
+      $("exSectionPill").textContent = ex.section;
+      $("exStatement").innerHTML = ex.statement;
+      $("tbTitle").textContent = ex.title;
+      $("tbSub").textContent = `Chap. ${ex.chapter} · ${ex.section}`;
+      $("focusTitle").textContent = ex.title;
+      $("noteInput").value = safeGet(LS.notes, {})[exId] || "";
+
+      doc = session(exId).doc;
+      pageEl.scrollTop = 0;
+      layoutPaper();
+      ensureTile(true);
+
+      updateUndoUI();
+      updateStatusUI();
+      closeSheet();
+      renderExerciseList();
+      if (!keepDrawer && !isWide()) toggleDrawer(false);
+    }
+
+    function navigateExercise(delta) {
+      const filtered = getFilteredExercises();
+      const idx = filtered.findIndex(e => e.id === currentExId);
+      const next = filtered[idx + delta];
+      if (idx !== -1 && next) selectExercise(next.id, true);
+      else showToast(delta > 0 ? "C'est le dernier exercice de la liste." : "C'est le premier exercice de la liste.");
+    }
+
+    function setExerciseStatus(status) {
+      if (exStatusMap[currentExId] === status) delete exStatusMap[currentExId];
+      else exStatusMap[currentExId] = status;
+      safeSet(LS.status, exStatusMap);
+      updateStatusUI();
+      renderExerciseList();
+    }
+
+    function updateStatusUI() {
+      const st = exStatusMap[currentExId];
+      $("markDoneBtn").className = "tb-btn" + (st === "done" ? " on-done" : "");
+      $("markReviewBtn").className = "tb-btn" + (st === "review" ? " on-review" : "");
+    }
+
+    function toggleStatement() {
+      prefs.statementCollapsed = !prefs.statementCollapsed;
+      savePrefs();
+      $("statementCard").classList.toggle("collapsed", prefs.statementCollapsed);
+      $("statementToggle").textContent = prefs.statementCollapsed ? "Afficher" : "Masquer";
+      ensureTile(false);
+    }
+
+    // =========================================================================
+    // OUTILS
+    // =========================================================================
+    function setTool(tool, silent) {
+      if (tool === "eraser" && prefs.tool === "eraser" && !silent) { toggleEraserMode(); return; }
+      prefs.tool = tool;
+      savePrefs();
+      ["pen", "hl", "line", "eraser"].forEach(t => $("tool-" + t).classList.toggle("on", t === tool));
+      $("eraserBadge").style.display = tool === "eraser" ? "" : "none";
+    }
+    function setColor(color, silent) {
+      prefs.color = color;
+      savePrefs();
+      document.querySelectorAll(".sw").forEach(b => b.classList.toggle("on", b.dataset.color === color));
+      if (!silent && (prefs.tool === "eraser")) setTool("pen");
+    }
+    function setSize(i) {
+      prefs.size = i;
+      savePrefs();
+      document.querySelectorAll(".sz").forEach(b => b.classList.toggle("on", Number(b.dataset.size) === i));
+    }
+    function setPaper(p) {
+      prefs.paper = p;
+      savePrefs();
+      paperEl.classList.remove("paper-grid", "paper-lined", "paper-dots", "paper-blank");
+      paperEl.classList.add("paper-" + p);
+      document.querySelectorAll("#paperSeg button").forEach(b => b.classList.toggle("on", b.dataset.paper === p));
+    }
+    function toggleFingerDraw() {
+      prefs.fingerDraw = !prefs.fingerDraw;
+      savePrefs();
+      applyFingerDraw();
+      showToast(prefs.fingerDraw
+        ? "Le doigt dessine. Pour défiler : glisse sur l'énoncé ou désactive cette option."
+        : "Le doigt fait défiler, l'Apple Pencil dessine.");
+    }
+    function applyFingerDraw() {
+      paperEl.classList.toggle("finger", !!prefs.fingerDraw);
+      $("fingerSwitch").classList.toggle("on", !!prefs.fingerDraw);
+    }
+    function toggleEraserMode() {
+      prefs.eraserMode = prefs.eraserMode === "stroke" ? "pixel" : "stroke";
+      savePrefs();
+      applyEraserMode();
+      showToast(prefs.eraserMode === "stroke" ? "Gomme : efface le trait entier touché." : "Gomme : efface précisément là où tu passes.");
+    }
+    function applyEraserMode() {
+      $("eraserBadge").textContent = prefs.eraserMode === "stroke" ? "trait" : "précis";
+      $("eraserModeText").textContent = prefs.eraserMode === "stroke" ? "Trait entier" : "Précise";
+    }
+
+    function openMoreMenu() {
+      const r = $("moreBtn").getBoundingClientRect();
+      const m = $("moreMenu");
+      m.classList.add("open");
+      const left = Math.max(8, Math.min(r.right - m.offsetWidth, window.innerWidth - m.offsetWidth - 8));
+      m.style.left = left + "px";
+      m.style.top = (r.bottom + 6) + "px";
+      $("menuScrim").classList.add("open");
+    }
+    function closeMoreMenu() {
+      $("moreMenu").classList.remove("open");
+      $("menuScrim").classList.remove("open");
+    }
+
+    // =========================================================================
+    // PLEIN ÉCRAN
+    // =========================================================================
+    let wasFullscreen = false;
+    function fsElement() { return document.fullscreenElement || document.webkitFullscreenElement || null; }
+    function setFocus(on) {
+      document.body.classList.toggle("focus", on);
+      setIcon($("focusIc"), on ? "minimize" : "maximize");
+      $("focusBtn").title = on ? "Quitter le plein écran" : "Plein écran";
+    }
+    function toggleFocus() {
+      const on = !document.body.classList.contains("focus");
+      setFocus(on);
+      const el = document.documentElement;
+      try {
+        if (on && !fsElement()) {
+          const req = el.requestFullscreen || el.webkitRequestFullscreen;
+          if (req) { const r = req.call(el); if (r && r.catch) r.catch(() => {}); }
+        } else if (!on && fsElement()) {
+          const ex = document.exitFullscreen || document.webkitExitFullscreen;
+          if (ex) { const r = ex.call(document); if (r && r.catch) r.catch(() => {}); }
+        }
+      } catch (e) {}
+    }
+    function onFullscreenChange() {
+      const fs = !!fsElement();
+      if (wasFullscreen && !fs && document.body.classList.contains("focus")) setFocus(false);
+      wasFullscreen = fs;
+    }
+
+    // =========================================================================
+    // MOTEUR DE DESSIN
+    //  - le doigt fait défiler (défilement natif d'iOS, avec l'inertie)
+    //  - l'Apple Pencil dessine (on bloque le défilement seulement pour lui)
+    //  - le canevas ne couvre que la zone visible : la feuille peut être aussi longue qu'on veut
+    // =========================================================================
+    function session(id) {
+      if (!sessions[id]) sessions[id] = { doc: loadDoc(id), undo: [], redo: [] };
+      return sessions[id];
+    }
+    function cur() { return session(currentExId); }
+
+    function loadDoc(id) {
+      const raw = safeGet(LS.ink + id, null);
+      const d = { strokes: [], pageH: MIN_PAGE_H };
+      if (raw && Array.isArray(raw.s)) {
+        d.pageH = Math.max(MIN_PAGE_H, raw.h || 0);
+        d.strokes = raw.s.map(o => o.t === "ire" ? { t: "ire", x: o.x, y: o.y, w: o.w } : { t: o.t, c: o.c, w: o.w, pts: o.p || [] });
+      }
+      return d;
+    }
+    function serialize(s) {
+      if (s.t === "ire") return { t: "ire", x: Math.round(s.x), y: Math.round(s.y), w: s.w };
+      const p = new Array(s.pts.length);
+      for (let i = 0; i < s.pts.length; i += 3) {
+        p[i] = Math.round(s.pts[i] * 10) / 10;
+        p[i + 1] = Math.round(s.pts[i + 1] * 10) / 10;
+        p[i + 2] = Math.round(s.pts[i + 2] * 100) / 100;
+      }
+      return { t: s.t, c: s.c, w: Math.round(s.w * 100) / 100, p };
+    }
+    function markDirty() {
+      dirty.add(currentExId);
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(saveNow, 300);
+    }
+    function saveNow() {
+      clearTimeout(saveTimer);
+      dirty.forEach(id => {
+        const d = sessions[id] && sessions[id].doc;
+        if (!d) return;
+        const key = LS.ink + id;
+        try {
+          if (!d.strokes.length) localStorage.removeItem(key);
+          else localStorage.setItem(key, JSON.stringify({ v: 2, h: Math.round(d.pageH), s: d.strokes.map(serialize) }));
+        } catch (e) {
+          if (!warnedQuota) {
+            warnedQuota = true;
+            showToast("Mémoire pleine : efface des feuilles d'anciens exercices pour pouvoir sauvegarder.");
+          }
+        }
+      });
+      dirty.clear();
+    }
+
+    // Reprend les dessins de l'ancienne version du cahier (une seule fois)
+    function migrateOldDrawings() {
+      if (safeGet(LS.migrated, false)) return;
+      const old = safeGet("sn2_canvas_strokes", null);
+      if (old && typeof old === "object") {
+        const k = 1.25; // l'ancienne feuille faisait ~800 px de large
+        Object.entries(old).forEach(([id, arr]) => {
+          if (!Array.isArray(arr) || !arr.length || hasInk(id)) return;
+          const strokes = [];
+          let maxY = 0;
+          arr.forEach(o => {
+            if (o.tool === "stamp_ire") {
+              strokes.push({ t: "ire", x: (o.x || 30) * k, y: (o.y || 25) * k, w: 880 });
+              maxY = Math.max(maxY, (o.y || 25) * k + 240);
+              return;
+            }
+            const t = { pen: "pen", highlighter: "hl", line: "line", eraser: "px" }[o.tool];
+            if (!t || !Array.isArray(o.points)) return;
+            const mult = t === "hl" ? 4.5 : t === "px" ? 6 : 1;
+            const pts = [];
+            o.points.forEach(q => { pts.push(q.x * k, q.y * k, q.p || 0.5); maxY = Math.max(maxY, q.y * k); });
+            const c = t === "hl" && o.color === "#0f172a" ? "#facc15" : o.color;
+            strokes.push({ t, c, w: (o.size || 3) * mult * 0.9, pts });
+          });
+          if (strokes.length) {
+            sessions[id] = { doc: { strokes, pageH: Math.max(MIN_PAGE_H, maxY + 300) }, undo: [], redo: [] };
+            dirty.add(id);
+          }
+        });
+        saveNow();
+      }
+      safeSet(LS.migrated, true);
+    }
+
+    // ---------- Géométrie ----------
+    function layoutPaper() {
+      if (!doc) return;
+      const s = (paperEl.clientWidth || 1) / PAGE_W;
+      const minH = Math.max(0, pageEl.clientHeight - 90) / s;   // la feuille remplit au moins l'écran
+      const h = Math.max(doc.pageH, minH);
+      paperEl.style.height = Math.round(h * s) + "px";
+      paperEl.style.setProperty("--g", (30 * s).toFixed(2) + "px");
+    }
+
+    function ensureTile(force) {
+      if (!doc) return;
+      const w = paperEl.clientWidth, H = paperEl.clientHeight, vh = pageEl.clientHeight;
+      if (!w || !H || !vh) return;
+      const visTop = pageEl.scrollTop - paperEl.offsetTop;
+      const visBot = visTop + vh;
+      const margin = vh * 0.3;
+      const wantH = Math.min(H, Math.ceil(vh * 2.6));
+      let need = force || tile.w !== w || Math.abs(tile.h - wantH) > 1;
+      if (!need) {
+        if (tile.top > 0 && visTop < tile.top + margin) need = true;
+        if (tile.top + tile.h < H && visBot > tile.top + tile.h - margin) need = true;
+      }
+      if (!need) return;
+      const h = wantH;
+      let dpr = window.devicePixelRatio || 1;
+      const MAX_PX = 12e6;  // Safari iOS refuse les canevas trop grands (page blanche)
+      if (w * h * dpr * dpr > MAX_PX) dpr = Math.sqrt(MAX_PX / (w * h));
+      const top = Math.max(0, Math.min(Math.round(visTop - (h - vh) / 2), H - h));
+      const pw = Math.round(w * dpr), ph = Math.round(h * dpr);
+      [inkC, liveC].forEach(c => {
+        if (c.width !== pw || c.height !== ph) { c.width = pw; c.height = ph; }
+        c.style.top = top + "px";
+        c.style.height = h + "px";
+      });
+      tile.top = top; tile.h = h; tile.w = w; tile.dpr = dpr; tile.s = w / PAGE_W;
+      redrawInk();
+      redrawLive();
+    }
+
+    function applyT(ctx) {
+      const k = tile.dpr * tile.s;
+      ctx.setTransform(k, 0, 0, k, 0, -tile.top * tile.dpr);
+    }
+    function clearCtx(ctx) {
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      applyT(ctx);
+    }
+    function redrawInk() {
+      clearCtx(inkX);
+      const y0 = tile.top / tile.s, y1 = (tile.top + tile.h) / tile.s;
+      for (const st of doc.strokes) {
+        const b = bbox(st);
+        if (b[3] < y0 || b[1] > y1) continue;
+        drawStroke(inkX, st, false);
+      }
+      if (act && act.stroke && (act.stroke.t === "pen" || act.stroke.t === "px")) drawStroke(inkX, act.stroke, true);
+    }
+    function redrawLive() {
+      clearCtx(liveX);
+      if (act && act.stroke && (act.stroke.t === "hl" || act.stroke.t === "line")) drawStroke(liveX, act.stroke, true);
+    }
+
+    // ---------- Rendu des traits ----------
+    function bbox(s) {
+      if (s._b) return s._b;
+      if (s.t === "ire") return (s._b = [s.x - 2, s.y - 2, s.x + s.w + 2, s.y + 242]);
+      const p = s.pts;
+      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+      for (let i = 0; i < p.length; i += 3) {
+        if (p[i] < x0) x0 = p[i]; if (p[i] > x1) x1 = p[i];
+        if (p[i + 1] < y0) y0 = p[i + 1]; if (p[i + 1] > y1) y1 = p[i + 1];
+      }
+      const pad = s.w * (s.t === "pen" ? 0.75 : 0.5) + 1;
+      return (s._b = [x0 - pad, y0 - pad, x1 + pad, y1 + pad]);
+    }
+    function widthAt(s, i) {
+      return s.t === "pen" ? s.w * (0.55 + 0.9 * s.pts[i * 3 + 2]) : s.w;
+    }
+    function styleFor(ctx, s, live) {
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      if (s.t === "px") {
+        ctx.globalCompositeOperation = "destination-out";
+        ctx.strokeStyle = ctx.fillStyle = "#000";
+        ctx.globalAlpha = 1;
+      } else {
+        ctx.globalCompositeOperation = "source-over";
+        ctx.strokeStyle = ctx.fillStyle = s.c;
+        ctx.globalAlpha = s.t === "hl" && !live ? HL_ALPHA : 1;
+      }
+    }
+    // Segment i (1..n-1) d'un trait lissé : courbe entre les milieux des points
+    function segment(p, i, n) {
+      const ax = i === 1 ? p[0] : (p[(i - 1) * 3] + p[i * 3]) / 2;
+      const ay = i === 1 ? p[1] : (p[(i - 1) * 3 + 1] + p[i * 3 + 1]) / 2;
+      if (i === n - 1) return [ax, ay, null, null, p[i * 3], p[i * 3 + 1]];
+      return [ax, ay, p[i * 3], p[i * 3 + 1], (p[i * 3] + p[(i + 1) * 3]) / 2, (p[i * 3 + 1] + p[(i + 1) * 3 + 1]) / 2];
+    }
+    function drawSeg(ctx, s, i, n) {
+      const g = segment(s.pts, i, n);
+      ctx.lineWidth = widthAt(s, i);
+      ctx.beginPath();
+      ctx.moveTo(g[0], g[1]);
+      if (g[2] === null) ctx.lineTo(g[4], g[5]);
+      else ctx.quadraticCurveTo(g[2], g[3], g[4], g[5]);
+      ctx.stroke();
+    }
+    function drawDot(ctx, s, live) {
+      ctx.save();
+      styleFor(ctx, s, live);
+      ctx.beginPath();
+      ctx.arc(s.pts[0], s.pts[1], widthAt(s, 0) / 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+    function drawStroke(ctx, s, live) {
+      if (s.t === "ire") { drawIRE(ctx, s); return; }
+      const p = s.pts, n = p.length / 3;
+      if (!n) return;
+      if (n === 1) { drawDot(ctx, s, live); return; }
+      ctx.save();
+      styleFor(ctx, s, live);
+      if (s.t === "line") {
+        ctx.lineWidth = s.w;
+        ctx.beginPath();
+        ctx.moveTo(p[0], p[1]);
+        ctx.lineTo(p[(n - 1) * 3], p[(n - 1) * 3 + 1]);
+        ctx.stroke();
+      } else if (s.t === "pen") {
+        for (let i = 1; i < n; i++) drawSeg(ctx, s, i, n);
+      } else {
+        ctx.lineWidth = s.w;
+        ctx.beginPath();
+        ctx.moveTo(p[0], p[1]);
+        for (let i = 1; i < n; i++) {
+          const g = segment(p, i, n);
+          if (g[2] === null) ctx.lineTo(g[4], g[5]);
+          else ctx.quadraticCurveTo(g[2], g[3], g[4], g[5]);
+        }
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    const IRE_ROW = 60, IRE_LAB = 190;
+    function drawIRE(ctx, s) {
+      ctx.save();
+      ctx.globalCompositeOperation = "source-over";
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = "#334155";
+      ctx.fillStyle = "#1e293b";
+      ctx.lineWidth = 2;
+      ctx.font = '600 21px -apple-system, "Segoe UI", Roboto, sans-serif';
+      ctx.textBaseline = "middle";
+      ctx.strokeRect(s.x, s.y, s.w, IRE_ROW * 4);
+      ctx.beginPath();
+      for (let r = 1; r <= 3; r++) { ctx.moveTo(s.x, s.y + r * IRE_ROW); ctx.lineTo(s.x + s.w, s.y + r * IRE_ROW); }
+      ctx.moveTo(s.x + IRE_LAB, s.y);
+      ctx.lineTo(s.x + IRE_LAB, s.y + IRE_ROW * 4);
+      ctx.stroke();
+      ["Équation", "I (initial)", "R (réagit)", "E / F"].forEach((t, r) => ctx.fillText(t, s.x + 14, s.y + r * IRE_ROW + IRE_ROW / 2));
+      ctx.restore();
+    }
+
+    // ---------- Gestion du crayon et du doigt ----------
+    function setupInput() {
+      paperEl.addEventListener("pointerdown", onPointerDown);
+      paperEl.addEventListener("pointermove", onPointerMove);
+      paperEl.addEventListener("pointerup", onPointerUp);
+      paperEl.addEventListener("pointercancel", onPointerUp);
+      paperEl.addEventListener("lostpointercapture", onPointerUp);
+      // iOS : on bloque le défilement uniquement pour l'Apple Pencil (touchType "stylus"),
+      // et pour tout doigt/paume tant qu'un trait est en cours.
+      paperEl.addEventListener("touchstart", onTouch, { passive: false });
+      paperEl.addEventListener("touchmove", onTouch, { passive: false });
+      paperEl.addEventListener("contextmenu", e => e.preventDefault());
+
+      pageEl.addEventListener("scroll", () => ensureTile(false), { passive: true });
+      let rafPending = false;
+      const relayout = () => {
+        if (rafPending) return;
+        rafPending = true;
+        requestAnimationFrame(() => { rafPending = false; layoutPaper(); ensureTile(true); });
+      };
+      if (window.ResizeObserver) new ResizeObserver(relayout).observe(pageEl);
+      window.addEventListener("resize", relayout);
+
+      // pas de zoom de toute l'interface au pincement (Safari ignore user-scalable=no)
+      document.addEventListener("gesturestart", e => e.preventDefault());
+      document.addEventListener("gesturechange", e => e.preventDefault());
+      document.addEventListener("dblclick", e => e.preventDefault());
+
+      document.addEventListener("fullscreenchange", onFullscreenChange);
+      document.addEventListener("webkitfullscreenchange", onFullscreenChange);
+      document.addEventListener("visibilitychange", () => { if (document.hidden) saveNow(); });
+      window.addEventListener("pagehide", saveNow);
+
+      document.addEventListener("keydown", e => {
+        if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z") {
+          e.preventDefault();
+          if (e.shiftKey) redo(); else undo();
+        } else if (e.key === "Escape") {
+          closeMoreMenu(); closeSheet();
+          ["apiModal", "refModal", "clearModal"].forEach(closeModal);
+        }
+      });
+    }
+
+    function onTouch(e) {
+      if (prefs.fingerDraw || act) { if (e.cancelable) e.preventDefault(); return; }
+      for (const t of e.changedTouches) {
+        if (t.touchType === "stylus") { if (e.cancelable) e.preventDefault(); return; }
+      }
+    }
+
+    function onPointerDown(e) {
+      if (act) return;                                         // un seul trait à la fois : la paume est ignorée
+      if (e.pointerType === "touch" && !prefs.fingerDraw) return; // le doigt défile
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      if (e.pointerType === "pen" && !IS_APPLE_TOUCH) paperEl.style.touchAction = "none"; // stylets Windows/Android
+      e.preventDefault();
+      try { paperEl.setPointerCapture(e.pointerId); } catch (err) {}
+      const r = paperEl.getBoundingClientRect();
+      act = { id: e.pointerId, left: r.left, top: r.top, s: r.width / PAGE_W, lastP: 0.5, lx: null, ly: null };
+      if (prefs.tool === "eraser" && prefs.eraserMode === "stroke") {
+        act.erase = [];
+        liveC.style.opacity = 1;
+      } else {
+        const t = prefs.tool === "eraser" ? "px" : prefs.tool;
+        const sz = SIZES[prefs.size] || SIZES[1];
+        act.stroke = {
+          t,
+          c: t === "hl" && prefs.color === "#0f172a" ? "#facc15" : prefs.color,
+          w: t === "hl" ? sz * 4.5 : t === "px" ? sz * 6 : sz,
+          pts: []
+        };
+        liveC.style.opacity = t === "hl" ? HL_ALPHA : 1;
+      }
+      addPoint(e);
+    }
+
+    function onPointerMove(e) {
+      if (!act || e.pointerId !== act.id) return;
+      e.preventDefault();
+      const list = e.getCoalescedEvents ? e.getCoalescedEvents() : null;
+      if (list && list.length) list.forEach(addPoint);
+      else addPoint(e);
+    }
+
+    function onPointerUp(e) {
+      if (!act || e.pointerId !== act.id) return;
+      finishStroke();
+    }
+
+    function addPoint(e) {
+      const x = (e.clientX - act.left) / act.s;
+      const y = (e.clientY - act.top) / act.s;
+      if (act.erase) { eraseMove(x, y); return; }
+      const s = act.stroke, p = s.pts, n = p.length / 3;
+      let pr = e.pointerType === "pen" ? (e.pressure > 0 ? e.pressure : act.lastP) : 0.5;
+      if (n) pr = act.lastP * 0.6 + pr * 0.4;
+      act.lastP = pr;
+
+      if (s.t === "line") {
+        if (!n) { p.push(x, y, pr); return; }
+        let x2 = x, y2 = y;
+        const dx = Math.abs(x - p[0]), dy = Math.abs(y - p[1]);
+        if (dy < dx * 0.09) y2 = p[1];        // ~5° : ligne parfaitement horizontale
+        else if (dx < dy * 0.09) x2 = p[0];   // ou verticale
+        p.length = 3;
+        p.push(x2, y2, pr);
+        redrawLive();
+        maybeGrow(y2);
+        return;
+      }
+      if (n) {
+        const dx = x - p[(n - 1) * 3], dy = y - p[(n - 1) * 3 + 1];
+        if (dx * dx + dy * dy < 0.36) return;
+      }
+      p.push(x, y, pr);
+      drawIncrement();
+      maybeGrow(y);
+    }
+
+    function drawIncrement() {
+      const s = act.stroke, n = s.pts.length / 3;
+      const ctx = s.t === "hl" ? liveX : inkX;
+      if (n === 1) { if (s.t !== "hl") drawDot(ctx, s, true); return; }
+      const i = n - 2;
+      if (i < 1) return;
+      ctx.save();
+      styleFor(ctx, s, true);
+      drawSeg(ctx, s, i, n);
+      ctx.restore();
+    }
+
+    function finishStroke() {
+      const a = act;
+      act = null;
+      if (a.erase) {
+        clearCtx(liveX);
+        if (a.erase.length) pushAction({ k: "erase", items: a.erase });
+        return;
+      }
+      const s = a.stroke, n = s.pts.length / 3;
+      if (!n || (s.t === "line" && n < 2)) { clearCtx(liveX); return; }
+      delete s._b;
+      doc.strokes.push(s);
+      if (s.t === "pen" || s.t === "px") {
+        if (n >= 2) { inkX.save(); styleFor(inkX, s, false); drawSeg(inkX, s, n - 1, n); inkX.restore(); }
+      } else {
+        clearCtx(liveX);
+        drawStroke(inkX, s, false);
+      }
+      pushAction({ k: "add", s });
+    }
+
+    function cancelStroke() {
+      act = null;
+      clearCtx(liveX);
+    }
+
+    function maybeGrow(y) {
+      const effH = paperEl.clientHeight / tile.s;
+      if (y > effH - 250) {
+        doc.pageH = effH + 700;
+        layoutPaper();
+        ensureTile(false);
+      }
+    }
+
+    // ---------- Gomme « trait entier » ----------
+    function distSeg(px, py, ax, ay, bx, by) {
+      const dx = bx - ax, dy = by - ay;
+      const L = dx * dx + dy * dy;
+      let t = L ? ((px - ax) * dx + (py - ay) * dy) / L : 0;
+      t = Math.max(0, Math.min(1, t));
+      const qx = ax + t * dx - px, qy = ay + t * dy - py;
+      return Math.sqrt(qx * qx + qy * qy);
+    }
+    function hitStroke(s, x, y, r) {
+      if (s.t === "ire") {
+        const x1 = s.x + s.w, y1 = s.y + IRE_ROW * 4;
+        const segs = [[s.x, s.y, x1, s.y], [s.x, y1, x1, y1], [s.x, s.y, s.x, y1], [x1, s.y, x1, y1], [s.x + IRE_LAB, s.y, s.x + IRE_LAB, y1]];
+        for (let k = 1; k <= 3; k++) segs.push([s.x, s.y + k * IRE_ROW, x1, s.y + k * IRE_ROW]);
+        return segs.some(g => distSeg(x, y, g[0], g[1], g[2], g[3]) < r);
+      }
+      const p = s.pts, n = p.length / 3, rr = r + s.w / 2;
+      if (n === 1) return Math.hypot(p[0] - x, p[1] - y) < rr;
+      if (s.t === "line") return distSeg(x, y, p[0], p[1], p[(n - 1) * 3], p[(n - 1) * 3 + 1]) < rr;
+      for (let i = 1; i < n; i++) {
+        if (distSeg(x, y, p[(i - 1) * 3], p[(i - 1) * 3 + 1], p[i * 3], p[i * 3 + 1]) < rr) return true;
+      }
+      return false;
+    }
+    function eraseAt(x, y, r) {
+      let changed = false;
+      for (let i = doc.strokes.length - 1; i >= 0; i--) {
+        const s = doc.strokes[i];
+        if (s.t === "px") continue;
+        const b = bbox(s);
+        if (x < b[0] - r || x > b[2] + r || y < b[1] - r || y > b[3] + r) continue;
+        if (hitStroke(s, x, y, r)) {
+          act.erase.push({ s, i });
+          doc.strokes.splice(i, 1);
+          changed = true;
+        }
+      }
+      return changed;
+    }
+    function eraseMove(x, y) {
+      const r = 8 + SIZES[prefs.size] * 1.5;
+      let changed = false;
+      if (act.lx === null) changed = eraseAt(x, y, r);
+      else {
+        const d = Math.hypot(x - act.lx, y - act.ly);
+        const steps = Math.max(1, Math.ceil(d / (r * 0.6)));
+        for (let k = 1; k <= steps; k++) {
+          if (eraseAt(act.lx + (x - act.lx) * k / steps, act.ly + (y - act.ly) * k / steps, r)) changed = true;
+        }
+      }
+      act.lx = x; act.ly = y;
+      if (changed) redrawInk();
+      clearCtx(liveX);
+      liveX.save();
+      liveX.lineWidth = 1.5;
+      liveX.strokeStyle = "rgba(100,116,139,.9)";
+      liveX.fillStyle = "rgba(148,163,184,.15)";
+      liveX.beginPath();
+      liveX.arc(x, y, r, 0, Math.PI * 2);
+      liveX.fill();
+      liveX.stroke();
+      liveX.restore();
+    }
+
+    // ---------- Annuler / rétablir ----------
+    function pushAction(a) {
+      const ss = cur();
+      ss.undo.push(a);
+      if (ss.undo.length > 300) ss.undo.shift();
+      ss.redo = [];
+      afterChange();
+    }
+    function undo() {
+      if (act) return;
+      const ss = cur(), a = ss.undo.pop();
+      if (!a) return;
+      if (a.k === "add") { const i = doc.strokes.lastIndexOf(a.s); if (i >= 0) doc.strokes.splice(i, 1); }
+      else if (a.k === "erase") { for (let j = a.items.length - 1; j >= 0; j--) doc.strokes.splice(a.items[j].i, 0, a.items[j].s); }
+      else if (a.k === "clear") { doc.strokes = a.prev.slice(); }
+      ss.redo.push(a);
+      afterChange();
+      redrawInk();
+    }
+    function redo() {
+      if (act) return;
+      const ss = cur(), a = ss.redo.pop();
+      if (!a) return;
+      if (a.k === "add") doc.strokes.push(a.s);
+      else if (a.k === "erase") a.items.forEach(it => { const i = doc.strokes.indexOf(it.s); if (i >= 0) doc.strokes.splice(i, 1); });
+      else if (a.k === "clear") doc.strokes = [];
+      ss.undo.push(a);
+      afterChange();
+      redrawInk();
+    }
+    let lastHadInk = null;
+    function afterChange() {
+      markDirty();
+      updateUndoUI();
+      const has = doc.strokes.length > 0;
+      if (has !== lastHadInk) { lastHadInk = has; renderExerciseList(); }
+    }
+    function updateUndoUI() {
+      const ss = cur();
+      $("undoBtn").disabled = !ss.undo.length;
+      $("redoBtn").disabled = !ss.redo.length;
+      lastHadInk = doc ? doc.strokes.length > 0 : null;
+    }
+
+    function confirmClear() {
+      closeModal("clearModal");
+      if (!doc.strokes.length) return;
+      const prev = doc.strokes;
+      doc.strokes = [];
+      pushAction({ k: "clear", prev });
+      redrawInk();
+      showToast("Feuille effacée (« Annuler » pour la récupérer).");
+    }
+
+    function visibleTopLogical() {
+      return (pageEl.scrollTop - paperEl.offsetTop) / tile.s;
+    }
+
+    function stampIRE() {
+      // sous ce qui est déjà écrit dans la zone visible, pour ne rien recouvrir
+      const visTop = visibleTopLogical();
+      const visBot = visTop + pageEl.clientHeight / tile.s;
+      let y = Math.max(24, visTop + 40);
+      doc.strokes.forEach(s => {
+        if (s.t === "px") return;
+        const b = bbox(s);
+        if (b[3] > visTop && b[1] < visBot) y = Math.max(y, b[3] + 30);
+      });
+      const s = { t: "ire", x: 60, y, w: 880 };
+      doc.strokes.push(s);
+      if (y + 300 > doc.pageH) { doc.pageH = y + 600; layoutPaper(); ensureTile(false); }
+      drawStroke(inkX, s, false);
+      pushAction({ k: "add", s });
+      showToast("Tableau I-R-E ajouté.");
+    }
+
+    function addSpace() {
+      doc.pageH = paperEl.clientHeight / tile.s + 800;
+      markDirty();
+      layoutPaper();
+      ensureTile(false);
+      pageEl.scrollBy({ top: 400, behavior: "smooth" });
+    }
+
+    // ---------- Image de la démarche (pour l'IA ou à partager) ----------
+    function inkStrokes() { return doc.strokes.filter(s => s.t !== "px"); }
+
+    function renderExport() {
+      let b = [Infinity, Infinity, -Infinity, -Infinity];
+      inkStrokes().forEach(s => {
+        const q = bbox(s);
+        b = [Math.min(b[0], q[0]), Math.min(b[1], q[1]), Math.max(b[2], q[2]), Math.max(b[3], q[3])];
+      });
+      if (!isFinite(b[1])) b = [0, 0, PAGE_W, 400];
+      const y0 = Math.max(0, b[1] - 30), y1 = b[3] + 30;
+      let sc = 1.2;
+      if ((y1 - y0) * sc > 4000) sc = 4000 / (y1 - y0);
+      const W = Math.round(PAGE_W * sc), H = Math.max(1, Math.round((y1 - y0) * sc));
+      const layer = document.createElement("canvas");
+      layer.width = W; layer.height = H;
+      const lx = layer.getContext("2d");
+      lx.setTransform(sc, 0, 0, sc, 0, -y0 * sc);
+      doc.strokes.forEach(s => drawStroke(lx, s, false));
+      const out = document.createElement("canvas");
+      out.width = W; out.height = H;
+      const ox = out.getContext("2d");
+      ox.fillStyle = "#fff";
+      ox.fillRect(0, 0, W, H);
+      ox.drawImage(layer, 0, 0);
+      return out;
+    }
+
+    function exportImage() {
+      if (!inkStrokes().length) { showToast("La feuille est vide."); return; }
+      const name = `demarche_${currentExId}.png`;
+      renderExport().toBlob(async blob => {
+        if (!blob) return;
+        try {
+          const file = new File([blob], name, { type: "image/png" });
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({ files: [file], title: name });
+            return;
+          }
+        } catch (e) {
+          if (e && e.name === "AbortError") return;
+        }
+        const url = URL.createObjectURL(blob);
+        if (window.self === window.top) {
+          const a = document.createElement("a");
+          a.href = url; a.download = name;
+          document.body.appendChild(a); a.click(); a.remove();
+        }
+        // Toujours afficher l'image : sur iPad, un appui long permet de l'enregistrer dans Photos
+        openSheet("explain", "Image de ta démarche");
+        $("sheetBody").innerHTML = `<div class="box slate">Appuie longuement sur l'image pour l'enregistrer ou la copier.</div>
+          <img src="${url}" alt="Ta démarche" style="width:100%;border:1px solid #e2e8f0;border-radius:12px;-webkit-touch-callout:default">`;
+      }, "image/png");
+    }
+
+    // =========================================================================
+    // IA GEMINI & LES 3 BOUTONS
+    // =========================================================================
+    function saveApiKey() {
+      const key = $("apiKeyInput").value.trim();
+      const model = $("modelInput").value.trim() || "gemini-flash-latest";
+      safeSet(LS.key, key);
+      safeSet(LS.model, model);
+      updateApiBadge();
+      closeModal("apiModal");
+      showToast(key ? "Clé enregistrée : l'IA lira ton écriture." : "Réglages enregistrés.");
+    }
+    function clearApiKey() {
+      $("apiKeyInput").value = "";
+      safeSet(LS.key, "");
+      updateApiBadge();
+      showToast("Clé effacée.");
+    }
+    function updateApiBadge() {
+      $("apiDot").className = "dot" + (safeGet(LS.key, "") ? " ok" : "");
+    }
+
+    function openSheet(mode, title) {
+      $("sheetHead").className = "sheet-head " + mode;
+      $("sheetTitle").textContent = title;
+      $("sheet").classList.add("open");
+      $("sheet").setAttribute("aria-hidden", "false");
+      $("sheetBody").scrollTop = 0;
+    }
+    function closeSheet() {
+      $("sheet").classList.remove("open");
+      $("sheet").setAttribute("aria-hidden", "true");
+    }
+
+    async function runAssistantAction(mode) {
+      const ex = EXERCISES.find(e => e.id === currentExId);
+      if (!ex) return;
+      const body = $("sheetBody");
+      const apiKey = safeGet(LS.key, "");
+      const model = safeGet(LS.model, "gemini-flash-latest");
+      const hasDrawing = inkStrokes().length > 0;
+      const textNote = $("noteInput").value.trim();
+      const titles = { verify: "Vérifier ma réponse", error: "Où est mon erreur ?", explain: "Explication complète" };
+      openSheet(mode, `${titles[mode]} — ${ex.title}`);
+
+      let apiError = "";
+      if (apiKey && (hasDrawing || textNote)) {
+        body.innerHTML = `<div class="box slate" style="display:flex;align-items:center;gap:12px"><div class="spinner"></div><div>L'IA lit ta feuille (${escapeHtml(model)})…</div></div>`;
+        try {
+          const aiHtml = await callGeminiVision(mode, ex, apiKey, model, textNote);
+          if (currentExId !== ex.id) return;
+          body.innerHTML = `<div class="box indigo">${aiHtml}</div>` + (mode === "explain"
+            ? `<div class="box slate"><div class="box-title">Corrigé officiel (Chang 6e éd. + NDC)</div>${ex.fullSolution}</div>` : "");
+          return;
+        } catch (err) {
+          apiError = err instanceof TypeError
+            ? "connexion à Gemini impossible : pas d'Internet, ou version en lien Claude, qui bloque les appels extérieurs. Utilise le fichier .html pour l'IA"
+            : String(err && err.message || err);
+        }
+      }
+      if (currentExId !== ex.id) return;
+
+      const errorBox = apiError
+        ? `<div class="box amber"><b>L'IA n'a pas pu répondre</b> (${escapeHtml(apiError)}). Vérifie ta clé, ta connexion ou le nom du modèle dans « IA ». Voici l'aide intégrée :</div>` : "";
+      const hint = !apiKey
+        ? `<div class="box indigo">Pour que l'IA lise ton écriture, ajoute une clé Gemini (bouton <b>IA</b> en haut), ou partage l'image de ta feuille.
+             <div class="btn-row"><button class="mini blue" onclick="openModal('apiModal')">Ajouter une clé</button><button class="mini white" onclick="exportImage()">Partager ma feuille</button></div></div>`
+        : (!hasDrawing && !textNote ? `<div class="box amber">Écris d'abord ta démarche sur la feuille (ou ta réponse finale en bas), puis réessaie : l'IA la lira.</div>` : "");
+
+      if (mode === "verify") {
+        body.innerHTML = errorBox + hint + `
+          <div class="box green">
+            <div class="box-title">Réponse finale attendue</div>
+            <div class="answer">${ex.shortAnswer}</div>
+            <div class="btn-row">
+              <button class="mini green" onclick="setExerciseStatus('done'); showToast('Bravo ! Exercice marqué réussi.')">J'ai la bonne réponse</button>
+              <button class="mini amber" onclick="runAssistantAction('error')">Je n'ai pas ça</button>
+            </div>
+          </div>`;
+      } else if (mode === "error") {
+        body.innerHTML = errorBox + hint + `
+          <div class="box amber">
+            <div class="box-title">Points de contrôle, étape par étape</div>
+            <ul class="cp">${ex.checkpoints.map((cp, i) => `<li><b>${i + 1}</b><span>${cp}</span></li>`).join("")}</ul>
+            <div class="btn-row"><button class="mini blue" onclick="runAssistantAction('explain')">Voir l'explication complète</button></div>
+          </div>`;
+      } else {
+        body.innerHTML = errorBox + `
+          <div class="box blue">
+            <div class="box-title">Corrigé détaillé (solutionnaire Chang 6e éd. + conventions NDC)</div>
+            ${ex.fullSolution}
+          </div>`;
+      }
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+
+    // Gemini répond souvent en Markdown ou entoure son HTML de ``` : on nettoie
+    function formatAiText(text) {
+      let t = String(text).trim().replace(/^```[a-zA-Z]*\s*/, "").replace(/\s*```$/, "");
+      t = t.replace(/<script[\s\S]*?<\/script>/gi, "").replace(/\son\w+\s*=\s*("[^"]*"|'[^']*')/gi, "");
+      if (/<(p|ul|ol|li|strong|br|h[1-6]|code|em|b|div)\b/i.test(t)) return t;
+      const lines = escapeHtml(t).split(/\n/);
+      let html = "", inList = false;
+      lines.forEach(line => {
+        const l = line.trim();
+        const item = l.match(/^([-*•]|\d+[.)])\s+(.*)$/);
+        if (item) { if (!inList) { html += "<ul>"; inList = true; } html += `<li>${item[2]}</li>`; return; }
+        if (inList) { html += "</ul>"; inList = false; }
+        if (!l) return;
+        const h = l.match(/^#{1,6}\s+(.*)$/);
+        html += h ? `<p><strong>${h[1]}</strong></p>` : `<p>${l}</p>`;
+      });
+      if (inList) html += "</ul>";
+      return html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/`([^`]+)`/g, "<code>$1</code>");
+    }
+
+    async function callGeminiVision(mode, ex, apiKey, model, textNote) {
+      const base64Data = renderExport().toDataURL("image/png").split(",")[1];
+
+      let modeInstruction = "";
+      if (mode === "verify") {
+        modeInstruction = `L'étudiant a cliqué sur le BOUTON 1 (« Vérifier ma réponse »).
+RÈGLE STRICTE :
+1. Lis attentivement l'écriture manuscrite de l'étudiant sur l'image (et sa note éventuelle : "${textNote}").
+2. Dis-lui clairement si sa réponse finale (pour chaque sous-question) et sa démarche générale sont BONNES (✅) ou FAUSSES (❌).
+3. SI C'EST FAUX : NE DONNE SURTOUT PAS la bonne réponse finale, NE DIS PAS où est l'erreur et NE RÉSOUS PAS l'exercice ! Invite-le simplement à revérifier ou à cliquer sur le bouton « Où est mon erreur ? ».`;
+      } else if (mode === "error") {
+        modeInstruction = `L'étudiant a cliqué sur le BOUTON 2 (« Où est mon erreur ? »).
+RÈGLE STRICTE :
+1. Analyse ligne par ligne la démarche manuscrite de l'étudiant sur l'image (et sa note éventuelle : "${textNote}") et compare-la au corrigé officiel et aux conventions du cahier de notes de cours (NDC).
+2. Indique-lui PRÉCISÉMENT à quelle étape ou ligne se trouve son erreur (ex: erreur de coefficient stœchiométrique dans la ligne R du tableau I-R-E, oubli de convertir en Kelvin ou en L, erreur de signe, d'exposant ou d'isolation algébrique) et donne-lui un indice ciblé pour la corriger.
+3. NE CALCULE PAS la réponse finale à sa place pour qu'il puisse corriger sa démarche lui-même !`;
+      } else {
+        modeInstruction = `L'étudiant a cliqué sur le BOUTON 3 (« Expliquer la réponse »).
+RÈGLE STRICTE :
+Explique-lui clairement toute la démarche de résolution étape par étape de manière pédagogique et bienveillante, en faisant le lien avec ce qu'il a écrit sur sa feuille manuscrite et en respectant les notations du cahier de notes de cours (tableaux I-R-E ou I-R-F, Ke, critère Ci/K >= 100).`;
+      }
+
+      const systemPrompt = `Tu es le tuteur personnel de chimie du cours « Chimie des solutions (202-SN2-RE) » au Cégep.
+Voici l'exercice sur lequel travaille l'étudiant :
+Titre : ${ex.title} (Chapitre ${ex.chapter} — ${ex.section})
+Énoncé : ${ex.statement.replace(/<[^>]+>/g, " ")}
+Réponse attendue : ${ex.shortAnswer}
+Points de contrôle NDC : ${ex.checkpoints.join(" | ").replace(/<[^>]+>/g, "")}
+Corrigé officiel : ${ex.fullSolution.replace(/<[^>]+>/g, " ")}
+
+Conventions importantes du cahier de notes de cours (NDC) à accepter :
+- Les tableaux d'équilibre sont notés I - R - E (Initiale, Réagit/Variation, Équilibre) et I - R - F pour les acides/bases forts.
+- La constante de l'eau est notée Ke = [H3O+][OH-] = 1,0e-14.
+- Pour Kp, l'unité est écrite entre parenthèses, ex: Kp = 150 (en kPa).
+- L'approximation Ci - x ≈ Ci est acceptée dès que Ci / K >= 100.
+
+${modeInstruction}
+Réponds en français, de façon directe, chaleureuse et structurée, en HTML simple (<p>, <strong>, <ul>, <li>, <code>) sans bloc de code Markdown.`;
+
+      const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: systemPrompt }, { inline_data: { mime_type: "image/png", data: base64Data } }] }]
+        })
+      });
+      if (!resp.ok) {
+        let msg = "";
+        try { msg = (await resp.json())?.error?.message || ""; } catch (e) {}
+        throw new Error("erreur " + resp.status + (msg ? " : " + msg.slice(0, 160) : ""));
+      }
+      const data = await resp.json();
+      const parts = data?.candidates?.[0]?.content?.parts || [];
+      const text = parts.map(p => p.text || "").join("").trim();
+      return formatAiText(text || "Aucune réponse reçue.");
+    }
+
+    initApp();
+  </script>
+</body>
+</html>
