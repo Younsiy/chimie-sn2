@@ -1,6 +1,6 @@
 // Garde le cahier dans l'iPad pour qu'il s'ouvre sans Internet.
 // Change CACHE quand tu mets une nouvelle version en ligne.
-const CACHE = "cahier-sn2-v6";
+const CACHE = "cahier-sn2-v7";
 const FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon-180.png", "./icon-512.png"];
 
 self.addEventListener("install", e => {
