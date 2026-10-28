@@ -267,7 +267,9 @@
     .tbl-wrap .data-table { width: auto; min-width: 50%; margin: 0; }
     .fig { margin: .6em 0; }
     .fig svg { width: 100%; max-width: 560px; height: auto; display: block; background: #f8fafc; border-radius: 12px; }
-    #exStatement ul, #sheetBody ul { margin: .4em 0; padding-left: 1.3em; }
+    #exStatement ul, #sheetBody ul, #sheetBody ol { margin: .4em 0; padding-left: 1.3em; }
+    #sheetBody { overflow-x: hidden; }
+    #sheetBody .box { overflow-x: auto; }
     #exStatement li, #sheetBody li { margin: .25em 0; }
     .tb-btn.on-almost { background: #854d0e; color: #fef9c3; }
     .tb-btn.on-redo { background: #991b1b; color: #fee2e2; }
@@ -2274,10 +2276,20 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
       to: "<mo>→</mo>", rightleftharpoons: "<mo>⇌</mo>", geq: "<mo>≥</mo>", leq: "<mo>≤</mo>", neq: "<mo>≠</mo>",
       pm: "<mo>±</mo>", dots: "<mo>…</mo>", ln: '<mi>ln</mi><mspace width="0.17em"/>', log: '<mi>log</mi><mspace width="0.17em"/>',
       ",": '<mspace width="0.17em"/>', ";": '<mspace width="0.28em"/>', quad: '<mspace width="1em"/>', qquad: '<mspace width="2em"/>',
-      "%": "<mo>%</mo>", " ": '<mspace width="0.25em"/>', "{": '<mo stretchy="false">{</mo>', "}": '<mo stretchy="false">}</mo>'
+      "%": "<mo>%</mo>", " ": '<mspace width="0.25em"/>', "{": '<mo stretchy="false">{</mo>', "}": '<mo stretchy="false">}</mo>',
+      // symboles que l'IA utilise souvent
+      rightarrow: "<mo>→</mo>", longrightarrow: "<mo>⟶</mo>", leftarrow: "<mo>←</mo>", leftrightarrow: "<mo>↔</mo>",
+      Longrightarrow: '<mo lspace="0.4em" rspace="0.4em">⟹</mo>', implies: '<mo lspace="0.4em" rspace="0.4em">⟹</mo>',
+      Leftrightarrow: "<mo>⇔</mo>", iff: "<mo>⟺</mo>", leftrightharpoons: "<mo>⇋</mo>", rightleftarrows: "<mo>⇄</mo>",
+      ge: "<mo>≥</mo>", le: "<mo>≤</mo>", gg: "<mo>≫</mo>", ll: "<mo>≪</mo>", ne: "<mo>≠</mo>", equiv: "<mo>≡</mo>", sim: "<mo>∼</mo>",
+      cdots: "<mo>⋯</mo>", ldots: "<mo>…</mo>", infty: "<mi>∞</mi>", circ: "<mo>°</mo>", degree: "<mo>°</mo>",
+      pi: "<mi>π</mi>", mu: "<mi>μ</mi>", sigma: "<mi>σ</mi>", lambda: "<mi>λ</mi>", theta: "<mi>θ</mi>", beta: "<mi>β</mi>",
+      gamma: "<mi>γ</mi>", Sigma: '<mi mathvariant="normal">Σ</mi>', delta: "<mi>δ</mi>", ":": '<mspace width="0.22em"/>', "!": "",
+      exp: '<mi>exp</mi><mspace width="0.17em"/>', sin: '<mi>sin</mi><mspace width="0.17em"/>', checkmark: "<mo>✓</mo>"
     };
+    const MATH_IGNORED = /^(displaystyle|textstyle|scriptstyle|big|Big|bigg|Bigg|bigl|bigr|Bigl|Bigr|left|right|limits|nolimits)$/;
     const MATH_OPS = "+-−=<>/×·≈→⇌⇒≥≤!?:;,|";
-    function texToMathML(src, display) {
+    function texToMathML(src, display, upright) {
       let i = 0;
       const s = src;
       function readGroupRaw() {
@@ -2290,7 +2302,7 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
         }
         return s.slice(start);
       }
-      function sub(str) { return texToMathML(str, false).replace(/^<math[^>]*>|<\/math>$/g, ""); }
+      function sub(str, up) { return texToMathML(str, false, up === undefined ? upright : up).replace(/^<math[^>]*>|<\/math>$/g, ""); }
       function unitML(raw) {
         // unités droites : "mol·L^{-1}·s^{-1}"
         let out = '<mspace width="0.22em"/>', j = 0;
@@ -2318,12 +2330,28 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
           let name = "";
           if (/[a-zA-Z]/.test(s[i])) { while (i < s.length && /[a-zA-Z]/.test(s[i])) name += s[i++]; }
           else name = s[i++];
-          if (name === "frac") { const a = readGroupRaw(), b = readGroupRaw(); return [`<mfrac><mrow>${sub(a)}</mrow><mrow>${sub(b)}</mrow></mfrac>`]; }
-          if (name === "sqrt") { const a = readGroupRaw(); return [`<msqrt><mrow>${sub(a)}</mrow></msqrt>`]; }
+          if (name === "frac" || name === "dfrac" || name === "tfrac") { const a = readGroupRaw(), b = readGroupRaw(); return [`<mfrac><mrow>${sub(a)}</mrow><mrow>${sub(b)}</mrow></mfrac>`]; }
+          if (name === "sqrt") {
+            while (s[i] === " ") i++;
+            if (s[i] === "[") { const close = s.indexOf("]", i); const n = s.slice(i + 1, close); i = close + 1; const a = readGroupRaw(); return [`<mroot><mrow>${sub(a)}</mrow><mrow>${sub(n)}</mrow></mroot>`]; }
+            const a = readGroupRaw(); return [`<msqrt><mrow>${sub(a)}</mrow></msqrt>`];
+          }
           if (name === "ce") return [chemML(readGroupRaw())];
-          if (name === "text") return [`<mtext>${escapeHtml(readGroupRaw())}</mtext>`];
+          if (name === "text" || name === "textbf" || name === "textit" || name === "textrm" || name === "mbox") {
+            const g = readGroupRaw();
+            if (/\$/.test(g)) return [`<mtext>${escapeHtml(g.replace(/\$/g, ""))}</mtext>`];
+            const sp = x => x ? '<mspace width="0.25em"/>' : "";
+            return [`${sp(/^\s/.test(g))}<mtext${name === "textbf" ? ' style="font-weight:700"' : ""}>${escapeHtml(g.trim())}</mtext>${sp(/\s$/.test(g))}`];
+          }
+          if (name === "mathrm" || name === "mathbf" || name === "operatorname" || name === "rm" || name === "mathsf") return [`<mrow>${sub(readGroupRaw(), true)}</mrow>`];
+          if (name === "boxed") return [`<mrow style="border:1.6px solid #4f46e5;border-radius:5px;padding:2px 5px">${sub(readGroupRaw())}</mrow>`];
+          if (name === "underbrace" || name === "overbrace" || name === "underline" || name === "overline" || name === "bar" || name === "vec" || name === "hat") {
+            const g = readGroupRaw();
+            if (name === "overline" || name === "bar") return [`<mover><mrow>${sub(g)}</mrow><mo>‾</mo></mover>`];
+            return [`<mrow>${sub(g)}</mrow>`];
+          }
           if (name === "u") return [`<mrow>${unitML(readGroupRaw())}</mrow>`];
-          if (name === "left" || name === "right") { return []; }
+          if (MATH_IGNORED.test(name)) { if (/^(left|right|bigl|bigr|Bigl|Bigr|big|Big|bigg|Bigg)$/.test(name) && s[i] === ".") i++; return []; }
           return [MATH_SYMBOLS[name] || `<mi>${escapeHtml(name)}</mi>`];
         }
         if (c === "(" || c === "[") {
@@ -2343,6 +2371,7 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
         if (/[a-zA-Zéèàùçô]/.test(c)) {
           let j = i; while (j < s.length && /[a-zA-Zéèàùçô]/.test(s[j])) j++;
           const w = s.slice(i, j); i = j;
+          if (upright) return [`<mi mathvariant="normal">${w}</mi>`];
           if (/^(pH|pOH|pKa|exp)$/.test(w)) return [`<mi>${w}</mi>`];
           return w.split("").map(ch => `<mi>${ch}</mi>`);
         }
@@ -2358,7 +2387,8 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
       }
       const nodes = [];
       while (i < s.length) {
-        if (s[i] === " ") { i++; continue; }
+        if (s[i] === " " || s[i] === "\n" || s[i] === "\u0001" || s[i] === "\u0002" || s[i] === "&") { i++; continue; }
+        if (s[i] === "\\" && s[i + 1] === "\\") { i += 2; continue; }   // retour à la ligne LaTeX : ignoré
         let a = atom();
         if (!a.length) continue;
         // primes et scripts s'attachent au dernier élément
@@ -2400,6 +2430,8 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
         .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
     }
     function inlineHTML(t) {
+      // **gras** peut entourer une formule : on le marque avant de découper le texte
+      t = String(t).replace(/\*\*(.+?)\*\*/g, "\u0001$1\u0002");
       let out = "", last = 0;
       const re = /\$\$([\s\S]+?)\$\$|\$([^$]+?)\$/g;
       let m;
@@ -2408,7 +2440,8 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
         out += m[1] !== undefined ? `<span class="mdisp">${texToMathML(m[1], true)}</span>` : texToMathML(m[2], false);
         last = re.lastIndex;
       }
-      return out + proseHTML(t.slice(last));
+      out += proseHTML(t.slice(last));
+      return out.replace(/\u0001/g, "<strong>").replace(/\u0002/g, "</strong>");
     }
     function renderBlocks(text) {
       const lines = String(text || "").split("\n");
@@ -2426,10 +2459,16 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
             "<tr>" + r.map(c => ri === 0 ? `<th>${inlineHTML(c)}</th>` : `<td>${inlineHTML(c)}</td>`).join("") + "</tr>").join("") + "</table></div>";
           continue;
         }
-        if (line.startsWith("- ")) {
+        if (/^[-*•] /.test(line)) {
           html += "<ul>";
-          while (i < lines.length && lines[i].trim().startsWith("- ")) { html += `<li>${inlineHTML(lines[i].trim().slice(2))}</li>`; i++; }
+          while (i < lines.length && /^[-*•] /.test(lines[i].trim())) { html += `<li>${inlineHTML(lines[i].trim().slice(2))}</li>`; i++; }
           html += "</ul>";
+          continue;
+        }
+        if (/^\d+\. /.test(line)) {
+          html += "<ol>";
+          while (i < lines.length && /^\d+\. /.test(lines[i].trim())) { html += `<li>${inlineHTML(lines[i].trim().replace(/^\d+\. /, ""))}</li>`; i++; }
+          html += "</ol>";
           continue;
         }
         const fig = line.match(/^\[\[fig:([\w.-]+)\]\]$/);
@@ -3964,23 +4003,22 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
     }
 
     // Gemini répond souvent en Markdown ou entoure son HTML de ``` : on nettoie
+    // La réponse de l'IA passe par le même moteur que les exercices : formules LaTeX → 2D
     function formatAiText(text) {
       let t = String(text).trim().replace(/^```[a-zA-Z]*\s*/, "").replace(/\s*```$/, "");
-      t = t.replace(/<script[\s\S]*?<\/script>/gi, "").replace(/\son\w+\s*=\s*("[^"]*"|'[^']*')/gi, "");
-      if (/<(p|ul|ol|li|strong|br|h[1-6]|code|em|b|div)\b/i.test(t)) return t;
-      const lines = escapeHtml(t).split(/\n/);
-      let html = "", inList = false;
-      lines.forEach(line => {
-        const l = line.trim();
-        const item = l.match(/^([-*•]|\d+[.)])\s+(.*)$/);
-        if (item) { if (!inList) { html += "<ul>"; inList = true; } html += `<li>${item[2]}</li>`; return; }
-        if (inList) { html += "</ul>"; inList = false; }
-        if (!l) return;
-        const h = l.match(/^#{1,6}\s+(.*)$/);
-        html += h ? `<p><strong>${h[1]}</strong></p>` : `<p>${l}</p>`;
-      });
-      if (inList) html += "</ul>";
-      return html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/`([^`]+)`/g, "<code>$1</code>");
+      // si l'IA a quand même écrit du HTML, on le ramène à du texte simple
+      t = t.replace(/<script[\s\S]*?<\/script>/gi, "")
+        .replace(/<br\s*\/?>/gi, "\n").replace(/<\/(p|li|h[1-6]|div|tr)>/gi, "\n")
+        .replace(/<li[^>]*>/gi, "- ").replace(/<\/?(strong|b)>/gi, "**").replace(/<\/?[a-zA-Z][^<>]*>/g, "")
+        .replace(/&nbsp;/g, " ").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
+      // délimiteurs \[ … \] et \( … \)
+      t = t.replace(/\\\[([\s\S]+?)\\\]/g, (m, x) => "\n$$" + x + "$$\n")
+        .replace(/\\\(([\s\S]+?)\\\)/g, (m, x) => "$" + x.replace(/\n/g, " ") + "$");
+      // une formule centrée = une seule ligne
+      t = t.replace(/\$\$([\s\S]+?)\$\$/g, (m, x) => "\n$$" + x.replace(/\s*\n\s*/g, " ").trim() + "$$\n");
+      // titres Markdown → gras ; `code` → formule
+      t = t.replace(/^#{1,6}\s+(.*)$/gm, "**$1**").replace(/`([^`\n]+)`/g, "$$$1$");
+      return renderBlocks(t);
     }
 
     async function callGeminiVision(mode, ex, apiKey, model, textNote, onProgress) {
@@ -4021,7 +4059,16 @@ Conventions importantes du cahier de notes de cours (NDC) à accepter :
 - L'approximation Ci - x ≈ Ci est acceptée dès que Ci / K >= 100.
 
 ${modeInstruction}
-Réponds en français, de façon directe, chaleureuse et structurée, en HTML simple (<p>, <strong>, <ul>, <li>, <code>) sans bloc de code Markdown.`;
+Réponds en français, de façon directe, chaleureuse et structurée, en étapes courtes.
+
+FORMAT OBLIGATOIRE (ta réponse est affichée par un moteur qui dessine les formules en 2D) :
+- Texte simple : PAS de HTML, PAS de bloc de code, PAS de tableau. Paragraphes courts séparés par une ligne vide. Listes avec « - » ou « 1. ». Gras avec **…**.
+- TOUTE formule, tout calcul, tout symbole ou toute grandeur (même K_c ou [H3O+]) va entre dollars : $…$ dans une phrase, ou $$…$$ seul sur sa propre ligne pour un calcul important.
+- Fractions : toujours \\frac{numérateur}{dénominateur}, jamais de barre oblique /. Exposants ^{…} et indices _{…} avec accolades : $K_{c}$, $10^{-4}$, $[\\ce{A}]_{0}$.
+- Formules et équations chimiques : \\ce{…}, par exemple $\\ce{H3O+}$, $\\ce{SO4^{2-}}$, $\\ce{2NO2(g) <=> N2O4(g)}$, $\\ce{CH4 + 2O2 -> CO2 + 2H2O}$.
+- Multiplication \\times, environ \\approx, donc \\Rightarrow, logarithmes \\ln et \\log, unités avec \\text{ mol/L}.
+- Nombres avec la virgule décimale : 0,25 et $3,0\\times10^{-4}$.
+Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_{t}} = \\frac{1}{0,028\\text{ s}^{-1}}\\ln\\frac{0,88}{0,14} \\approx 66\\text{ s}$$ »`;
 
       const body = JSON.stringify({
         contents: [{ parts: [{ text: systemPrompt }, { inline_data: { mime_type: "image/png", data: base64Data } }] }]
