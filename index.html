@@ -269,6 +269,12 @@
     .fig svg { width: 100%; max-width: 560px; height: auto; display: block; background: #f8fafc; border-radius: 12px; }
     #exStatement ul, #sheetBody ul, #sheetBody ol { margin: .4em 0; padding-left: 1.3em; }
     #sheetBody { overflow-x: hidden; }
+    .ai-label { margin: .9em 0 .2em; font-weight: 700; color: #475569; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+    .ai-wrote-math { background: #f1f5f9; border-radius: 10px; padding: 8px 10px !important; margin-top: 0 !important; }
+    .ai-err { background: #fef2f2; border-left: 4px solid #dc2626; color: #7f1d1d; padding: 8px 10px; border-radius: 8px; margin: .5em 0; }
+    .ai-ok { background: #f0fdf4; border-left: 4px solid #16a34a; color: #14532d; padding: 8px 10px; border-radius: 8px; margin: .5em 0 .2em; font-weight: 600; }
+    .ai-ok-math { background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 10px; padding: 8px 10px !important; margin-top: 0 !important; }
+    .ai-err-math { background: #fef2f2; border-radius: 10px; padding: 8px 10px !important; }
     #sheetBody .box { overflow-x: auto; }
     #exStatement li, #sheetBody li { margin: .25em 0; }
     .tb-btn.on-almost { background: #854d0e; color: #fef9c3; }
@@ -1013,7 +1019,7 @@ La constante d'équilibre ($K_c$) pour la réaction :
 $$\ce{2NO(g) + Cl2(g) <=> 2NOCl(g)}$$
 vaut 6,5 × 10^{4} à 35 °C. Supposons que l'on mélange 2,0 × 10^{−2} mol de NO, 8,3 × 10^{−3} mol de {{Cl2}} et 6,8 mol de NOCl dans un ballon de 2,0 L. Dans quel sens évoluera la réaction pour atteindre l'équilibre ?
 A:
-De droite à gauche (vers les réactifs), car $Q_c$ (2,8 × 10^{6}) > $K_c$ (6,5 × 10^{4})
+De droite à gauche (vers les réactifs), car $Q_c$ (2,8 × 10^{7}) > $K_c$ (6,5 × 10^{4})
 H:
 Cahier NDC (p. 134) : comparer $Q_c$ et $K_c$. Si $Q_c > K_c$, la réaction évolue vers la gauche (sens inverse) ; si $Q_c < K_c$, elle évolue vers la droite (sens direct).
 S:
@@ -1022,8 +1028,8 @@ Calcul des concentrations initiales (V = 2,0 L) :
 - $[\ce{Cl2}]_0 = \frac{8,3\times10^{-3}\u{mol}}{2,0\u{L}} = 4,15\times10^{-3}\u{mol/L}$
 - $[\ce{NOCl}]_0 = \frac{6,8\u{mol}}{2,0\u{L}} = 3,4\u{mol/L}$
 Quotient réactionnel $Q_c$ :
-$$Q_c = \frac{[\ce{NOCl}]_0^2}{[\ce{NO}]_0^2[\ce{Cl2}]_0} = \frac{(3,4)^2}{(1,0\times10^{-2})^2(4,15\times10^{-3})} = 2,8\times10^{6}$$
-Puisque $Q_c$ (2,8 × 10^{6}) > $K_c$ (6,5 × 10^{4}), le système évoluera de droite à gauche (vers les réactifs) pour atteindre l'équilibre.
+$$Q_c = \frac{[\ce{NOCl}]_0^2}{[\ce{NO}]_0^2[\ce{Cl2}]_0} = \frac{(3,4)^2}{(1,0\times10^{-2})^2(4,15\times10^{-3})} = \frac{11,56}{4,15\times10^{-7}} = 2,8\times10^{7}$$
+Puisque $Q_c$ (2,8 × 10^{7}) > $K_c$ (6,5 × 10^{4}), le système évoluera de droite à gauche (vers les réactifs) pour atteindre l'équilibre.
 
 === ch3-ex3.7 | 3 | Équilibre : Calculs avec Q et la constante K | interne | Exercice 3.7 (p. 123)
 Q:
@@ -2285,7 +2291,8 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
       cdots: "<mo>⋯</mo>", ldots: "<mo>…</mo>", infty: "<mi>∞</mi>", circ: "<mo>°</mo>", degree: "<mo>°</mo>",
       pi: "<mi>π</mi>", mu: "<mi>μ</mi>", sigma: "<mi>σ</mi>", lambda: "<mi>λ</mi>", theta: "<mi>θ</mi>", beta: "<mi>β</mi>",
       gamma: "<mi>γ</mi>", Sigma: '<mi mathvariant="normal">Σ</mi>', delta: "<mi>δ</mi>", ":": '<mspace width="0.22em"/>', "!": "",
-      exp: '<mi>exp</mi><mspace width="0.17em"/>', sin: '<mi>sin</mi><mspace width="0.17em"/>', checkmark: "<mo>✓</mo>"
+      exp: '<mi>exp</mi><mspace width="0.17em"/>', sin: '<mi>sin</mi><mspace width="0.17em"/>', checkmark: "<mo>✓</mo>",
+      div: "<mo>÷</mo>", ast: "<mo>∗</mo>", propto: "<mo>∝</mo>", leftrightharpoon: "<mo>⇌</mo>", xrightarrow: "<mo>→</mo>"
     };
     const MATH_IGNORED = /^(displaystyle|textstyle|scriptstyle|big|Big|bigg|Bigg|bigl|bigr|Bigl|Bigr|left|right|limits|nolimits)$/;
     const MATH_OPS = "+-−=<>/×·≈→⇌⇒≥≤!?:;,|";
@@ -4018,29 +4025,53 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
       t = t.replace(/\$\$([\s\S]+?)\$\$/g, (m, x) => "\n$$" + x.replace(/\s*\n\s*/g, " ").trim() + "$$\n");
       // titres Markdown → gras ; `code` → formule
       t = t.replace(/^#{1,6}\s+(.*)$/gm, "**$1**").replace(/`([^`\n]+)`/g, "$$$1$");
-      return renderBlocks(t);
+      // couleurs : ce que tu as écrit (gris), l'erreur (rouge), la correction (vert)
+      const wrap = document.createElement("div");
+      wrap.innerHTML = renderBlocks(t);
+      let tone = "";
+      [...wrap.children].forEach(el => {
+        const txt = el.textContent.trim();
+        if (el.tagName === "P") {
+          if (/^Ce que tu as écrit/i.test(txt)) { el.className = "ai-label"; tone = "wrote"; return; }
+          if (/^❌/.test(txt)) { el.className = "ai-err"; tone = "err"; return; }
+          if (/^✅/.test(txt)) { el.className = "ai-ok"; tone = /À écrire|place/i.test(txt) ? "ok" : ""; return; }
+          tone = "";
+          return;
+        }
+        if (el.classList.contains("mdisp") && tone) { el.classList.add("ai-" + tone + "-math"); tone = ""; }
+      });
+      return wrap.innerHTML;
     }
 
     async function callGeminiVision(mode, ex, apiKey, model, textNote, onProgress) {
       const base64Data = renderExport().toDataURL("image/png").split(",")[1];
 
       let modeInstruction = "";
+      const note = textNote ? ` (réponse finale tapée par l'étudiant : "${textNote}")` : "";
       if (mode === "verify") {
-        modeInstruction = `L'étudiant a cliqué sur le BOUTON 1 (« Vérifier ma réponse »).
-RÈGLE STRICTE :
-1. Lis attentivement l'écriture manuscrite de l'étudiant sur l'image (et sa note éventuelle : "${textNote}").
-2. Dis-lui clairement si sa réponse finale (pour chaque sous-question) et sa démarche générale sont BONNES (✅) ou FAUSSES (❌).
-3. SI C'EST FAUX : NE DONNE SURTOUT PAS la bonne réponse finale, NE DIS PAS où est l'erreur et NE RÉSOUS PAS l'exercice ! Invite-le simplement à revérifier ou à cliquer sur le bouton « Où est mon erreur ? ».`;
+        modeInstruction = `TÂCHE : vérifier la réponse finale de l'étudiant sur l'image${note}.
+Réponds UNIQUEMENT avec une ligne par sous-question (ou une seule ligne s'il n'y en a pas), dans ce format exact :
+a) ✅ $(sa réponse finale recopiée)$
+b) ❌ $(sa réponse finale recopiée)$
+Si une réponse est fausse : ne donne PAS la bonne réponse et n'explique rien. Si tout est juste, ajoute seulement une dernière ligne « **✅ Tout est juste.** ». Rien d'autre.`;
       } else if (mode === "error") {
-        modeInstruction = `L'étudiant a cliqué sur le BOUTON 2 (« Où est mon erreur ? »).
-RÈGLE STRICTE :
-1. Analyse ligne par ligne la démarche manuscrite de l'étudiant sur l'image (et sa note éventuelle : "${textNote}") et compare-la au corrigé officiel et aux conventions du cahier de notes de cours (NDC).
-2. Indique-lui PRÉCISÉMENT à quelle étape ou ligne se trouve son erreur (ex: erreur de coefficient stœchiométrique dans la ligne R du tableau I-R-E, oubli de convertir en Kelvin ou en L, erreur de signe, d'exposant ou d'isolation algébrique) et donne-lui un indice ciblé pour la corriger.
-3. NE CALCULE PAS la réponse finale à sa place pour qu'il puisse corriger sa démarche lui-même !`;
+        modeInstruction = `TÂCHE : trouver EXACTEMENT où l'étudiant s'est trompé dans sa démarche manuscrite sur l'image${note}.
+1. Lis toute sa démarche, ligne par ligne, et refais chaque calcul toi-même avec SES nombres pour repérer la première ligne fausse.
+2. Pour chaque erreur (au maximum 3, dans l'ordre de la feuille), écris EXACTEMENT ce bloc, sans rien ajouter :
+
+**Ce que tu as écrit :**
+$$(recopie fidèle de sa ligne fautive, avec SES nombres, même s'ils sont faux)$$
+**❌ Erreur :** (une seule phrase de 20 mots maximum qui nomme précisément ce qui est faux)
+**✅ À écrire à la place :**
+$$(la même ligne corrigée, avec les bons nombres et le bon résultat de cette ligne)$$
+
+3. S'il n'y a aucune erreur, écris seulement : **✅ Aucune erreur : ta démarche est juste.**
+INTERDIT : salutations, compliments, encouragements, questions, conseils généraux, phrases du genre « vérifie tes calculs ». Pas un mot de plus que le bloc.`;
       } else {
-        modeInstruction = `L'étudiant a cliqué sur le BOUTON 3 (« Expliquer la réponse »).
-RÈGLE STRICTE :
-Explique-lui clairement toute la démarche de résolution étape par étape de manière pédagogique et bienveillante, en faisant le lien avec ce qu'il a écrit sur sa feuille manuscrite et en respectant les notations du cahier de notes de cours (tableaux I-R-E ou I-R-F, Ke, critère Ci/K >= 100).`;
+        modeInstruction = `TÂCHE : donner la solution complète, courte et claire, en tenant compte de la feuille de l'étudiant sur l'image${note}.
+Format : étapes numérotées « 1. », « 2. »… Chaque étape = une phrase de 15 mots maximum, suivie de son calcul sur une ligne $$…$$.
+Si une étape de l'étudiant est fausse, commence cette étape par ❌ et recopie sa ligne fautive avant la bonne. Termine par la ligne « **Réponse finale :** $…$ ».
+Respecte les notations du Cahier NDC (tableaux I-R-E ou I-R-F, $K_{e}$, critère $\\frac{C_{i}}{K} \\geq 100$). Pas de salutation ni de conclusion.`;
       }
 
       const systemPrompt = `Tu es le tuteur personnel de chimie du cours « Chimie des solutions (202-SN2-RE) » au Cégep.
@@ -4059,7 +4090,7 @@ Conventions importantes du cahier de notes de cours (NDC) à accepter :
 - L'approximation Ci - x ≈ Ci est acceptée dès que Ci / K >= 100.
 
 ${modeInstruction}
-Réponds en français, de façon directe, chaleureuse et structurée, en étapes courtes.
+Réponds en français, de façon très brève et précise : uniquement le format demandé, aucune phrase de remplissage.
 
 FORMAT OBLIGATOIRE (ta réponse est affichée par un moteur qui dessine les formules en 2D) :
 - Texte simple : PAS de HTML, PAS de bloc de code, PAS de tableau. Paragraphes courts séparés par une ligne vide. Listes avec « - » ou « 1. ». Gras avec **…**.
@@ -4071,7 +4102,8 @@ FORMAT OBLIGATOIRE (ta réponse est affichée par un moteur qui dessine les form
 Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_{t}} = \\frac{1}{0,028\\text{ s}^{-1}}\\ln\\frac{0,88}{0,14} \\approx 66\\text{ s}$$ »`;
 
       const body = JSON.stringify({
-        contents: [{ parts: [{ text: systemPrompt }, { inline_data: { mime_type: "image/png", data: base64Data } }] }]
+        contents: [{ parts: [{ text: systemPrompt }, { inline_data: { mime_type: "image/png", data: base64Data } }] }],
+        generationConfig: { temperature: 0.2 }
       });
       // Si le modèle choisi est surchargé (503) ou limité (429), on réessaie puis on passe à un modèle de secours
       const models = [...new Set([model, "gemini-2.5-flash", "gemini-flash-lite-latest", "gemini-2.5-flash-lite"])];
