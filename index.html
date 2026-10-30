@@ -6,9 +6,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Chimie SN2">
+  <meta name="apple-mobile-web-app-title" content="Ma session">
   <meta name="theme-color" content="#111827">
-  <title>Cahier Chimie SN2</title>
+  <title>Ma session A2026</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icon-180.png">
   <style>
@@ -173,7 +173,7 @@
     .as-explain { background: #2563eb; }
     #noteInput { flex: 1; min-width: 80px; height: 46px; border: 1px solid #cbd5e1; border-radius: 12px; padding: 0 12px; background: #f8fafc; -webkit-user-select: text; user-select: text; }
     @media (max-width: 900px) { .as-btn .long { display: none; } }
-    @media (max-width: 700px) { .tb-btn .lbl { display: none; } }
+    @media (max-width: 1000px) { .tb-btn .lbl { display: none; } }
 
     /* ---------- Mode plein écran / concentration ---------- */
     body.focus #topbar, body.focus #assist, body.focus #drawer, body.focus #scrim { display: none !important; }
@@ -301,24 +301,132 @@
       opacity: 0; pointer-events: none; transition: opacity .2s;
     }
     #toast.show { opacity: 1; }
+
+    /* ---------- Espace de session : accueil et page d'un cours ---------- */
+    .screen {
+      position: fixed; inset: 0; z-index: 40; background: var(--bg); display: none; flex-direction: column; min-height: 0;
+    }
+    .screen.open { display: flex; }
+    .scr-head {
+      display: flex; align-items: center; gap: 8px; flex-shrink: 0; background: var(--bar); color: #fff;
+      padding: 10px 12px; padding-top: calc(10px + env(safe-area-inset-top));
+      padding-left: calc(12px + env(safe-area-inset-left)); padding-right: calc(12px + env(safe-area-inset-right));
+    }
+    .scr-title { flex: 1; min-width: 0; }
+    .scr-title h1 { margin: 0; font-size: 20px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .scr-title span { display: block; font-size: 13px; color: #94a3b8; }
+    .scr-body {
+      flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+      padding: 16px; padding-left: calc(16px + env(safe-area-inset-left)); padding-right: calc(16px + env(safe-area-inset-right));
+      padding-bottom: calc(24px + env(safe-area-inset-bottom));
+    }
+    .scr-inner { max-width: 980px; margin: 0 auto; }
+    #courseGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    @media (max-width: 640px) { #courseGrid { grid-template-columns: 1fr; } }
+    .course-card {
+      display: flex; flex-direction: column; gap: 10px; min-height: 164px; padding: 18px; text-align: left; border-radius: 18px;
+      background: var(--panel); box-shadow: 0 1px 2px rgba(15,23,42,.08), 0 0 0 1px var(--line); border-top: 6px solid var(--cc);
+    }
+    .course-card:active { background: #f8fafc; }
+    .course-card .ci { font-size: 32px; line-height: 1; }
+    .course-card b { font-size: 18px; line-height: 1.25; }
+    .course-card small { display: block; font-size: 13px; color: var(--muted); margin-top: auto; }
+    .course-card .bar > div { background: var(--cc); }
+    #storageInfo { margin-top: 16px; font-size: 13px; color: var(--muted); text-align: center; }
+    .course-tabs { max-width: 980px; margin: 0 auto 14px; }
+    .course-tabs button { height: 44px; font-size: 15px; }
+    .cs-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .cs-group { background: var(--panel); border-radius: 16px; padding: 4px 8px 8px; margin-bottom: 14px; box-shadow: 0 0 0 1px var(--line); }
+    .cs-group h2 { font-size: 16px; margin: 10px 8px 2px; }
+    .cs-empty { text-align: center; color: var(--muted); padding: 34px 16px; line-height: 1.5; }
+    .notice { padding: 12px 14px; border-radius: 14px; background: #fffbeb; border: 1px solid #fde68a; margin-bottom: 14px; line-height: 1.45; font-size: 14px; }
+    .notice .btn { margin-top: 10px; }
+    .doc-item { display: flex; align-items: center; gap: 2px; }
+    .doc-open { flex: 1; min-width: 0; min-height: 58px; display: flex; align-items: center; gap: 12px; padding: 6px 10px; text-align: left; border-radius: 12px; }
+    .doc-open:active { background: #f1f5f9; }
+    .doc-open .di { font-size: 26px; flex-shrink: 0; }
+    .doc-open b { display: block; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .doc-open small { color: var(--muted); font-size: 12px; }
+    .doc-open > span:last-child { min-width: 0; }
+    #busy { position: fixed; inset: 0; z-index: 65; background: rgba(15,23,42,.55); display: none; align-items: center; justify-content: center; padding: 16px; }
+    #busy.open { display: flex; }
+    #busy > div { background: #fff; border-radius: 16px; padding: 18px 20px; display: flex; align-items: center; gap: 12px; font-weight: 600; max-width: 420px; }
+
+    /* ---------- Énoncé affiché depuis le PDF importé ---------- */
+    .pdfcrop { margin: 0 auto; max-width: 780px; min-height: 40px; }
+    .pdfcrop canvas { display: block; width: 100%; height: auto; }
+
+    /* ---------- Modes : exercice, cahier vierge, document PDF ---------- */
+    .doc-only { display: none !important; }
+    body.mode-doc .ex-only, body.mode-doc #statementCard, body.mode-doc #assist, body.mode-doc #drawer, body.mode-doc #scrim { display: none !important; }
+    body.mode-doc .doc-only { display: inline-flex !important; }
+    body.mode-doc #paper { margin-top: 0; }
+    body.mode-pdf .pdf-hide { display: none !important; }
+    body.mode-pdf #page { overflow-x: auto; touch-action: pan-x pan-y; padding: 0; }
+    body.mode-pdf #paper { touch-action: pan-x pan-y; border-radius: 0; box-shadow: none; background: #cbd5e1; max-width: none; }
+    body.mode-pdf .page-foot { display: none; }
+    #pdfLayer { position: absolute; inset: 0; pointer-events: none; display: none; }
+    body.mode-pdf #pdfLayer { display: block; }
+    .pg { position: absolute; left: 0; width: 100%; background: #fff; overflow: hidden; }
+    .pg canvas, .pg img { position: static !important; display: block; width: 100%; height: 100%; }
+    body:not(.mode-pdf) .pdf-zoom { display: none !important; }
+    #focusRefBtn.chem-only { display: none !important; }
+    @media (max-width: 1000px) {
+      .tool { width: 40px; } .sw, .sz { width: 30px; } .sep { margin: 0 2px; }
+      .pager .tool { width: 32px; } .pager span { min-width: 50px; font-size: 12px; }
+    }
+    .zoom-txt { font-size: 13px; font-weight: 700; min-width: 48px; text-align: center; color: #e5e7eb; }
   </style>
 </head>
 <body>
 
+  <!-- ===================== ACCUEIL : CHOIX DU COURS ===================== -->
+  <div id="home" class="screen open">
+    <header class="scr-head">
+      <div class="scr-title"><h1>Ma session</h1><span>Automne 2026</span></div>
+      <button class="tb-btn" onclick="openBackup()"><span data-ic="save"></span><span>Sauvegarde</span></button>
+    </header>
+    <div class="scr-body"><div class="scr-inner">
+      <div id="courseGrid"></div>
+      <div id="storageInfo"></div>
+    </div></div>
+  </div>
+
+  <!-- ===================== PAGE D'UN COURS ===================== -->
+  <div id="courseScreen" class="screen">
+    <header class="scr-head">
+      <button class="tb-btn" onclick="goHome()" aria-label="Retour aux cours"><span data-ic="left"></span><span>Cours</span></button>
+      <div class="scr-title"><h1 id="courseTitle"></h1></div>
+    </header>
+    <div class="scr-body">
+      <div class="seg course-tabs">
+        <button id="tabExercises" onclick="setCourseTab('exercises')">Exercices</button>
+        <button id="tabNotes" onclick="setCourseTab('notes')">Notes de cours</button>
+      </div>
+      <div id="courseBody" class="scr-inner"></div>
+    </div>
+  </div>
+  <input id="docFile" type="file" multiple accept="application/pdf,.pdf,image/*,.ppt,.pptx" style="display:none" onchange="importDocs(this)">
+  <input id="emPdfFile" type="file" accept="application/pdf,.pdf" style="display:none" onchange="importCoursePdf(this)">
+
   <!-- ===================== BARRE DU HAUT ===================== -->
   <header id="topbar">
-    <button class="tb-btn" onclick="toggleDrawer()" title="Liste des exercices" aria-label="Liste des exercices"><span data-ic="menu"></span></button>
-    <button class="tb-btn" onclick="navigateExercise(-1)" title="Exercice précédent" aria-label="Exercice précédent"><span data-ic="left"></span></button>
+    <button class="tb-btn" onclick="leaveToCourse()" title="Retour au cours" aria-label="Retour au cours"><span data-ic="home"></span><span class="lbl">Cours</span></button>
+    <button class="tb-btn ex-only" onclick="toggleDrawer()" title="Liste des exercices" aria-label="Liste des exercices"><span data-ic="menu"></span></button>
+    <button class="tb-btn ex-only" onclick="navigateExercise(-1)" title="Exercice précédent" aria-label="Exercice précédent"><span data-ic="left"></span></button>
     <div class="tb-title">
       <b id="tbTitle">—</b>
       <span id="tbSub">Chimie SN2 — Examen 2</span>
     </div>
-    <button class="tb-btn" onclick="navigateExercise(1)" title="Exercice suivant" aria-label="Exercice suivant"><span data-ic="right"></span></button>
-    <button id="markDoneBtn" class="tb-btn" onclick="setExerciseStatus('done')" title="Réussi du premier coup"><span>✅</span><span class="lbl">Réussi</span></button>
-    <button id="markAlmostBtn" class="tb-btn" onclick="setExerciseStatus('almost')" title="Presque : petit détail manqué ou j'ai hésité"><span>🟡</span><span class="lbl">Presque</span></button>
-    <button id="markReviewBtn" class="tb-btn" onclick="setExerciseStatus('review')" title="Raté : à refaire"><span>❌</span><span class="lbl">À refaire</span></button>
-    <button class="tb-btn" onclick="openModal('refModal')" title="Aide-mémoire (formules, Ka)"><span data-ic="book"></span><span class="lbl">Formules</span></button>
-    <button class="tb-btn" onclick="openModal('apiModal')" title="Réglages de l'IA"><span id="apiDot" class="dot"></span><span>IA</span></button>
+    <button class="tb-btn ex-only" onclick="navigateExercise(1)" title="Exercice suivant" aria-label="Exercice suivant"><span data-ic="right"></span></button>
+    <button id="markDoneBtn" class="tb-btn ex-only" onclick="setExerciseStatus('done')" title="Réussi du premier coup"><span>✅</span><span class="lbl">Réussi</span></button>
+    <button id="markAlmostBtn" class="tb-btn ex-only" onclick="setExerciseStatus('almost')" title="Presque : petit détail manqué ou j'ai hésité"><span>🟡</span><span class="lbl">Presque</span></button>
+    <button id="markReviewBtn" class="tb-btn ex-only" onclick="setExerciseStatus('review')" title="Raté : à refaire"><span>❌</span><span class="lbl">À refaire</span></button>
+    <button id="refBtn" class="tb-btn ex-only" onclick="openModal('refModal')" title="Aide-mémoire (formules, Ka)"><span data-ic="book"></span><span class="lbl">Formules</span></button>
+    <button class="tb-btn ex-only" onclick="openModal('apiModal')" title="Réglages de l'IA"><span id="apiDot" class="dot"></span><span>IA</span></button>
+    <button class="tb-btn doc-only pdf-zoom" onclick="changeZoom(-1)" aria-label="Réduire"><span style="font-size:22px">−</span></button>
+    <span id="zoomText" class="zoom-txt doc-only pdf-zoom">100 %</span>
+    <button class="tb-btn doc-only pdf-zoom" onclick="changeZoom(1)" aria-label="Agrandir"><span style="font-size:22px">+</span></button>
   </header>
 
   <!-- ===================== OUTILS DE DESSIN ===================== -->
@@ -326,10 +434,10 @@
     <button id="undoBtn" class="tool" onclick="undo()" title="Annuler" aria-label="Annuler"><span data-ic="undo"></span></button>
     <button id="redoBtn" class="tool" onclick="redo()" title="Rétablir" aria-label="Rétablir"><span data-ic="redo"></span></button>
     <span class="sep"></span>
-    <button class="tool focus-only" onclick="navigateExercise(-1)" aria-label="Exercice précédent"><span data-ic="left"></span></button>
-    <span id="focusTitle" class="focus-title focus-only"></span>
-    <button class="tool focus-only" onclick="navigateExercise(1)" aria-label="Exercice suivant"><span data-ic="right"></span></button>
-    <span class="sep focus-only"></span>
+    <button class="tool focus-only ex-only" onclick="navigateExercise(-1)" aria-label="Exercice précédent"><span data-ic="left"></span></button>
+    <span id="focusTitle" class="focus-title focus-only ex-only"></span>
+    <button class="tool focus-only ex-only" onclick="navigateExercise(1)" aria-label="Exercice suivant"><span data-ic="right"></span></button>
+    <span class="sep focus-only ex-only"></span>
 
     <button id="tool-pen" class="tool" onclick="setTool('pen')" title="Stylo" aria-label="Stylo"><span data-ic="pen"></span></button>
     <button id="tool-hl" class="tool" onclick="setTool('hl')" title="Surligneur" aria-label="Surligneur"><span data-ic="highlighter"></span></button>
@@ -346,8 +454,8 @@
       <span id="pagerText">Page 1/1</span>
       <button class="tool" onclick="changePage(1)" aria-label="Page suivante"><span data-ic="right"></span></button>
     </span>
-    <button class="tool focus-only" onclick="runAssistantAction('verify')" title="Voir la réponse" aria-label="Voir la réponse"><span data-ic="check"></span></button>
-    <button class="tool focus-only" onclick="openModal('refModal')" title="Formules" aria-label="Formules"><span data-ic="book"></span></button>
+    <button class="tool focus-only ex-only" onclick="runAssistantAction('verify')" title="Voir la réponse" aria-label="Voir la réponse"><span data-ic="check"></span></button>
+    <button id="focusRefBtn" class="tool focus-only ex-only" onclick="openModal('refModal')" title="Formules" aria-label="Formules"><span data-ic="book"></span></button>
     <button id="moreBtn" class="tool" onclick="openMoreMenu()" title="Plus d'options" aria-label="Plus d'options"><span data-ic="more"></span></button>
     <button id="focusBtn" class="tool" onclick="toggleFocus()" title="Plein écran" aria-label="Plein écran"><span id="focusIc" data-ic="maximize"></span></button>
   </div>
@@ -356,22 +464,21 @@
   <div id="main">
     <aside id="drawer">
       <div class="dr-head">
-        <div class="seg">
-          <button id="tabCh2" onclick="selectChapter(2)">Chap. 2<small>Cinétique</small></button>
-          <button id="tabCh3" onclick="selectChapter(3)">Chap. 3<small>Équilibre</small></button>
-          <button id="tabCh4" onclick="selectChapter(4)">Chap. 4<small>Acides/bases</small></button>
-        </div>
+        <div id="chapterTabs" class="seg"></div>
         <div class="progress-row"><span id="progressText">Progression</span><span id="countText"></span></div>
         <div class="bar"><div id="progressFill"></div></div>
         <input id="searchInput" class="field" type="search" placeholder="Rechercher (2.4, pH, Kp…)" oninput="renderExerciseList()" autocomplete="off" autocorrect="off" spellcheck="false">
         <div class="row">
           <select id="sectionFilter" class="field" onchange="renderExerciseList()"></select>
-          <select id="typeFilter" class="field" style="width:120px;flex-shrink:0" onchange="renderExerciseList()">
-            <option value="ALL">Tous</option>
-            <option value="interne">Internes</option>
-            <option value="probleme">Problèmes</option>
-          </select>
+          <select id="typeFilter" class="field" style="width:120px;flex-shrink:0" onchange="renderExerciseList()"></select>
         </div>
+        <select id="statusFilter" class="field" onchange="renderExerciseList()">
+          <option value="ALL">Tous les statuts</option>
+          <option value="review">❌ À refaire</option>
+          <option value="almost">🟡 Presque</option>
+          <option value="done">✅ Réussi</option>
+          <option value="todo">Pas encore marqués</option>
+        </select>
       </div>
       <div id="exList"></div>
     </aside>
@@ -388,6 +495,7 @@
         </section>
 
         <div id="paper" class="paper-grid">
+          <div id="pdfLayer"></div>
           <canvas id="inkCanvas"></canvas>
           <canvas id="liveCanvas"></canvas>
           <div id="selMenu">
@@ -422,12 +530,12 @@
   <!-- ===================== MENU « PLUS » ===================== -->
   <div id="menuScrim" onclick="closeMoreMenu()"></div>
   <div id="moreMenu">
-    <button class="mi" onclick="closeMoreMenu(); addPage()"><span data-ic="plus"></span>Ajouter une nouvelle page</button>
-    <button id="deletePageItem" class="mi danger" onclick="closeMoreMenu(); openModal('deletePageModal')"><span data-ic="trash"></span>Supprimer cette page</button>
-    <div class="mi-hr"></div>
-    <button class="mi" onclick="closeMoreMenu(); stampIRE()"><span data-ic="table"></span>Insérer un tableau I-R-E</button>
-    <div class="mi-label">Type de feuille</div>
-    <div class="mi-seg" id="paperSeg">
+    <button class="mi pdf-hide" onclick="closeMoreMenu(); addPage()"><span data-ic="plus"></span>Ajouter une nouvelle page</button>
+    <button id="deletePageItem" class="mi danger pdf-hide" onclick="closeMoreMenu(); openModal('deletePageModal')"><span data-ic="trash"></span>Supprimer cette page</button>
+    <div class="mi-hr pdf-hide"></div>
+    <button id="ireItem" class="mi" onclick="closeMoreMenu(); stampIRE()"><span data-ic="table"></span>Insérer un tableau I-R-E</button>
+    <div class="mi-label pdf-hide">Type de feuille</div>
+    <div class="mi-seg pdf-hide" id="paperSeg">
       <button data-paper="grid" onclick="setPaper('grid')">Quadrillé</button>
       <button data-paper="lined" onclick="setPaper('lined')">Ligné</button>
       <button data-paper="dots" onclick="setPaper('dots')">Points</button>
@@ -558,14 +666,15 @@ $$x = \frac{-b + \sqrt{b^2 - 4ac}}{2a}$$
     <div class="modal-card">
       <div class="modal-head"><h3>Sauvegarde de mes réponses</h3><button class="tb-btn" onclick="closeModal('backupModal')" aria-label="Fermer"><span data-ic="x"></span></button></div>
       <div class="modal-body">
-        <p style="margin-top:0">Tes dessins, statuts et notes s'enregistrent tout seuls sur cet iPad, même si tu fermes l'app ou éteins l'iPad. Une copie dans Fichiers te protège si tu supprimes l'app ou changes d'appareil.</p>
+        <p style="margin-top:0">Tes dessins, statuts, notes et documents s'enregistrent tout seuls sur cet iPad, même si tu fermes l'app ou éteins l'iPad. Une copie dans Fichiers te protège si tu supprimes l'app ou changes d'appareil.</p>
         <p id="backupInfo" style="color:#64748b;font-size:13px"></p>
         <div class="btn-row">
-          <button class="btn primary" onclick="exportBackup()">Enregistrer dans Fichiers</button>
+          <button class="btn primary" onclick="exportBackup()">Mes réponses et annotations</button>
+          <button class="btn primary" onclick="exportArchive()">Tout, avec mes documents</button>
           <button class="btn plain" onclick="copyBackup()">Copier le texte</button>
         </div>
         <label for="backupFile">Restaurer une sauvegarde</label>
-        <input id="backupFile" class="field" type="file" accept=".json,application/json,text/plain" onchange="importBackupFile(this)" style="padding-top:8px">
+        <input id="backupFile" class="field" type="file" onchange="importBackupFile(this)" style="padding-top:8px">
         <label for="backupText">… ou coller le texte copié</label>
         <textarea id="backupText" class="field selectable" style="height:80px;padding:8px;font-size:13px;resize:vertical"></textarea>
         <div class="modal-actions">
@@ -574,6 +683,46 @@ $$x = \frac{-b + \sqrt{b^2 - 4ac}}{2a}$$
       </div>
     </div>
   </div>
+
+  <!-- ===================== MODALE : MODIFIER UN DOCUMENT ===================== -->
+  <div id="docModal" class="modal" onclick="if(event.target===this) closeModal('docModal')">
+    <div class="modal-card">
+      <div class="modal-head"><h3>Modifier le document</h3><button class="tb-btn" onclick="closeModal('docModal')" aria-label="Fermer"><span data-ic="x"></span></button></div>
+      <div class="modal-body">
+        <label for="docNameInput" style="margin-top:0">Nom</label>
+        <input id="docNameInput" class="field selectable" type="text" autocomplete="off">
+        <label for="docFolderInput">Dossier (par exemple : Chapitre 3)</label>
+        <input id="docFolderInput" class="field selectable" type="text" list="docFolderList" autocomplete="off">
+        <datalist id="docFolderList"></datalist>
+        <div class="modal-actions">
+          <button class="btn link" onclick="closeModal('docModal'); openModal('docDeleteModal')">Supprimer</button>
+          <button class="btn primary" onclick="saveDocEdit()">Enregistrer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="docDeleteModal" class="modal" onclick="if(event.target===this) closeModal('docDeleteModal')">
+    <div class="modal-card" style="max-width:380px">
+      <div class="modal-body">
+        <h3 style="margin:0 0 6px;font-size:17px">Supprimer ce document ?</h3>
+        <p style="margin:0;color:#64748b">Le fichier et tout ce que tu as écrit dessus seront effacés de cet iPad. Cette action ne peut pas être annulée.</p>
+        <div class="modal-actions">
+          <button class="btn plain" onclick="closeModal('docDeleteModal')">Garder</button>
+          <button class="btn danger" onclick="deleteDoc()">Supprimer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="pptModal" class="modal" onclick="if(event.target===this) closeModal('pptModal')">
+    <div class="modal-card" style="max-width:440px">
+      <div class="modal-body">
+        <h3 style="margin:0 0 6px;font-size:17px">Convertis d'abord ton PowerPoint en PDF</h3>
+        <p style="margin:0;color:#475569">Dans l'app PowerPoint ou Keynote : Exporter, puis PDF. Importe ensuite ce PDF ici : tu pourras écrire dessus, même hors ligne.</p>
+        <div class="modal-actions"><button class="btn primary" onclick="closeModal('pptModal')">Compris</button></div>
+      </div>
+    </div>
+  </div>
+  <div id="busy"><div><div class="spinner"></div><span id="busyText"></span></div></div>
 
   <div id="toast"></div>
 
@@ -2193,6 +2342,1085 @@ b) Pour la pyridine $\ce{C5H5N(aq) + H2O(l) <=> C5H5NH+(aq) + OH-(aq)}$ ($K_b = 
 $$K_b = \frac{x^2}{0,050 - x} \approx \frac{x^2}{0,050} = 1,7\times10^{-9} \;\Rightarrow\; x = [\ce{OH-}] = 9,2\times10^{-6}\u{mol/L}$$
 $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 - 5,04 = 8,96$$
   </script>
+  <script type="text/plain" id="exDataEm">
+=== em-ch5-q1 | 5 | 5.1 La capacité d'un condensateur | question | Question 1 (p. 183)
+Q:
+[[crop:2:204:299]]
+A:
+a. La charge reste la même. b. La charge devient nulle.
+H:
+Une charge ne quitte une armature que s'il existe un chemin conducteur.
+S:
+**a.** Pile débranchée : aucun chemin pour les charges. Elles restent sur les armatures, donc $Q$ ne change pas.
+**b.** Le fil relie $+Q$ et $-Q$ : les charges se neutralisent jusqu'à $\Delta V = 0$, donc $Q = C\Delta V = 0$.
+=== em-ch5-q2 | 5 | 5.1 La capacité d'un condensateur | question | Question 2 (p. 183)
+Q:
+[[crop:2:322:444]]
+A:
+a., b. et c. La capacité reste la même.
+H:
+La capacité dépend de la géométrie et du diélectrique, pas de la charge ni de la tension.
+S:
+$$C = \frac{Q}{\Delta V}$$
+Si $Q$ double, $\Delta V$ et le champ $E = \frac{\Delta V}{d}$ doublent aussi : le rapport ne change pas. $C$ dépend seulement de $A$, de $d$ et de $\kappa$.
+**a., b. et c.** La capacité reste la même dans les trois cas.
+=== em-ch5-e3 | 5 | 5.1 La capacité d'un condensateur | exercice | Exercice 3 (p. 183)
+Q:
+[[crop:2:467:529]]
+A:
+$Q = 73,8\u{µC}$
+H:
+$Q = C\Delta V$
+S:
+$$Q = C\Delta V = (8,20\times10^{-6}\u{F})(9,00\u{V}) = 73,8\times10^{-6}\u{C} = 73,8\u{µC}$$
+=== em-ch5-q5 | 5 | 5.2 Le calcul de la capacité | question | Question 5 (p. 183)
+Q:
+[[crop:2:583:723]]
+A:
+a. $C$ double. b. $C$ est divisée par 2. c. $C$ est multipliée par 2,5.
+H:
+$C = \frac{\kappa\varepsilon_{0}A}{d}$
+S:
+$$C = \frac{\kappa\varepsilon_{0}A}{d}$$
+**a.** $d$ au dénominateur, $d \to \frac{d}{2}$ : $C$ double.
+**b.** $A$ au numérateur, $A \to \frac{A}{2}$ : $C$ est divisée par 2.
+**c.** $\kappa$ passe de 1 à 2,5 : $C$ est multipliée par 2,5.
+=== em-ch5-q6 | 5 | 5.2 Le calcul de la capacité | question | Question 6 (p. 183)
+Q:
+[[crop:2:746:955]]
+[[crop:3:45:199]]
+A:
+Courbe a : $C_{2}$ et $C_{4}$. Courbe b : $C_{1}$. Courbe c : $C_{3}$.
+H:
+La pente du graphique $Q$ en fonction de $\Delta V$ est la capacité.
+S:
+La pente de chaque droite vaut $C$. On calcule chaque capacité avec $C_{0} = \frac{\varepsilon_{0}A}{d}$ :
+$$C_{1} = C_{0} \quad C_{2} = 2C_{0} \quad C_{3} = \frac{C_{0}}{2} \quad C_{4} = \frac{2\times2A\,\varepsilon_{0}}{2d} = 2C_{0}$$
+La plus grande pente (a) va avec $C_{2}$ et $C_{4}$, la moyenne (b) avec $C_{1}$, la plus petite (c) avec $C_{3}$.
+=== em-ch5-e7 | 5 | 5.2 Le calcul de la capacité | exercice | Exercice 7 (p. 183)
+Q:
+[[crop:3:222:359]]
+A:
+a. $\kappa = 7,45$ b. De la porcelaine (selon le tableau 5.1 du manuel).
+H:
+Le diélectrique réduit le champ : $E = \frac{Q}{\kappa\varepsilon_{0}A}$.
+S:
+**a.** On isole $\kappa$ :
+$$\kappa = \frac{Q}{\varepsilon_{0}AE} = \frac{0,96\times10^{-6}}{(8,854\times10^{-12})(112\times10^{-4})(1,3\times10^{6})} = 7,45$$
+**b.** Cette valeur correspond à la porcelaine dans le tableau 5.1 du manuel.
+=== em-ch5-q11 | 5 | 5.3 L'énergie emmagasinée dans un condensateur | question | Question 11 (p. 184)
+Q:
+[[crop:3:413:539]]
+A:
+a. $\frac{Q_{1}}{Q_{2}} = 1$ b. $\frac{\Delta V_{1}}{\Delta V_{2}} = 3$
+H:
+Connaissant $C$ et $U$, utilise $U = \frac{Q^{2}}{2C}$ puis $\Delta V = \frac{Q}{C}$.
+S:
+On a $C_{2} = 3C_{1}$ et $U_{1} = 3U_{2}$.
+**a.**
+$$\frac{U_{1}}{U_{2}} = \frac{Q_{1}^{2}}{Q_{2}^{2}}\times\frac{C_{2}}{C_{1}} \Rightarrow 3 = \frac{Q_{1}^{2}}{Q_{2}^{2}}\times3 \Rightarrow \frac{Q_{1}}{Q_{2}} = 1$$
+**b.**
+$$\frac{\Delta V_{1}}{\Delta V_{2}} = \frac{Q_{1}}{Q_{2}}\times\frac{C_{2}}{C_{1}} = 1\times3 = 3$$
+=== em-ch5-q12 | 5 | 5.3 L'énergie emmagasinée dans un condensateur | question | Question 12 (p. 184)
+Q:
+[[crop:3:562:683]]
+A:
+$U_{(ii)} < U_{(iii)} < U_{(i)}$
+H:
+Choisis la forme de l'énergie selon ce qui est donné : $\frac{1}{2}C\Delta V^{2}$, $\frac{Q^{2}}{2C}$ ou $\frac{1}{2}Q\Delta V$.
+S:
+$$U_{(i)} = \frac{1}{2}C\Delta V^{2} = \frac{1}{2}(2\u{µF})(2\u{V})^{2} = 4\u{µJ}$$
+$$U_{(ii)} = \frac{Q^{2}}{2C} = \frac{(2\u{µC})^{2}}{2(2\u{µF})} = 1\u{µJ}$$
+$$U_{(iii)} = \frac{1}{2}Q\Delta V = \frac{1}{2}(2\u{µC})(2\u{V}) = 2\u{µJ}$$
+Donc $U_{(ii)} < U_{(iii)} < U_{(i)}$.
+=== em-ch5-e13 | 5 | 5.3 L'énergie emmagasinée dans un condensateur | exercice | Exercice 13 (p. 184)
+Q:
+[[crop:3:706:848]]
+A:
+a. $C = 11,7\u{pF}$ b. $Q = 8,45\u{nC}$ c. $U = 3,04\u{µJ}$
+H:
+$C = \frac{\varepsilon_{0}A}{d}$, puis $Q = C\Delta V$ et $U = \frac{1}{2}Q\Delta V$.
+S:
+**a.**
+$$C = \frac{\varepsilon_{0}A}{d} = \frac{(8,854\times10^{-12})(53,0\times10^{-4})}{4,00\times10^{-3}} = 11,7\times10^{-12}\u{F}$$
+**b.**
+$$Q = C\Delta V = (11,73\times10^{-12})(720) = 8,45\times10^{-9}\u{C}$$
+**c.**
+$$U = \frac{1}{2}Q\Delta V = \frac{1}{2}(8,45\times10^{-9})(720) = 3,04\times10^{-6}\u{J}$$
+=== em-ch5-p16 | 5 | 5.3 L'énergie emmagasinée dans un condensateur | probleme | Problème 16 (p. 184)
+Q:
+[[crop:3:871:955]]
+[[crop:4:45:179]]
+A:
+a. $C = 1,00\u{µF}$ b. $d = 2,67\u{µm}$ c. $A = 641\u{cm^{2}}$ d. $Q = 316\u{µC}$
+H:
+Au maximum, la tension et l'énergie sont liées par $U = \frac{1}{2}C\Delta V^{2}$, et le champ atteint la rigidité diélectrique.
+S:
+**a.**
+$$C = \frac{2U}{\Delta V^{2}} = \frac{2(80,0\times10^{-3})}{400^{2}} = 1,00\times10^{-6}\u{F}$$
+**b.** À la tension maximale, $E$ égale la rigidité diélectrique :
+$$d = \frac{\Delta V}{E} = \frac{400}{150\times10^{6}} = 2,67\times10^{-6}\u{m}$$
+**c.**
+$$A = \frac{Cd}{\kappa\varepsilon_{0}} = \frac{(1,00\times10^{-6})(2,67\times10^{-6})}{(4,70)(8,854\times10^{-12})} = 0,0641\u{m^{2}} = 641\u{cm^{2}}$$
+**d.**
+$$Q = \sqrt{2CU} = \sqrt{2(1,00\times10^{-6})(50,0\times10^{-3})} = 316\times10^{-6}\u{C}$$
+=== em-ch5-p18 | 5 | 5.3 L'énergie emmagasinée dans un condensateur | probleme | Problème 18 (p. 184)
+Q:
+[[crop:4:202:379]]
+A:
+a. $Q_{i} = 150\u{µC}$ b. $C = 50,0\u{µF}$ c. $i = 8,33\u{C/s}$
+H:
+L'énergie du condensateur est celle libérée par le flash : $U = P\Delta t$.
+S:
+**a.** L'énergie libérée :
+$$U = P\Delta t = (12,5)(18,0\times10^{-6}) = 225\times10^{-6}\u{J}$$
+$$U = \frac{1}{2}Q\Delta V \Rightarrow Q = \frac{2U}{\Delta V} = \frac{2(225\times10^{-6})}{3,00} = 150\times10^{-6}\u{C}$$
+**b.**
+$$C = \frac{Q}{\Delta V} = \frac{150\times10^{-6}}{3,00} = 50,0\times10^{-6}\u{F}$$
+**c.**
+$$i = \frac{\Delta Q}{\Delta t} = \frac{150\times10^{-6}}{18,0\times10^{-6}} = 8,33\u{C/s}$$
+=== em-ch5-p20 | 5 | 5.3 L'énergie emmagasinée dans un condensateur | probleme | Problème 20 (p. 184)
+Q:
+[[crop:4:402:503]]
+A:
+$W = 797\u{µJ}$
+H:
+Source débranchée : $Q$ reste constante. Le travail est la variation d'énergie.
+S:
+Avec le diélectrique :
+$$C = \frac{\kappa\varepsilon_{0}A}{d} = \frac{(6,00)(8,854\times10^{-12})(0,250)}{600\times10^{-6}} = 22,1\times10^{-9}\u{F}$$
+$$U_{i} = \frac{1}{2}C\Delta V^{2} = \frac{1}{2}(22,1\times10^{-9})(120)^{2} = 159\u{µJ}$$
+La source est débranchée, donc $Q$ reste constante. Sans diélectrique, $C$ est divisée par $\kappa$, donc $U = \frac{Q^{2}}{2C}$ est multipliée par $\kappa$ :
+$$W = U_{f} - U_{i} = (\kappa - 1)U_{i} = 5(159,4\u{µJ}) = 797\u{µJ}$$
+=== em-ch5-q21 | 5 | 5.4 L'association de condensateurs | question | Question 21 (p. 184)
+Q:
+[[crop:4:557:768]]
+A:
+(i) < (iii) < (ii)
+H:
+En parallèle, les capacités s'additionnent ; en série, on additionne les inverses.
+S:
+**(i)** Les trois en série :
+$$\frac{1}{C_{\text{éq}}} = \frac{1}{C} + \frac{1}{2C} + \frac{2}{C} = \frac{3,5}{C} \Rightarrow C_{\text{éq}} = 0,29C$$
+**(ii)** Les trois en parallèle : $C_{\text{éq}} = C + 2C + \frac{C}{2} = 3,5C$.
+**(iii)** $C$ et $2C$ en parallèle donnent $3C$, en série avec $\frac{C}{2}$ :
+$$C_{\text{éq}} = \frac{(3C)(C/2)}{3C + C/2} = 0,43C$$
+Donc (i) < (iii) < (ii).
+=== em-ch5-e22 | 5 | 5.4 L'association de condensateurs | exercice | Exercice 22 (p. 184)
+Q:
+[[crop:4:791:955]]
+A:
+a. $C_{\text{éq}} = 10,00\u{µF}$ b. $Q_{1} = 1,20\u{mC}$ et $Q_{2} = 0,80\u{mC}$ c. $\Delta V_{1} = \Delta V_{2} = 200\u{V}$
+H:
+En parallèle : même tension, les charges s'additionnent.
+S:
+**a.** $C_{\text{éq}} = 6,00 + 4,00 = 10,00\u{µF}$
+**c.** En parallèle, chaque condensateur a la tension de la source : $\Delta V_{1} = \Delta V_{2} = 200\u{V}$.
+**b.**
+$$Q_{1} = (6,00\u{µF})(200\u{V}) = 1,20\u{mC}$$
+$$Q_{2} = (4,00\u{µF})(200\u{V}) = 0,80\u{mC}$$
+=== em-ch5-e23 | 5 | 5.4 L'association de condensateurs | exercice | Exercice 23 (p. 184)
+Q:
+[[crop:5:79:222]]
+A:
+a. $C_{\text{éq}} = 2,40\u{µF}$ b. $Q_{1} = Q_{2} = 480\u{µC}$ c. $\Delta V_{1} = 80,0\u{V}$ et $\Delta V_{2} = 120\u{V}$
+H:
+En série : même charge, les tensions s'additionnent.
+S:
+**a.**
+$$C_{\text{éq}} = \frac{C_{1}C_{2}}{C_{1} + C_{2}} = \frac{(6,00)(4,00)}{10,00} = 2,40\u{µF}$$
+**b.** En série, la charge est la même :
+$$Q = C_{\text{éq}}\Delta V = (2,40\u{µF})(200\u{V}) = 480\u{µC}$$
+**c.**
+$$\Delta V_{1} = \frac{480}{6,00} = 80,0\u{V} \quad \Delta V_{2} = \frac{480}{4,00} = 120\u{V}$$
+=== em-ch5-e24 | 5 | 5.4 L'association de condensateurs | exercice | Exercice 24 (p. 185)
+Q:
+[[crop:5:245:445]]
+A:
+$C_{\text{éq}} = 29,7\u{µF}$
+H:
+Repère d'abord les deux condensateurs sur la même branche.
+S:
+$C_{1}$ et $C_{2}$ sont en série :
+$$C_{12} = \frac{(12,0)(15,0)}{27,0} = 6,67\u{µF}$$
+Cette branche est en parallèle avec $C_{3}$ :
+$$C_{\text{éq}} = 6,67 + 23,0 = 29,7\u{µF}$$
+=== em-ch5-e28 | 5 | 5.4 L'association de condensateurs | exercice | Exercice 28 (p. 185)
+Q:
+[[crop:5:468:534]]
+A:
+$U = 0,030\u{J}$
+H:
+L'énergie totale se calcule avec la capacité équivalente.
+S:
+$$C_{\text{éq}} = \frac{(3,0)(5,0)}{8,0} = 1,875\u{µF}$$
+$$U = \frac{1}{2}C_{\text{éq}}\Delta V^{2} = \frac{1}{2}(1,875\times10^{-6})(180)^{2} = 0,030\u{J}$$
+=== em-ch5-e29 | 5 | 5.4 L'association de condensateurs | exercice | Exercice 29 (p. 185)
+Q:
+[[crop:5:557:794]]
+A:
+$C_{\text{éq}} = \frac{\varepsilon_{0}A}{b - a}$ (démonstration)
+H:
+Appelle $d_{1}$ et $d_{2}$ les deux espaces vides : leur somme ne dépend pas de la position.
+S:
+Soit $d_{1}$ et $d_{2}$ les espaces de chaque côté de la partie centrale, avec :
+$$d_{1} + d_{2} = b - a$$
+Les deux condensateurs sont en série :
+$$\frac{1}{C_{\text{éq}}} = \frac{d_{1}}{\varepsilon_{0}A} + \frac{d_{2}}{\varepsilon_{0}A} = \frac{d_{1} + d_{2}}{\varepsilon_{0}A} = \frac{b - a}{\varepsilon_{0}A}$$
+$$C_{\text{éq}} = \frac{\varepsilon_{0}A}{b - a}$$
+Seule la somme $d_{1} + d_{2}$ intervient : le résultat ne dépend pas de la position de la partie centrale.
+=== em-ch5-p30 | 5 | 5.4 L'association de condensateurs | probleme | Problème 30 (p. 185)
+Q:
+[[crop:5:817:955]]
+[[crop:6:45:242]]
+A:
+a. $C_{\text{éq}} = 3,43\u{µF}$ b. $Q_{1} = 12,9\u{µC}$, $Q_{2} = 21,4\u{µC}$, $Q_{3} = 34,3\u{µC}$ c. $\Delta V_{1} = \Delta V_{2} = 4,29\u{V}$, $\Delta V_{3} = 5,71\u{V}$ d. $U_{1} = 27,6\u{µJ}$, $U_{2} = 45,9\u{µJ}$, $U_{3} = 98,0\u{µJ}$
+H:
+$C_{1}$ et $C_{2}$ sont en parallèle, et ce groupe est en série avec $C_{3}$.
+S:
+**a.** $C_{12} = 3,00 + 5,00 = 8,00\u{µF}$, en série avec $C_{3}$ :
+$$C_{\text{éq}} = \frac{(8,00)(6,00)}{14,0} = 3,43\u{µF}$$
+**b.** Charge totale, qui est aussi celle de $C_{3}$ :
+$$Q_{3} = (3,43\u{µF})(10,0\u{V}) = 34,3\u{µC}$$
+**c.**
+$$\Delta V_{3} = \frac{34,3}{6,00} = 5,71\u{V} \quad \Delta V_{1} = \Delta V_{2} = 10,0 - 5,71 = 4,29\u{V}$$
+Retour à **b.** :
+$$Q_{1} = (3,00)(4,29) = 12,9\u{µC} \quad Q_{2} = (5,00)(4,29) = 21,4\u{µC}$$
+**d.** Avec $U = \frac{1}{2}Q\Delta V$ :
+$$U_{1} = 27,6\u{µJ} \quad U_{2} = 45,9\u{µJ} \quad U_{3} = 98,0\u{µJ}$$
+=== em-ch5-p31 | 5 | 5.4 L'association de condensateurs | probleme | Problème 31 (p. 185)
+Q:
+[[crop:6:265:607]]
+A:
+a. $C_{\text{éq}} = 10,80\u{µF}$ b. $U = 77,8\u{mJ}$ c. $Q_{1} = 576\u{µC}$, $Q_{2} = 720\u{µC}$, $Q_{3} = 576\u{µC}$ d. $\Delta V_{1} = 48,0\u{V}$, $\Delta V_{2} = 120\u{V}$, $\Delta V_{3} = 72,0\u{V}$ e. $U_{1} = 13,8\u{mJ}$, $U_{2} = 43,2\u{mJ}$, $U_{3} = 20,7\u{mJ}$
+H:
+$C_{2}$ est directement aux bornes de la source ; $C_{1}$ et $C_{3}$ forment une branche en série.
+S:
+**a.**
+$$C_{13} = \frac{(12,0)(8,00)}{20,0} = 4,80\u{µF} \quad C_{\text{éq}} = 4,80 + 6,00 = 10,80\u{µF}$$
+**b.**
+$$U = \frac{1}{2}(10,80\times10^{-6})(120)^{2} = 77,8\u{mJ}$$
+**c.** et **d.** $C_{2}$ a la tension de la source : $\Delta V_{2} = 120\u{V}$ et $Q_{2} = 720\u{µC}$.
+Dans la branche en série : $Q_{1} = Q_{3} = (4,80)(120) = 576\u{µC}$.
+$$\Delta V_{1} = \frac{576}{12,0} = 48,0\u{V} \quad \Delta V_{3} = \frac{576}{8,00} = 72,0\u{V}$$
+**e.** Avec $U = \frac{1}{2}Q\Delta V$ :
+$$U_{1} = 13,8\u{mJ} \quad U_{2} = 43,2\u{mJ} \quad U_{3} = 20,7\u{mJ}$$
+=== em-ch5-p33 | 5 | 5.4 L'association de condensateurs | probleme | Problème 33 (p. 186)
+Q:
+[[crop:6:630:955]]
+A:
+a. $Q_{1} = Q_{3} = 10,8\u{µC}$ et $Q_{2} = Q_{4} = 20,0\u{µC}$ b. $Q_{1} = 10,3\u{µC}$, $Q_{2} = 20,6\u{µC}$, $Q_{3} = 11,6\u{µC}$, $Q_{4} = 19,3\u{µC}$
+H:
+Ouvert : deux branches en série, en parallèle. Fermé : deux groupes en parallèle, en série.
+S:
+**a.** Interrupteur ouvert : $C_{1}$ et $C_{3}$ en série, $C_{2}$ et $C_{4}$ en série, chaque branche à 9,00 V.
+$$C_{13} = \frac{(2,00)(3,00)}{5,00} = 1,20\u{µF} \Rightarrow Q_{1} = Q_{3} = 10,8\u{µC}$$
+$$C_{24} = \frac{(4,00)(5,00)}{9,00} = 2,22\u{µF} \Rightarrow Q_{2} = Q_{4} = 20,0\u{µC}$$
+**b.** Interrupteur fermé : $C_{12} = 6,00\u{µF}$ et $C_{34} = 8,00\u{µF}$ sont en série.
+$$C_{\text{éq}} = \frac{(6,00)(8,00)}{14,0} = 3,43\u{µF} \Rightarrow Q = 30,9\u{µC}$$
+$$\Delta V_{12} = \frac{30,86}{6,00} = 5,14\u{V} \quad \Delta V_{34} = \frac{30,86}{8,00} = 3,86\u{V}$$
+$$Q_{1} = 10,3\u{µC} \quad Q_{2} = 20,6\u{µC} \quad Q_{3} = 11,6\u{µC} \quad Q_{4} = 19,3\u{µC}$$
+=== em-ch5-p34 | 5 | 5.4 L'association de condensateurs | probleme | Problème 34 (p. 186)
+Q:
+[[crop:7:79:233]]
+A:
+a. $Q_{1} = Q_{2} = 37\u{µC}$, $\Delta V_{1} = 7,4\u{V}$, $\Delta V_{2} = 4,6\u{V}$ b. $Q_{1}' = 28\u{µC}$, $Q_{2}' = 45\u{µC}$, $\Delta V_{1}' = \Delta V_{2}' = 5,7\u{V}$
+H:
+En b, la charge totale se conserve et les deux condensateurs finissent à la même tension.
+S:
+**a.**
+$$C_{\text{éq}} = \frac{(5,0)(8,0)}{13,0} = 3,08\u{µF} \Rightarrow Q = (3,08)(12,0) = 37\u{µC}$$
+$$\Delta V_{1} = \frac{36,9}{5,0} = 7,4\u{V} \quad \Delta V_{2} = \frac{36,9}{8,0} = 4,6\u{V}$$
+**b.** Même polarité reliée : les charges s'additionnent, et les condensateurs sont en parallèle.
+$$Q_{\text{tot}} = 2(36,9) = 73,8\u{µC} \Rightarrow \Delta V' = \frac{73,8}{13,0} = 5,7\u{V}$$
+$$Q_{1}' = (5,0)(5,68) = 28\u{µC} \quad Q_{2}' = (8,0)(5,68) = 45\u{µC}$$
+=== em-ch5-p35 | 5 | 5.4 L'association de condensateurs | probleme | Problème 35 (p. 186)
+Q:
+[[crop:7:256:392]]
+A:
+a. $\Delta V_{1} = \Delta V_{2} = 34,7\u{V}$ b. $Q_{1} = 0,052\u{mC}$ et $Q_{2} = 0,19\u{mC}$
+H:
+Polarités opposées reliées : les charges se soustraient.
+S:
+Charges initiales :
+$$Q_{1} = (1,50)(60,0) = 90,0\u{µC} \quad Q_{2} = (5,60)(60,0) = 336\u{µC}$$
+**a.** Les charges opposées se neutralisent, il reste $336 - 90,0 = 246\u{µC}$ réparties en parallèle :
+$$\Delta V = \frac{246}{1,50 + 5,60} = 34,7\u{V}$$
+**b.**
+$$Q_{1}' = (1,50)(34,65) = 52\u{µC} \quad Q_{2}' = (5,60)(34,65) = 194\u{µC}$$
+=== em-ch5-p36 | 5 | 5.4 L'association de condensateurs | probleme | Problème 36 (p. 186)
+Q:
+[[crop:7:415:744]]
+A:
+a. $C_{\text{éq}} = \frac{\varepsilon_{0}A(\kappa_{1} + \kappa_{2})}{2d}$ b. $C_{\text{éq}} = \frac{2\varepsilon_{0}A}{d}\times\frac{\kappa_{1}\kappa_{2}}{\kappa_{1} + \kappa_{2}}$
+H:
+Côte à côte : parallèle. L'un sur l'autre : série.
+S:
+**a.** Deux condensateurs en parallèle, d'aire $\frac{A}{2}$ et de distance $d$ :
+$$C_{\text{éq}} = \frac{\kappa_{1}\varepsilon_{0}(A/2)}{d} + \frac{\kappa_{2}\varepsilon_{0}(A/2)}{d} = \frac{\varepsilon_{0}A(\kappa_{1} + \kappa_{2})}{2d}$$
+**b.** Deux condensateurs en série, d'aire $A$ et de distance $\frac{d}{2}$ :
+$$C_{1} = \frac{2\kappa_{1}\varepsilon_{0}A}{d} \quad C_{2} = \frac{2\kappa_{2}\varepsilon_{0}A}{d}$$
+$$C_{\text{éq}} = \frac{C_{1}C_{2}}{C_{1} + C_{2}} = \frac{2\varepsilon_{0}A}{d}\times\frac{\kappa_{1}\kappa_{2}}{\kappa_{1} + \kappa_{2}}$$
+=== em-ch6-q2 | 6 | 6.1 Le courant électrique | question | Question 2 (p. 214)
+Q:
+[[crop:7:875:955]]
+[[crop:8:45:230]]
+A:
+$i = 4\u{mA}$, vers la gauche
+H:
+Ce qui entre dans le conducteur égale ce qui en sort.
+S:
+Courants qui entrent : $6 + 2 = 8\u{mA}$. Courants qui sortent : $3 + 1 = 4\u{mA}$.
+Il manque $8 - 4 = 4\u{mA}$ en sortie : $i = 4\u{mA}$ sort par la branche du haut à gauche, donc vers la gauche.
+=== em-ch6-e4 | 6 | 6.1 Le courant électrique | exercice | Exercice 4 (p. 214)
+Q:
+[[crop:8:253:316]]
+A:
+$N = 3,7\times10^{21}$ électrons
+H:
+$Q = i\Delta t$ et $Q = Ne$.
+S:
+$$Q = i\Delta t = (2,5)(4,00\times60) = 600\u{C}$$
+$$N = \frac{Q}{e} = \frac{600}{1,602\times10^{-19}} = 3,7\times10^{21}$$
+=== em-ch6-e5 | 6 | 6.1 Le courant électrique | exercice | Exercice 5 (p. 214)
+Q:
+[[crop:8:339:455]]
+A:
+$i = 34\u{mA}$
+H:
+Le courant instantané est la dérivée de la charge.
+S:
+$$i = \frac{dq}{dt} = 12,0t - 2,0$$
+À $t = 3,0\u{s}$ :
+$$i = 12,0(3,0) - 2,0 = 34\u{mA}$$
+=== em-ch6-p6 | 6 | 6.1 Le courant électrique | probleme | Problème 6 (p. 214)
+Q:
+[[crop:8:478:618]]
+A:
+a. $n = 6,026\times10^{28}\u{m^{-3}}$ b. $v_{d} = 7,34\times10^{-6}\u{m/s}$ c. $\Delta t = 1,58$ jour
+H:
+Un électron par atome : $n$ vient de la masse volumique et de la masse molaire. Puis $i = neAv_{d}$.
+S:
+**a.** Avec $\rho = 2700\u{kg/m^{3}}$ et $M = 0,02698\u{kg/mol}$ :
+$$n = \frac{\rho N_{A}}{M} = \frac{(2700)(6,022\times10^{23})}{0,02698} = 6,026\times10^{28}\u{m^{-3}}$$
+**b.** L'aire : $A = \pi(2,595\times10^{-3})^{2} = 2,116\times10^{-5}\u{m^{2}}$.
+$$v_{d} = \frac{i}{neA} = \frac{1,50}{(6,026\times10^{28})(1,602\times10^{-19})(2,116\times10^{-5})} = 7,34\times10^{-6}\u{m/s}$$
+**c.**
+$$\Delta t = \frac{1,00}{7,34\times10^{-6}} = 1,36\times10^{5}\u{s} = 1,58\text{ jour}$$
+=== em-ch6-p7 | 6 | 6.1 Le courant électrique | probleme | Problème 7 (p. 214)
+Q:
+[[crop:8:641:756]]
+A:
+a. $J = 22\u{A/m^{2}}$ vers la gauche b. $v_{d} = 1,63\times10^{-9}\u{m/s}$ vers la droite
+H:
+Le courant conventionnel va à l'inverse du mouvement des électrons.
+S:
+**a.**
+$$i = \frac{Ne}{\Delta t} = \frac{(270\times10^{10})(1,602\times10^{-19})}{1,00\times10^{-3}} = 4,33\times10^{-4}\u{A}$$
+$$A = \pi(2,50\times10^{-3})^{2} = 1,963\times10^{-5}\u{m^{2}}$$
+$$J = \frac{i}{A} = 22\u{A/m^{2}}$$
+Les électrons vont vers la droite, donc $J$ est vers la gauche.
+**b.** Avec $n \approx 8,45\times10^{28}\u{m^{-3}}$ pour le cuivre :
+$$v_{d} = \frac{J}{ne} = \frac{22}{(8,45\times10^{28})(1,602\times10^{-19})} = 1,63\times10^{-9}\u{m/s}$$
+Les électrons dérivent vers la droite.
+=== em-ch6-q10 | 6 | 6.2 Le champ électrique et la conduction | question | Question 10 (p. 214)
+Q:
+[[crop:8:811:955]]
+[[crop:9:45:121]]
+A:
+a. $J$ double. b. $J$ double. c. $J$ est divisée par 4. d. $J$ est plus faible dans l'aluminium.
+H:
+$J = \frac{E}{\rho} = \frac{i}{A}$
+S:
+$$J = \frac{E}{\rho} = \frac{i}{A}$$
+**a.** $E$ double, $\rho$ ne change pas : $J$ double.
+**b.** $i$ double, $A$ ne change pas : $J$ double.
+**c.** Pour le même courant, $d$ doublé donne $A$ multipliée par 4 : $J$ est divisée par 4.
+**d.** Même $E$ : $J$ est plus faible là où $\rho$ est plus grande, donc dans l'aluminium.
+=== em-ch6-e13 | 6 | 6.2 Le champ électrique et la conduction | exercice | Exercice 13 (p. 215)
+Q:
+[[crop:9:144:224]]
+A:
+$E = 61,1\u{mV/m}$
+H:
+$E = \rho J$ avec $J = \frac{i}{A}$.
+S:
+$$J = \frac{i}{A} = \frac{140}{\pi(3,50\times10^{-3})^{2}} = 3,64\times10^{6}\u{A/m^{2}}$$
+Avec $\rho_{\text{Cu}} = 1,68\times10^{-8}\u{Ω·m}$ :
+$$E = \rho J = (1,68\times10^{-8})(3,64\times10^{6}) = 61,1\times10^{-3}\u{V/m}$$
+=== em-ch6-e17 | 6 | 6.3 La résistivité et la température | exercice | Exercice 17 (p. 215)
+Q:
+[[crop:9:279:342]]
+A:
+$T = 1,7\times10^{2}\u{°C}$
+H:
+$\rho = \rho_{0}[1 + \alpha(T - T_{0})]$
+S:
+Avec $\rho_{\text{Cu}} = 1,68\times10^{-8}$, $\rho_{\text{Al}} = 2,65\times10^{-8}\u{Ω·m}$ à 20 °C et $\alpha_{\text{Cu}} = 3,9\times10^{-3}\u{°C^{-1}}$ :
+$$1,68\times10^{-8}[1 + \alpha(T - 20,0)] = 2,65\times10^{-8}$$
+$$T - 20,0 = \frac{(2,65/1,68) - 1}{3,9\times10^{-3}} = 148\u{°C}$$
+$$T = 1,7\times10^{2}\u{°C}$$
+=== em-ch6-e18 | 6 | 6.3 La résistivité et la température | exercice | Exercice 18 (p. 215)
+Q:
+[[crop:9:365:447]]
+A:
+$J = 0,124\u{A/m^{2}}$
+H:
+Même $E$ : $J$ varie à l'inverse de $\rho$.
+S:
+Avec $\alpha_{\text{Al}} = 3,9\times10^{-3}\u{°C^{-1}}$ :
+$$\frac{\rho}{\rho_{0}} = 1 + (3,9\times10^{-3})(-30,0 - 20,0) = 0,805$$
+$E = \rho J$ est constant :
+$$J = J_{0}\frac{\rho_{0}}{\rho} = \frac{0,100}{0,805} = 0,124\u{A/m^{2}}$$
+=== em-ch6-q19 | 6 | 6.4 Le courant dans les fils conducteurs | question | Question 19 (p. 215)
+Q:
+[[crop:9:502:623]]
+A:
+$R_{(ii)} < R_{(i)} < R_{(iii)}$
+H:
+$R = \frac{\rho\ell}{A}$
+S:
+$$R_{(i)} = \frac{\rho_{\text{Cu}}\ell}{A} \quad R_{(ii)} = \frac{\rho_{\text{Cu}}(2\ell)}{4A} = \frac{1}{2}R_{(i)}$$
+Le laiton a une résistivité plus grande que le cuivre, donc $R_{(iii)} > R_{(i)}$.
+=== em-ch6-q20 | 6 | 6.4 Le courant dans les fils conducteurs | question | Question 20 (p. 215)
+Q:
+[[crop:9:646:955]]
+A:
+a. $R_{2} < R_{1} < R_{3}$ b. $\Delta V_{2} < \Delta V_{1} < \Delta V_{3}$
+H:
+Même matériau : $R$ est proportionnelle à $\frac{\ell}{d^{2}}$.
+S:
+**a.** On compare $\frac{\ell}{d^{2}}$, en prenant le fil 1 comme référence :
+$$R_{1} = 1 \quad R_{2} = \frac{2}{2^{2}} = 0,5 \quad R_{3} = \frac{1}{(1/2)^{2}} = 4$$
+**b.** Même courant, donc $\Delta V = Ri$ suit le même ordre que $R$.
+=== em-ch6-q21 | 6 | 6.4 Le courant dans les fils conducteurs | question | Question 21 (p. 215)
+Q:
+[[crop:10:79:142]]
+A:
+La résistance est multipliée par 4.
+H:
+Le volume du fil ne change pas quand on l'étire.
+S:
+Volume constant : si $\ell$ double, $A$ est divisée par 2.
+$$R' = \frac{\rho(2\ell)}{A/2} = 4\frac{\rho\ell}{A} = 4R$$
+=== em-ch6-e24 | 6 | 6.4 Le courant dans les fils conducteurs | exercice | Exercice 24 (p. 215)
+Q:
+[[crop:10:165:230]]
+A:
+$R = 0,0143\u{Ω}$
+H:
+$R = \frac{\rho\ell}{A}$, avec la résistivité du fer du tableau du manuel.
+S:
+Valeur du manuel : $\rho_{\text{Fe}} \approx 8,57\times10^{-8}\u{Ω·m}$ (d'autres tables donnent une valeur un peu différente).
+$$R = \frac{\rho\ell}{A} = \frac{(8,57\times10^{-8})(1000)}{60,0\times10^{-4}} = 0,0143\u{Ω}$$
+=== em-ch6-e25 | 6 | 6.4 Le courant dans les fils conducteurs | exercice | Exercice 25 (p. 215)
+Q:
+[[crop:10:253:353]]
+A:
+$R = 2,25\times10^{-4}\u{Ω}$
+H:
+Additionne les trois résistances ; l'aire est la même partout.
+S:
+$$A = \pi(5,00\times10^{-3})^{2} = 7,854\times10^{-5}\u{m^{2}}$$
+Avec $\rho_{\text{Ni}} \approx 6,9\times10^{-8}$ et $\rho_{\text{Pt}} \approx 1,05\times10^{-7}\u{Ω·m}$ :
+$$R = \frac{\rho_{\text{Ni}}(0,100 + 0,0800) + \rho_{\text{Pt}}(0,0500)}{A} = 2,25\times10^{-4}\u{Ω}$$
+=== em-ch6-p26 | 6 | 6.4 Le courant dans les fils conducteurs | probleme | Problème 26 (p. 215)
+Q:
+[[crop:10:376:439]]
+A:
+$R = 16,7\u{Ω}$
+H:
+Volume constant : $R$ est proportionnelle à $\ell^{2}$.
+S:
+Volume constant : $A = \frac{V}{\ell}$, donc $R = \frac{\rho\ell^{2}}{V}$.
+$$R' = R\left(\frac{\ell'}{\ell}\right)^{2} = 1,50\left(\frac{10,0}{3,00}\right)^{2} = 16,7\u{Ω}$$
+=== em-ch6-p27 | 6 | 6.4 Le courant dans les fils conducteurs | probleme | Problème 27 (p. 215)
+Q:
+[[crop:10:462:602]]
+A:
+a. $\rho = 2,65\times10^{-8}\u{Ω·m}$ b. $J = 3,77\times10^{5}\u{A/m^{2}}$ c. $E = 10,0\u{mV/m}$
+H:
+$R = \frac{\Delta V}{i}$, puis $\rho = \frac{RA}{\ell}$.
+S:
+$$A = \pi(2,06\times10^{-3})^{2} = 1,333\times10^{-5}\u{m^{2}}$$
+**a.**
+$$R = \frac{0,100}{5,03} = 0,01988\u{Ω} \quad \rho = \frac{RA}{\ell} = 2,65\times10^{-8}\u{Ω·m}$$
+**b.**
+$$J = \frac{i}{A} = \frac{5,03}{1,333\times10^{-5}} = 3,77\times10^{5}\u{A/m^{2}}$$
+**c.**
+$$E = \frac{\Delta V}{\ell} = \frac{0,100}{10,0} = 10,0\u{mV/m}$$
+=== em-ch6-p29 | 6 | 6.4 Le courant dans les fils conducteurs | probleme | Problème 29 (p. 216)
+Q:
+[[crop:10:625:725]]
+A:
+$T = 421\u{°C}$
+H:
+Compare $R$ dans le four à $R_{0}$ à 20 °C : $R = R_{0}[1 + \alpha(T - T_{0})]$.
+S:
+Dans le four :
+$$R = \frac{0,400}{0,237} = 1,688\u{Ω}$$
+À 20 °C, avec $\rho_{\text{Pt}} \approx 1,05\times10^{-7}\u{Ω·m}$ et $A = \pi(1,0095\times10^{-4})^{2} = 3,20\times10^{-8}\u{m^{2}}$ :
+$$R_{0} = \frac{(1,05\times10^{-7})(0,200)}{3,20\times10^{-8}} = 0,656\u{Ω}$$
+Avec $\alpha_{\text{Pt}} = 3,92\times10^{-3}\u{°C^{-1}}$ :
+$$T = 20,0 + \frac{(1,688/0,656) - 1}{3,92\times10^{-3}} = 421\u{°C}$$
+=== em-ch6-p30 | 6 | 6.4 Le courant dans les fils conducteurs | probleme | Problème 30 (p. 216)
+Q:
+[[crop:10:748:955]]
+A:
+a. $R = 0,016\u{Ω}$ b. $i = 1,2\u{A}$ c. $v_{d} = 0,55\u{mm/s}$
+H:
+Corrige la résistance avec la température, puis $i = \frac{\Delta V}{R}$ et $v_{d} = \frac{i}{neA}$.
+S:
+$$A = \pi(2,275\times10^{-4})^{2} = 1,626\times10^{-7}\u{m^{2}}$$
+**a.** À 20 °C, $R_{0} = \frac{(1,68\times10^{-8})(1,00)}{A} = 0,1033\u{Ω}$. Avec $\alpha_{\text{Cu}} = 3,9\times10^{-3}\u{°C^{-1}}$ :
+$$R = 0,1033[1 + (3,9\times10^{-3})(-216)] = 0,016\u{Ω}$$
+**b.**
+$$i = \frac{0,020}{0,016} = 1,2\u{A}$$
+**c.** Avec $n \approx 8,45\times10^{28}\u{m^{-3}}$ :
+$$v_{d} = \frac{i}{neA} = \frac{1,2}{(8,45\times10^{28})(1,602\times10^{-19})(1,626\times10^{-7})} = 0,55\u{mm/s}$$
+=== em-ch6-q31 | 6 | 6.5 La résistance et la loi d'Ohm | question | Question 31 (p. 216)
+Q:
+[[crop:11:114:280]]
+A:
+$i_{(iii)} < i_{(ii)} < i_{(i)} < i_{(iv)}$
+H:
+Même pile : le plus petit courant va avec la plus grande résistance.
+S:
+On compare $\frac{\rho\ell}{A}$, avec $\rho_{\text{Cu}} = 1,68$ et $\rho_{\text{Al}} = 2,65$ (en $10^{-8}\u{Ω·m}$) :
+$$R_{(i)} \propto 1,68 \quad R_{(ii)} \propto 2,65 \quad R_{(iii)} \propto 3,36 \quad R_{(iv)} \propto 1,33$$
+$i = \frac{\Delta V}{R}$ donne l'ordre inverse : $i_{(iii)} < i_{(ii)} < i_{(i)} < i_{(iv)}$.
+=== em-ch6-e33 | 6 | 6.5 La résistance et la loi d'Ohm | exercice | Exercice 33 (p. 216)
+Q:
+[[crop:11:303:383]]
+A:
+$R_{0} = 23\u{Ω}$
+H:
+$R_{\text{chaud}} = \frac{\Delta V}{i}$, puis $R = R_{0}[1 + \alpha\Delta T]$.
+S:
+$$R = \frac{120}{0,500} = 240\u{Ω}$$
+Avec $\alpha_{\text{W}} = 4,5\times10^{-3}\u{°C^{-1}}$ :
+$$R_{0} = \frac{240}{1 + (4,5\times10^{-3})(2100 - 20)} = 23\u{Ω}$$
+=== em-ch6-e35 | 6 | 6.6 La puissance dans les circuits électriques | exercice | Exercice 35 (p. 216)
+Q:
+[[crop:11:438:534]]
+A:
+a. $i = 10,87\u{A}$ b. $R = 10,6\u{Ω}$
+H:
+$P = \Delta V i$
+S:
+**a.**
+$$i = \frac{P}{\Delta V} = \frac{1250}{115,0} = 10,87\u{A}$$
+**b.**
+$$R = \frac{\Delta V}{i} = \frac{115,0}{10,87} = 10,6\u{Ω}$$
+=== em-ch6-e37 | 6 | 6.6 La puissance dans les circuits électriques | exercice | Exercice 37 (p. 216)
+Q:
+[[crop:11:557:656]]
+A:
+$P = 5,04\u{kW}$
+H:
+La résistance reste la même : $P = \frac{\Delta V^{2}}{R}$.
+S:
+$$R = \frac{\Delta V^{2}}{P} = \frac{120^{2}}{1500} = 9,60\u{Ω}$$
+$$P' = \frac{220^{2}}{9,60} = 5,04\u{kW}$$
+=== em-ch6-e38 | 6 | 6.6 La puissance dans les circuits électriques | exercice | Exercice 38 (p. 216)
+Q:
+[[crop:11:679:837]]
+A:
+a. $P = 2,40\u{kW}$ b. $i = 10,0\u{A}$ c. Coût : 0,77 dollar
+H:
+Le coût est l'énergie en kilowattheures multipliée par le prix.
+S:
+**a.**
+$$P = \frac{\Delta V^{2}}{R} = \frac{240^{2}}{24,0} = 2,40\u{kW}$$
+**b.**
+$$i = \frac{\Delta V}{R} = \frac{240}{24,0} = 10,0\u{A}$$
+**c.** Énergie : $(2,40\u{kW})(4,00\u{h}) = 9,60\u{kWh}$. À 0,0800 dollar par kilowattheure, le coût est de 0,77 dollar.
+=== em-ch6-e39 | 6 | 6.6 La puissance dans les circuits électriques | exercice | Exercice 39 (p. 216)
+Q:
+[[crop:11:860:955]]
+[[crop:12:45:102]]
+A:
+a. $q = 4,00\u{mC}$ b. $P = 5,80\u{mW}$ c. $\Delta U = 0,348\u{J}$
+H:
+$q = i\Delta t$, $P = ℰ i$, $\Delta U = P\Delta t$.
+S:
+**a.**
+$$q = (4,00\times10^{-3})(1,00) = 4,00\u{mC}$$
+**b.**
+$$P = ℰ i = (1,45)(4,00\times10^{-3}) = 5,80\u{mW}$$
+**c.**
+$$\Delta U = P\Delta t = (5,80\times10^{-3})(60,0) = 0,348\u{J}$$
+=== em-ch6-p40 | 6 | 6.6 La puissance dans les circuits électriques | probleme | Problème 40 (p. 216)
+Q:
+[[crop:12:125:291]]
+A:
+a. $R = 18,0\u{Ω}$ b. $R_{0} = 17,3\u{Ω}$ c. $N = 269$ spires
+H:
+La longueur du fil vient de $R_{0}$, et chaque spire mesure $2\pi r$.
+S:
+**a.**
+$$R = \frac{\Delta V^{2}}{P} = \frac{120^{2}}{800} = 18,0\u{Ω}$$
+**b.** Avec $\alpha \approx 0,40\times10^{-3}\u{°C^{-1}}$ pour le nichrome :
+$$R_{0} = \frac{18,0}{1 + (0,40\times10^{-3})(100)} = 17,3\u{Ω}$$
+**c.** Avec $\rho_{0} \approx 1,08\times10^{-6}\u{Ω·m}$ et $A = \pi(1,295\times10^{-3})^{2} = 5,27\times10^{-6}\u{m^{2}}$ :
+$$\ell = \frac{R_{0}A}{\rho_{0}} = 84,4\u{m}$$
+$$N = \frac{\ell}{2\pi r} = \frac{84,4}{2\pi(0,0500)} = 269$$
+=== em-ch7-q2 | 7 | 7.2 Les lois de Kirchhoff | question | Question 2 (p. 244)
+Q:
+[[crop:12:424:599]]
+A:
+$i = 0,70\u{A}$, vers le haut
+H:
+Dans une résistance, le courant va du + vers le −.
+S:
+Dans chaque résistance, le courant va de la borne + vers la borne − :
+$$i_{\text{gauche}} = \frac{1,5}{5,0} = 0,30\u{A} \text{ vers le nœud}$$
+$$i_{\text{droite}} = \frac{2,4}{6,0} = 0,40\u{A} \text{ vers le nœud}$$
+Loi des nœuds : $i = 0,30 + 0,40 = 0,70\u{A}$, qui sort du nœud vers le haut.
+=== em-ch7-q3 | 7 | 7.2 Les lois de Kirchhoff | question | Question 3 (p. 244)
+Q:
+[[crop:12:622:955]]
+A:
+a. $i_{1} = i_{2} + i_{3}$ b. $ℰ_{1} - R_{1}i_{1} - R_{4}i_{3} = 0$ c. $-R_{2}i_{2} - ℰ_{2} - R_{3}i_{2} - \frac{Q}{C} + R_{4}i_{3} = 0$
+H:
+En suivant le sens du courant, une résistance fait baisser le potentiel ; contre le courant, elle le fait monter.
+S:
+**a.** Au nœud c, $i_{1}$ entre, $i_{2}$ et $i_{3}$ sortent :
+$$i_{1} = i_{2} + i_{3}$$
+**b.** Maille abca : on monte dans $ℰ_{1}$, puis on suit $i_{1}$ et $i_{3}$ :
+$$ℰ_{1} - R_{1}i_{1} - R_{4}i_{3} = 0$$
+**c.** Maille cdac : on suit $i_{2}$ dans $R_{2}$ et $R_{3}$, on traverse $ℰ_{2}$ et $C$ du + vers le −, puis on remonte $R_{4}$ contre $i_{3}$ :
+$$-R_{2}i_{2} - ℰ_{2} - R_{3}i_{2} - \frac{Q}{C} + R_{4}i_{3} = 0$$
+=== em-ch7-e4 | 7 | 7.2 Les lois de Kirchhoff | exercice | Exercice 4 (p. 244)
+Q:
+[[crop:13:79:255]]
+A:
+$i = 34,1\u{mA}$, en sens antihoraire
+H:
+Les deux piles se font face : c'est la plus forte qui impose le sens.
+S:
+Les deux sources s'opposent. $ℰ_{2}$, à droite, est la plus forte : elle pousse le courant vers le haut à droite, donc en sens antihoraire.
+$$i = \frac{ℰ_{2} - ℰ_{1}}{R_{1} + R_{2} + R_{3}} = \frac{15,0 - 12,0}{88,0} = 34,1\u{mA}$$
+=== em-ch7-e6 | 7 | 7.2 Les lois de Kirchhoff | exercice | Exercice 6 (p. 244)
+Q:
+[[crop:13:278:523]]
+A:
+a. $i_{3} = 18,0\u{mA}$, vers le bas b. $V_{b} - V_{a} = -2,75\u{V}$
+H:
+Parcours le chemin de b vers a, en additionnant les variations de potentiel.
+S:
+**a.** $i_{1}$ et $i_{2}$ entrent dans le nœud :
+$$i_{3} = 12,0 + 6,00 = 18,0\u{mA}, \text{ vers le bas}$$
+**b.** De b vers a : on monte dans $ℰ$, on suit $i_{1}$ dans $R_{1}$, on remonte $R_{2}$ contre $i_{2}$ :
+$$V_{b} + ℰ - R_{1}i_{1} + R_{2}i_{2} = V_{a}$$
+$$V_{b} - V_{a} = -5,00 + (250)(0,0120) - (125)(0,00600) = -2,75\u{V}$$
+=== em-ch7-p7 | 7 | 7.2 Les lois de Kirchhoff | probleme | Problème 7 (p. 244–245)
+Q:
+[[crop:13:546:955]]
+A:
+a. $Q_{1} = 138\u{µC}$ b. $i_{R_{2}} = 58,4\u{mA}$ et $i_{R_{4}} = 6,72\u{mA}$
+H:
+Le condensateur agit ici comme une tension $\frac{Q}{C}$ dans la maille. $C_{2}$ est en parallèle avec $R_{4}$.
+S:
+**a.** Maille de gauche :
+$$ℰ - i(R_{1} + R_{3}) - \frac{Q_{1}}{C_{1}} = 0$$
+$$Q_{1} = C_{1}[11,5 - (0,0150)(480)] = (32,0\u{µF})(4,30\u{V}) = 138\u{µC}$$
+**b.** $C_{2}$ est aux bornes de $R_{4}$ :
+$$\Delta V_{C_{2}} = \frac{137,6\u{µC}}{64,0\u{µF}} = 2,15\u{V}$$
+$$i_{R_{4}} = \frac{2,15}{320} = 6,72\u{mA}$$
+$R_{2}$ reçoit le reste de la tension de la source :
+$$i_{R_{2}} = \frac{11,5 - 2,15}{160} = 58,4\u{mA}$$
+=== em-ch7-q9 | 7 | 7.3 Les piles réelles | question | Question 9 (p. 245)
+Q:
+[[crop:14:114:362]]
+A:
+$\Delta V_{(iii)} < \Delta V_{(i)} < \Delta V_{(ii)}$
+H:
+Regarde si le courant traverse $r$ du haut vers le bas ou du bas vers le haut.
+S:
+**(i)** $i = 0$ : $\Delta V = ℰ$.
+**(ii)** Le courant descend de b vers a, donc b est plus haut que la pile de $ir$ : $\Delta V = ℰ + ir$.
+**(iii)** Le courant monte de a vers b : $\Delta V = ℰ - ir$.
+Donc $\Delta V_{(iii)} < \Delta V_{(i)} < \Delta V_{(ii)}$.
+=== em-ch7-e11 | 7 | 7.3 Les piles réelles | exercice | Exercice 11 (p. 245)
+Q:
+[[crop:14:385:448]]
+A:
+$r = 0,40\u{Ω}$
+H:
+La puissance dans $R$ donne $i$, puis $ℰ = i(R + r)$.
+S:
+$$i = \sqrt{\frac{P}{R}} = \sqrt{\frac{60,0}{1,50}} = 6,32\u{A}$$
+$$r = \frac{ℰ}{i} - R = \frac{12,0}{6,32} - 1,50 = 0,40\u{Ω}$$
+=== em-ch7-e12 | 7 | 7.3 Les piles réelles | exercice | Exercice 12 (p. 245)
+Q:
+[[crop:14:471:611]]
+A:
+a. $P_{ℰ} = 10,9\u{W}$ b. $P_{r} = 2,64\u{W}$ c. $P_{\text{batterie}} = 8,26\u{W}$
+H:
+$P_{ℰ} = ℰ i$, $P_{r} = i^{2}r$, et la différence va dans $R$.
+S:
+$$i = \frac{ℰ}{R + r} = \frac{6,00}{3,30} = 1,82\u{A}$$
+**a.** $P_{ℰ} = ℰ i = (6,00)(1,818) = 10,9\u{W}$
+**b.** $P_{r} = i^{2}r = (1,818)^{2}(0,800) = 2,64\u{W}$
+**c.** $P = i^{2}R = (1,818)^{2}(2,50) = 8,26\u{W}$
+=== em-ch7-p16 | 7 | 7.3 Les piles réelles | probleme | Problème 16 (p. 245)
+Q:
+[[crop:14:634:714]]
+A:
+$ℰ = 0,687\u{V}$ et $r = 318\u{Ω}$
+H:
+Écris $ℰ = i(R + r)$ pour les deux cas, puis égale-les.
+S:
+$$ℰ = (1,21\u{mA})(250 + r) = (0,840\u{mA})(500 + r)$$
+$$0,3025 + 1,21\times10^{-3}r = 0,420 + 0,840\times10^{-3}r$$
+$$r = \frac{0,1175}{0,370\times10^{-3}} = 318\u{Ω}$$
+$$ℰ = (1,21\times10^{-3})(250 + 318) = 0,687\u{V}$$
+=== em-ch7-q17 | 7 | 7.4 L'association de résistances | question | Question 17 (p. 245)
+Q:
+[[crop:14:769:955]]
+A:
+a. En parallèle. b. En série. c. En parallèle.
+H:
+Série : un seul chemin. Parallèle : mêmes deux nœuds aux extrémités.
+S:
+**a.** $R_{1}$ et $R_{2}$ relient les deux mêmes nœuds : en parallèle.
+**b.** Le courant passe dans $R_{1}$, puis dans $R_{2}$, sans autre chemin : en série.
+**c.** Chaque résistance relie les deux mêmes bornes de la pile : en parallèle.
+=== em-ch7-q18 | 7 | 7.4 L'association de résistances | question | Question 18 (p. 246)
+Q:
+[[crop:15:79:193]]
+A:
+a. L'ampoule de 100 W. b. L'ampoule de 60 W.
+H:
+Compare $R = \frac{\Delta V^{2}}{P}$, puis en série $P = i^{2}R$.
+S:
+**a.**
+$$R_{60} = \frac{120^{2}}{60} = 240\u{Ω} \quad R_{100} = \frac{120^{2}}{100} = 144\u{Ω}$$
+L'ampoule de 100 W a la plus petite résistance.
+**b.** En série, même courant : $P = i^{2}R$ est plus grande pour la plus grande résistance, donc l'ampoule de 60 W éclaire le plus.
+=== em-ch7-q19 | 7 | 7.4 L'association de résistances | question | Question 19 (p. 246)
+Q:
+[[crop:15:216:562]]
+A:
+(vi) < (ii) = (iii) < (iv) < (i) < (v)
+H:
+Dans (vi), regarde le fil du haut. Dans (v), regarde l'interrupteur.
+S:
+**(i)** En série : $3R$.
+**(ii)** et **(iii)** Trois résistances en parallèle : $\frac{R}{3}$.
+**(iv)** $R$ en série avec deux en parallèle : $R + \frac{R}{2} = 1,5R$.
+**(v)** Interrupteur ouvert : résistance infinie.
+**(vi)** Le fil du haut relie directement les deux bornes (court-circuit) : $0$.
+Donc (vi) < (ii) = (iii) < (iv) < (i) < (v).
+=== em-ch7-e20 | 7 | 7.4 L'association de résistances | exercice | Exercice 20 (p. 246)
+Q:
+[[crop:15:585:751]]
+A:
+a. $\Delta V = 4,8\u{V}$ b. $R = 1,8\u{Ω}$ c. $i = 2,7\u{A}$ d. $i_{\text{total}} = 2,7\u{A}$
+H:
+En série : la tension se partage également, le courant est le même partout.
+S:
+**a.**
+$$\Delta V = \frac{120}{25} = 4,8\u{V}$$
+**b.**
+$$R = \frac{\Delta V^{2}}{P} = \frac{4,8^{2}}{13} = 1,8\u{Ω}$$
+**c.**
+$$i = \frac{P}{\Delta V} = \frac{13}{4,8} = 2,7\u{A}$$
+**d.** En série, le courant de la prise est celui de chaque ampoule : $2,7\u{A}$.
+=== em-ch7-e21 | 7 | 7.4 L'association de résistances | exercice | Exercice 21 (p. 246)
+Q:
+[[crop:15:774:955]]
+A:
+$P_{ℰ} = 1,90\u{W}$
+H:
+$R_{3}$ et $R_{4}$ sont en série ; ce groupe est en parallèle avec $R_{2}$.
+S:
+$$R_{34} = 144 + 1080 = 1224\u{Ω}$$
+$$R_{234} = \frac{(210)(1224)}{210 + 1224} = 179,2\u{Ω}$$
+$$R_{\text{éq}} = 124 + 179,2 = 303,2\u{Ω}$$
+$$P = \frac{ℰ^{2}}{R_{\text{éq}}} = \frac{24,0^{2}}{303,2} = 1,90\u{W}$$
+=== em-ch7-p24 | 7 | 7.4 L'association de résistances | probleme | Problème 24 (p. 246)
+Q:
+[[crop:16:94:273]]
+A:
+$R = \frac{R_{o}}{\sqrt{3}}$
+H:
+Écris $R_{\text{éq}}$ en fonction de $R$ et $R_{o}$, pose-la égale à $R_{o}$, puis simplifie.
+S:
+La résistance du milieu est en parallèle avec la branche $R + R_{o}$ :
+$$R_{\text{éq}} = R + \frac{R(R + R_{o})}{2R + R_{o}} = R_{o}$$
+On multiplie par $2R + R_{o}$ :
+$$R(2R + R_{o}) + R(R + R_{o}) = R_{o}(2R + R_{o})$$
+$$3R^{2} + 2RR_{o} = 2RR_{o} + R_{o}^{2}$$
+$$R = \frac{R_{o}}{\sqrt{3}}$$
+=== em-ch7-p26 | 7 | 7.4 L'association de résistances | probleme | Problème 26 (p. 247)
+Q:
+[[crop:16:296:486]]
+A:
+$i_{1} = 0,112\u{mA}$, $\Delta V_{1} = 1,34\u{V}$ ; $i_{2} = 0,179\u{mA}$, $\Delta V_{2} = 1,34\u{V}$ ; $i_{3} = 0,291\u{mA}$, $\Delta V_{3} = 6,98\u{V}$ ; $i_{4} = 0,157\u{mA}$, $\Delta V_{4} = 8,33\u{V}$ ; $i_{5} = 0,448\u{mA}$, $\Delta V_{5} = 3,67\u{V}$
+H:
+$R_{1} \parallel R_{2}$, en série avec $R_{3}$ ; ce groupe est en parallèle avec $R_{4}$, puis en série avec $R_{5}$.
+S:
+Réduction du circuit (en kΩ) :
+$$R_{12} = \frac{(12,0)(7,50)}{19,5} = 4,62$$
+$$R_{123} = 4,62 + 24,0 = 28,6$$
+$$R_{1234} = \frac{(28,6)(53,0)}{81,6} = 18,6$$
+$$R_{\text{éq}} = 18,6 + 8,20 = 26,8$$
+Courant total, qui passe dans $R_{5}$ :
+$$i_{5} = \frac{12,0}{26,8} = 0,448\u{mA} \quad \Delta V_{5} = 3,67\u{V}$$
+Il reste $\Delta V_{4} = 12,0 - 3,67 = 8,33\u{V}$, donc $i_{4} = 0,157\u{mA}$.
+Dans l'autre branche, $i_{3} = 0,448 - 0,157 = 0,291\u{mA}$ et $\Delta V_{3} = 6,98\u{V}$.
+Il reste $\Delta V_{1} = \Delta V_{2} = 8,33 - 6,98 = 1,34\u{V}$, donc $i_{1} = 0,112\u{mA}$ et $i_{2} = 0,179\u{mA}$.
+=== em-ch7-p27 | 7 | 7.4 L'association de résistances | probleme | Problème 27 (p. 247)
+Q:
+[[crop:16:509:753]]
+A:
+a. $i = \frac{4ℰ}{40 + 14R}$ b. $P = \frac{16ℰ^{2}R}{(40 + 14R)^{2}}$ c. $R = 2,86\u{Ω}$
+H:
+Pour le maximum, dérive $P$ par rapport à $R$ et pose la dérivée égale à zéro.
+S:
+**a.** Résistance équivalente et courant total :
+$$R_{\text{éq}} = 10 + \frac{4R}{4 + R} = \frac{40 + 14R}{4 + R}$$
+$$i_{\text{tot}} = \frac{ℰ(4 + R)}{40 + 14R}$$
+Diviseur de courant entre $R$ et $R_{2}$ :
+$$i = i_{\text{tot}}\frac{4}{4 + R} = \frac{4ℰ}{40 + 14R}$$
+**b.**
+$$P = i^{2}R = \frac{16ℰ^{2}R}{(40 + 14R)^{2}}$$
+**c.** $\frac{dP}{dR} = 0$ donne :
+$$(40 + 14R) - 28R = 0 \Rightarrow R = \frac{40}{14} = 2,86\u{Ω}$$
+=== em-ch7-q28 | 7 | 7.5 Les instruments de mesure | question | Question 28 (p. 247)
+Q:
+[[crop:16:807:955]]
+A:
+$\Delta V_{2} < \Delta V_{1} = \Delta V_{3}$
+H:
+Repère les deux points où chaque voltmètre est branché.
+S:
+$V_{1}$ et $V_{3}$ sont branchés aux bornes de la source : ils lisent $ℰ$.
+$V_{2}$ est aux bornes de $R_{2}$ seulement : il lit une partie de $ℰ$, car $R_{1}$ prend l'autre partie.
+=== em-ch7-e29 | 7 | 7.5 Les instruments de mesure | exercice | Exercice 29 (p. 247)
+Q:
+[[crop:17:94:377]]
+A:
+a. $i_{\text{réel}} = 4,29\u{mA}$ b. $i_{\text{mes}} = 4,17\u{mA}$ c. Erreur relative : 2,8 %
+H:
+L'ampèremètre s'ajoute en série et augmente la résistance totale.
+S:
+**a.**
+$$i_{\text{réel}} = \frac{3,00}{200 + 500} = 4,29\u{mA}$$
+**b.**
+$$i_{\text{mes}} = \frac{3,00}{200 + 500 + 20} = 4,17\u{mA}$$
+**c.**
+$$\frac{4,286 - 4,167}{4,286}\times100\% = 2,8\%$$
+=== em-ch7-e32 | 7 | 7.6 Les circuits à plusieurs sources de f.é.m. | exercice | Exercice 32 (p. 247)
+Q:
+[[crop:17:431:649]]
+A:
+$i_{ℰ_{1}} = 38\u{mA}$, de la borne + à la borne − ; $i_{ℰ_{2}} = 55\u{mA}$, de la borne − à la borne + ; $i_{ℰ_{3}} = 16\u{mA}$, de la borne + à la borne −
+H:
+$ℰ_{2}$ est idéale et fixe la tension entre le haut et le bas : chaque maille se résout seule.
+S:
+$ℰ_{2}$ impose 9,0 V entre le nœud du haut et celui du bas.
+Maille de gauche :
+$$i_{1} = \frac{9,0 - 1,5}{15 + 180} = 38\u{mA}$$
+Il entre par la borne + de $ℰ_{1}$.
+Maille de droite :
+$$i_{3} = \frac{9,0 - 6,0}{62 + 120} = 16\u{mA}$$
+Il entre par la borne + de $ℰ_{3}$.
+Nœud du haut :
+$$i_{2} = 38,5 + 16,5 = 55\u{mA}$$
+Il traverse $ℰ_{2}$ de la borne − à la borne +.
+=== em-ch7-p34 | 7 | 7.6 Les circuits à plusieurs sources de f.é.m. | probleme | Problème 34 (p. 248)
+Q:
+[[crop:17:672:955]]
+A:
+a. $i = 0,714\u{mA}$, vers la gauche b. $V_{b} - V_{a} = 1,04\u{V}$
+H:
+Prends le nœud du bas, entre l'ampèremètre et $R_{4}$, comme zéro, et écris les trois courants qui sortent de a.
+S:
+**a.** On pose le nœud du bas à 0 V et on écrit les courants qui sortent de a (en mA, avec les résistances en kΩ) :
+$$\frac{V_{a} - 12,0}{2,00} + \frac{V_{a} - 17,0}{4,00} + \frac{V_{a} + 8,00}{3,00 + 5,00} = 0$$
+$$7V_{a} = 74 \Rightarrow V_{a} = 10,57\u{V}$$
+Dans la branche de l'ampèremètre :
+$$i_{1} = \frac{10,57 - 12,0}{2,00} = -0,714\u{mA}$$
+Le signe négatif indique que le courant va vers a par $R_{1}$. Dans l'ampèremètre, il circule donc vers la gauche.
+**b.** Courant de la branche de droite :
+$$i_{3} = \frac{10,57 + 8,00}{8,00} = 2,32\u{mA}$$
+$$V_{b} = (2,32)(5,00) = 11,61\u{V}$$
+$$V_{b} - V_{a} = 11,61 - 10,57 = 1,04\u{V}$$
+=== em-ch7-p35 | 7 | 7.6 Les circuits à plusieurs sources de f.é.m. | probleme | Problème 35 (p. 248)
+Q:
+[[crop:18:79:369]]
+A:
+a. $i_{ℰ_{1}} = 0,500\u{A}$, vers le haut ; $i_{ℰ_{2}} = 0,500\u{A}$, vers le bas ; $i_{ℰ_{3}} = 0$ b. $\Delta V_{1} = 5,50\u{V}$ ; $\Delta V_{2} = 2,50\u{V}$ ; $\Delta V_{3} = 4,00\u{V}$
+H:
+Chaque branche a $R + r = 4,00\u{Ω}$. Cherche le potentiel du nœud du haut.
+S:
+**a.** Avec le bas à 0 V et le nœud du haut à $V$, la somme des courants est nulle :
+$$\frac{6,00 - V}{4,00} + \frac{2,00 - V}{4,00} + \frac{4,00 - V}{4,00} = 0 \Rightarrow V = 4,00\u{V}$$
+$$i_{1} = \frac{6,00 - 4,00}{4,00} = 0,500\u{A} \text{ vers le haut}$$
+$$i_{2} = \frac{2,00 - 4,00}{4,00} = -0,500\u{A}, \text{ donc vers le bas}$$
+$$i_{3} = \frac{4,00 - 4,00}{4,00} = 0$$
+**b.**
+$$\Delta V_{1} = 6,00 - (0,500)(1,00) = 5,50\u{V}$$
+$$\Delta V_{2} = 2,00 + (0,500)(1,00) = 2,50\u{V}$$
+$$\Delta V_{3} = 4,00\u{V}$$
+=== em-ch7-p36 | 7 | 7.6 Les circuits à plusieurs sources de f.é.m. | probleme | Problème 36 (p. 248)
+Q:
+[[crop:18:392:737]]
+A:
+a. $i_{2} = 933\u{µA}$, vers le bas b. $R_{3} = 2,00\u{kΩ}$ c. $R_{1} = 252\u{Ω}$
+H:
+$V_{a} - V_{b}$ est connu : c'est la tension de chaque branche entre a et b.
+S:
+On a $V_{a} - V_{b} = 5,12\u{V}$.
+**a.** Branche du milieu :
+$$i_{2} = \frac{5,12 - 4,00}{1,20\times10^{3}} = 933\u{µA}, \text{ vers le bas}$$
+**b.**
+$$R_{3} = \frac{5,12}{2,56\times10^{-3}} = 2,00\u{kΩ}$$
+**c.** Loi des nœuds en a :
+$$i_{1} = 2,56 + 0,933 = 3,49\u{mA}$$
+$$R_{1} = \frac{6,00 - 5,12}{3,49\times10^{-3}} = 252\u{Ω}$$
+=== em-ch7-p37 | 7 | 7.6 Les circuits à plusieurs sources de f.é.m. | probleme | Problème 37 (p. 248)
+Q:
+[[crop:18:760:955]]
+[[crop:19:45:232]]
+A:
+a. $i_{3} = 6,71\u{mA}$ (le manuel indique 6,70 mA) b. $V_{b} - V_{c} = 8,00\u{V}$ c. $V_{b} - V_{d} = -4,00\u{V}$ d. $V_{b} - V_{f} = 3,00\u{V}$
+H:
+Les f.é.m. sont inconnues : passe par les chemins qui contiennent seulement des résistances à partir de a.
+S:
+**a.** Au nœud b :
+$$i_{3} = i_{1} + i_{2} = 4,51 + 2,20 = 6,71\u{mA}$$
+**b.** $i_{1}$ va de a vers c dans $R_{1}$, donc $V_{a} - V_{c} = R_{1}i_{1} = 6,00\u{V}$ :
+$$V_{b} - V_{c} = (V_{b} - V_{a}) + (V_{a} - V_{c}) = 2,00 + 6,00 = 8,00\u{V}$$
+**c.** $i_{3}$ va de d vers a dans $R_{3}$, donc $V_{d} - V_{a} = R_{3}i_{3} = 6,00\u{V}$ :
+$$V_{b} - V_{d} = 2,00 - 6,00 = -4,00\u{V}$$
+**d.** $i_{2}$ va de a vers f dans $R_{2}$, donc $V_{a} - V_{f} = R_{2}i_{2} = 1,00\u{V}$ :
+$$V_{b} - V_{f} = 2,00 + 1,00 = 3,00\u{V}$$
+=== em-ch7-q40 | 7 | 7.7 Les circuits RC | question | Question 40 (p. 249)
+Q:
+[[crop:19:287:368]]
+A:
+L'intensité est maximale au départ, puis diminue graduellement jusqu'à zéro.
+H:
+Un condensateur déchargé agit d'abord comme un fil, puis chargé comme un circuit ouvert.
+S:
+À $t = 0$, le condensateur est vide : le courant est maximal, $i = \frac{ℰ}{R}$, et l'ampoule brille fortement.
+Le condensateur se charge et le courant diminue selon $i = \frac{ℰ}{R}e^{-t/\tau}$. L'ampoule faiblit jusqu'à s'éteindre.
+=== em-ch7-q41 | 7 | 7.7 Les circuits RC | question | Question 41 (p. 249)
+Q:
+[[crop:19:391:715]]
+A:
+a. $\tau_{(ii)} < \tau_{(i)} < \tau_{(iii)}$ b. Toutes égales, car $Q_{m} = Cℰ$. c. $i_{m,(iii)} < i_{m,(i)} < i_{m,(ii)}$
+H:
+Trouve la résistance en série avec le condensateur dans chaque circuit.
+S:
+Résistance dans la branche du condensateur :
+$$R_{(i)} = R \quad R_{(ii)} = \frac{R}{2} \quad R_{(iii)} = 2R$$
+**a.** $\tau = RC$ suit le même ordre.
+**b.** En fin de charge, $\Delta V_{C} = ℰ$ dans les trois cas, donc $Q_{m} = Cℰ$ est la même.
+**c.** $i_{m} = \frac{ℰ}{R}$ suit l'ordre inverse de la résistance.
+=== em-ch7-q42 | 7 | 7.7 Les circuits RC | question | Question 42 (p. 249)
+Q:
+[[crop:19:738:955]]
+[[crop:20:45:232]]
+A:
+a. $\tau_{(ii)} = \tau_{(iv)} < \tau_{(i)} = \tau_{(iii)}$ b. $R_{(ii)} = R_{(iv)} < R_{(i)} = R_{(iii)}$ c. $i_{m,(iii)} < i_{m,(i)} = i_{m,(iv)} < i_{m,(ii)}$
+H:
+Une courbe qui chute plus vite a un $\tau$ plus petit. Le courant initial vaut $\frac{Q_{0}}{\tau}$.
+S:
+**a.** D'après les courbes, (ii) et (iv) tombent plus vite que (i) et (iii) : leur $\tau$ est plus petit.
+**b.** $C$ est la même, donc $R = \frac{\tau}{C}$ suit le même ordre que $\tau$.
+**c.** $i_{m} = \frac{Q_{0}}{RC} = \frac{Q_{0}}{\tau}$. Avec $Q_{0}$ double pour (i) et (ii), et $\tau$ double pour (i) et (iii) :
+$$i_{m,(iii)} \propto \frac{1}{2} \quad i_{m,(i)} \propto 1 \quad i_{m,(iv)} \propto 1 \quad i_{m,(ii)} \propto 2$$
+=== em-ch7-e44 | 7 | 7.7 Les circuits RC | exercice | Exercice 44 (p. 249)
+Q:
+[[crop:20:255:526]]
+A:
+a. $\Delta V_{C} = 75,9\u{V}$ b. $\Delta V_{R} = 44,1\u{V}$ c. $U_{E} = 0,056\u{J}$
+H:
+Charge : $\Delta V_{C} = ℰ(1 - e^{-t/\tau})$.
+S:
+$$\tau = RC = (200\times10^{3})(50,0\times10^{-6}) = 10,0\u{s}$$
+**a.**
+$$\Delta V_{C} = 120(1 - e^{-1}) = 75,9\u{V}$$
+**b.**
+$$\Delta V_{R} = 120 - 75,9 = 44,1\u{V}$$
+**c.**
+$$\Delta V_{C} = 120(1 - e^{-0,5}) = 47,2\u{V}$$
+$$U_{E} = \frac{1}{2}C\Delta V_{C}^{2} = \frac{1}{2}(50,0\times10^{-6})(47,2)^{2} = 0,056\u{J}$$
+=== em-ch7-e46 | 7 | 7.7 Les circuits RC | exercice | Exercice 46 (p. 249)
+Q:
+[[crop:20:549:664]]
+A:
+a. $t = 41,6\u{ms}$ b. $t = 20,8\u{ms}$
+H:
+$U$ est proportionnelle à $Q^{2}$, donc l'énergie décroît deux fois plus vite.
+S:
+**a.**
+$$Q = Q_{0}e^{-t/\tau} \Rightarrow t = \tau\ln2 = (60,0)(0,693) = 41,6\u{ms}$$
+**b.**
+$$U = U_{0}e^{-2t/\tau} \Rightarrow t = \frac{\tau}{2}\ln2 = 20,8\u{ms}$$
+=== em-ch7-e47 | 7 | 7.7 Les circuits RC | exercice | Exercice 47 (p. 249)
+Q:
+[[crop:20:687:827]]
+A:
+a. $\tau = 3,75\u{s}$ b. $Q_{m} = 775\u{µC}$ c. $i = 54,4\u{µA}$
+H:
+$U = \frac{Q^{2}}{2C}$ donne la charge initiale. En décharge, $i = \frac{Q_{m}}{\tau}e^{-t/\tau}$.
+S:
+**a.**
+$$\tau = RC = (1,50\times10^{6})(2,50\times10^{-6}) = 3,75\u{s}$$
+**b.**
+$$Q_{m} = \sqrt{2CU} = \sqrt{2(2,50\times10^{-6})(0,120)} = 775\u{µC}$$
+**c.**
+$$i = \frac{Q_{m}}{\tau}e^{-t/\tau} = \frac{775\u{µC}}{3,75\u{s}}e^{-5,00/3,75} = 54,4\u{µA}$$
+=== em-ch7-e48 | 7 | 7.7 Les circuits RC | exercice | Exercice 48 (p. 249)
+Q:
+[[crop:20:850:955]]
+[[crop:21:45:281]]
+A:
+a. $t_{1/2} = RC\ln2$ b. Une droite de pente $C\ln2$ passant par l'origine.
+H:
+En décharge, $\Delta V = \Delta V_{0}e^{-t/RC}$.
+S:
+**a.**
+$$\frac{\Delta V_{0}}{2} = \Delta V_{0}e^{-t/RC} \Rightarrow t_{1/2} = RC\ln2$$
+**b.** $t_{1/2}$ est proportionnel à $R$ : le graphique de $t_{1/2}$ en fonction de $R$ est une droite de pente $C\ln2$, avec une ordonnée à l'origine nulle.
+=== em-ch7-p49 | 7 | 7.7 Les circuits RC | probleme | Problème 49 (p. 250)
+Q:
+[[crop:21:304:596]]
+A:
+a. $Q = 10,2\u{µC}$ b. $i_{2} = 357\u{µA}$ c. $t = 48,7\u{ms}$
+H:
+Réduis les résistances à une seule $R_{\text{éq}}$ vue par le condensateur.
+S:
+$R_{3}$ et $R_{4}$ en série donnent $14,1\u{kΩ}$, en parallèle avec $R_{2}$, puis en série avec $R_{1}$ :
+$$R_{\text{éq}} = 4,00 + \frac{(5,00)(14,1)}{19,1} = 7,69\u{kΩ}$$
+$$\tau = R_{\text{éq}}C = (7,69\times10^{3})(2,75\times10^{-6}) = 21,15\u{ms}$$
+**a.**
+$$Q = 12,2\,e^{-3,70/21,15} = 10,2\u{µC}$$
+**b.** Courant total, puis diviseur de courant :
+$$i = \frac{Q}{\tau} = \frac{10,24\u{µC}}{21,15\u{ms}} = 484\u{µA}$$
+$$i_{2} = 484\times\frac{14,1}{19,1} = 357\u{µA}$$
+**c.**
+$$t = \tau\ln\frac{12,2}{1,22} = (21,15)\ln10 = 48,7\u{ms}$$
+=== em-ch7-p51 | 7 | 7.7 Les circuits RC | probleme | Problème 51 (p. 250)
+Q:
+[[crop:21:619:955]]
+A:
+a. $i_{1} = 110\u{mA}$ et $i_{2} = i_{3} = 54,8\u{mA}$ b. $i_{1} = i_{2} = 82,2\u{mA}$ et $i_{3} = 0$
+H:
+À $t = 0$, $C$ agit comme un fil. Quand $t \to \infty$, $C$ agit comme un circuit ouvert.
+S:
+**a.** À $t = 0$, $C$ est un fil : $R_{2}$ et $R_{3}$ sont en parallèle.
+$$R_{\text{éq}} = 730 + \frac{730}{2} = 1095\u{Ω}$$
+$$i_{1} = \frac{120}{1095} = 110\u{mA} \quad i_{2} = i_{3} = \frac{i_{1}}{2} = 54,8\u{mA}$$
+**b.** Quand $t \to \infty$, aucun courant ne passe dans la branche de $C$ : $i_{3} = 0$.
+$$i_{1} = i_{2} = \frac{120}{730 + 730} = 82,2\u{mA}$$
+  </script>
   <script>
     // =========================================================================
     // FORMULES EN 2D : mini-TeX → MathML (natif dans Safari, marche hors ligne)
@@ -2282,6 +3510,8 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
       Delta: '<mi mathvariant="normal">Δ</mi>', chi: "<mi>χ</mi>", alpha: "<mi>α</mi>",
       times: "<mo>×</mo>", cdot: "<mo>·</mo>", approx: "<mo>≈</mo>", Rightarrow: '<mo lspace="0.4em" rspace="0.4em">⇒</mo>',
       to: "<mo>→</mo>", rightleftharpoons: "<mo>⇌</mo>", geq: "<mo>≥</mo>", leq: "<mo>≤</mo>", neq: "<mo>≠</mo>",
+      kappa: "<mi>κ</mi>", varepsilon: "<mi>ε</mi>", epsilon: "<mi>ε</mi>", tau: "<mi>τ</mi>", rho: "<mi>ρ</mi>", ell: "<mi>ℓ</mi>",
+      Omega: '<mi mathvariant="normal">Ω</mi>', parallel: "<mo>∥</mo>",
       pm: "<mo>±</mo>", dots: "<mo>…</mo>", ln: '<mi>ln</mi><mspace width="0.17em"/>', log: '<mi>log</mi><mspace width="0.17em"/>',
       ",": '<mspace width="0.17em"/>', ";": '<mspace width="0.28em"/>', quad: '<mspace width="1em"/>', qquad: '<mspace width="2em"/>',
       "%": "<mo>%</mo>", " ": '<mspace width="0.25em"/>', "{": '<mo stretchy="false">{</mo>', "}": '<mo stretchy="false">}</mo>',
@@ -2385,6 +3615,7 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
           return w.split("").map(ch => `<mi>${ch}</mi>`);
         }
         if (c === "Δ") { i++; return ['<mi mathvariant="normal">Δ</mi>']; }
+        if (c === "ℰ") { i++; return ["<mi>ℰ</mi>"]; }
         if (c === "°") { i++; return ["<mo>°</mo>"]; }
         if (c === "'") { i++; return ["<mo>′</mo>"]; }
         i++;
@@ -2482,6 +3713,8 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
         }
         const fig = line.match(/^\[\[fig:([\w.-]+)\]\]$/);
         if (fig) { html += `<figure class="fig">${FIGURES[fig[1]] || ""}</figure>`; i++; continue; }
+        const crop = line.match(/^\[\[crop:(\d+):(\d+):(\d+)\]\]$/);
+        if (crop) { html += `<div class="pdfcrop" data-p="${crop[1]}" data-a="${crop[2]}" data-b="${crop[3]}"></div>`; i++; continue; }
         if (/^\$\$[\s\S]*\$\$$/.test(line) && line.indexOf("$$", 2) === line.length - 2) {
           html += `<div class="mdisp">${texToMathML(line.slice(2, -2), true)}</div>`; i++; continue;
         }
@@ -2538,7 +3771,10 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
         hint: e.H.join("\n").trim(), solution: e.S.join("\n").trim()
       }));
     }
-    const EXERCISES = parseExercises(document.getElementById("exData").textContent);
+    const EXERCISES = [
+      ...parseExercises(document.getElementById("exData").textContent).map(e => Object.assign(e, { course: "chimie" })),
+      ...parseExercises(document.getElementById("exDataEm").textContent).map(e => Object.assign(e, { course: "em" }))
+    ];
     function plainText(t) {
       return String(t).replace(/\\ce\{([^}]*)\}/g, "$1").replace(/[{}$\\]/g, "").replace(/\s+/g, " ");
     }
@@ -2571,6 +3807,7 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
       share: '<path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="m16 6-4-4-4 4"/><path d="M12 2v13"/>',
       save: '<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/>',
       lasso: '<path d="M7 22a5 5 0 0 1-2-4"/><path d="M3.3 14A6.8 6.8 0 0 1 2 10c0-4.4 4.5-8 10-8s10 3.6 10 8-4.5 8-10 8a12 12 0 0 1-5-1" stroke-dasharray="3 3"/><path d="M5 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>',
+      home: '<path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/>',
       trash: '<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>'
     };
     function setIcon(el, name) {
@@ -2618,7 +3855,8 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
     let exStatusMap = {};
     let prefs = {
       tool: "pen", color: "#0f172a", size: 1, paper: "grid", eraserMode: "stroke",
-      fingerDraw: false, statementCollapsed: false, lastEx: null, drawerOpen: null
+      fingerDraw: false, statementCollapsed: false, lastEx: null, drawerOpen: null,
+      lastByCourse: {}, docZoom: 1, docPos: {}
     };
 
     const sessions = {};   // exId -> { doc: {strokes, pageH}, undo: [], redo: [] }
@@ -2656,8 +3894,15 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
     // =========================================================================
     // INITIALISATION
     // =========================================================================
-    function initApp() {
+    async function initApp() {
       injectIcons();
+      idb = await idbOpen();
+      if (idb) {
+        try {
+          (await idbPairs("ink", IDBKeyRange.upperBound(DOC_PREFIX, true))).forEach(([k, v]) => inkCache.set(k, v));
+          docs = (await idbPairs("docs")).map(p => p[1]);
+        } catch (e) {}
+      }
       // Aide-mémoire : formules écrites en mini-TeX, affichées en 2D
       document.querySelectorAll("[data-render]").forEach(el => {
         const title = el.querySelector(".box-title");
@@ -2689,24 +3934,28 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
         safeSet(LS.notes, notes);
       });
 
-      const last = EXERCISES.find(e => e.id === prefs.lastEx);
-      currentExId = last ? last.id : null;
-      selectChapter(last ? last.chapter : 2);
+      renderHome();
 
       // Rappel doux : une copie dans Fichiers au moins une fois par semaine
       const lastBackup = safeGet("sn2v2_last_backup", 0);
       if (EXERCISES.some(e => exStatusMap[e.id] || hasInk(e.id)) && Date.now() - lastBackup > 7 * 864e5) {
-        setTimeout(() => showToast("Pense à faire une copie de tes réponses : ⋯ → Sauvegarde de mes réponses."), 1500);
+        setTimeout(() => showToast("Pense à faire une copie de tes réponses : bouton Sauvegarde, sur cet écran."), 1500);
       }
 
       // Demande à l'iPad de ne jamais effacer les données de l'app
       try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch (e) {}
       // Mode hors ligne : seulement quand la page est servie comme app (https), pas en fichier local
-      if ("serviceWorker" in navigator && location.protocol === "https:" && window.self === window.top) {
+      if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost") && window.self === window.top) {
         const hadController = !!navigator.serviceWorker.controller;
-        navigator.serviceWorker.register("sw.js").catch(() => {});
+        navigator.serviceWorker.register("sw.js").then(reg => {
+          // l'iPad garde souvent l'app ouverte : on revérifie à chaque retour dans l'app
+          document.addEventListener("visibilitychange", () => { if (!document.hidden) reg.update().catch(() => {}); });
+        }).catch(() => {});
         navigator.serviceWorker.addEventListener("controllerchange", () => {
-          if (hadController) showToast("Nouvelle version installée : ferme et rouvre l'app pour l'utiliser.");
+          if (!hadController) return;
+          pendingReload = true;
+          tryReload();
+          if (pendingReload) showToast("Nouvelle version prête : elle s'installera au retour à l'écran des cours.");
         });
       }
     }
@@ -2747,8 +3996,9 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
     // =========================================================================
     // SAUVEGARDE / RESTAURATION
     // =========================================================================
-    function collectBackup() {
+    async function collectBackup() {
       saveNow();
+      await idbPending;
       const items = {};
       try {
         for (let i = 0; i < localStorage.length; i++) {
@@ -2756,10 +4006,73 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
           if (/^sn2/.test(k) && k !== LS.key) items[k] = localStorage.getItem(k);  // jamais la clé API
         }
       } catch (e) {}
-      return { app: "cahier-chimie-sn2", v: 2, date: new Date().toISOString(), items };
+      const data = { app: "cahier-chimie-sn2", v: 3, date: new Date().toISOString(), items, ink: {}, docs };
+      (await idbPairs("ink")).forEach(([k, v]) => { data.ink[k] = v; });
+      return data;
     }
-    function backupName() {
-      return `sauvegarde_chimie_SN2_${new Date().toISOString().slice(0, 10)}.json`;
+    function backupName(ext) {
+      return `sauvegarde_session_A2026_${new Date().toISOString().slice(0, 10)}.${ext || "json"}`;
+    }
+    // Fichier complet : 8 octets de marque, la longueur de l'en-tête, l'en-tête JSON, puis les documents à la suite
+    const ARCHIVE_MAGIC = "SN2ARCH1";
+    async function exportArchive() {
+      if (!idb) { showToast("Le stockage n'est pas disponible."); return; }
+      showBusy("Préparation de la sauvegarde…");
+      try {
+        const backup = await collectBackup();
+        const ids = docs.filter(d => d.kind !== "blank").map(d => d.id);
+        if (await hasCoursePdf()) ids.push(COURSE_PDF_ID);
+        const parts = [], files = [];
+        for (const id of ids) {
+          const b = await idbGet("files", id);
+          if (b) { files.push({ id, size: b.size, type: b.type }); parts.push(b); }
+        }
+        const head = new TextEncoder().encode(JSON.stringify({ backup, files }));
+        const len = String(head.length).padStart(12, "0");
+        const blob = new Blob([ARCHIVE_MAGIC, len, head, ...parts], { type: "application/octet-stream" });
+        hideBusy();
+        await shareFile(new File([blob], backupName("sn2"), { type: "application/octet-stream" }));
+      } catch (e) {
+        hideBusy();
+        if (!e || e.name !== "AbortError") showToast("La sauvegarde n'a pas pu être créée.");
+      }
+    }
+    async function restoreArchive(file) {
+      showBusy("Restauration…");
+      try {
+        const len = Number(await file.slice(8, 20).text());
+        const head = JSON.parse(await file.slice(20, 20 + len).text());
+        let at = 20 + len;
+        for (const f of head.files) {
+          await idbPut("files", f.id, file.slice(at, at + f.size, f.type));
+          at += f.size;
+        }
+        coursePdf = null; coursePdfKnown = null; cropPages.clear();
+        hideBusy();
+        await restoreBackup(JSON.stringify(head.backup));
+      } catch (e) {
+        hideBusy();
+        showToast("Cette sauvegarde n'a pas pu être restaurée.");
+      }
+    }
+    async function shareFile(file) {
+      try {
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: file.name });
+          safeSet("sn2v2_last_backup", Date.now());
+          showToast("Choisis « Enregistrer dans Fichiers » pour garder la copie.");
+          return;
+        }
+      } catch (e) {
+        if (e && e.name === "AbortError") return;
+      }
+      const url = URL.createObjectURL(file);
+      const a = document.createElement("a");
+      a.href = url; a.download = file.name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+      safeSet("sn2v2_last_backup", Date.now());
+      showToast("Sauvegarde enregistrée.");
     }
     function openBackup() {
       const n = EXERCISES.filter(e => hasInk(e.id)).length;
@@ -2770,7 +4083,7 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
       openModal("backupModal");
     }
     async function exportBackup() {
-      const text = JSON.stringify(collectBackup());
+      const text = JSON.stringify(await collectBackup());
       const name = backupName();
       try {
         const file = new File([text], name, { type: "application/json" });
@@ -2796,7 +4109,7 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
       }
     }
     async function copyBackup() {
-      const text = JSON.stringify(collectBackup());
+      const text = JSON.stringify(await collectBackup());
       try {
         await navigator.clipboard.writeText(text);
         safeSet("sn2v2_last_backup", Date.now());
@@ -2809,7 +4122,7 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
         showToast("Sélectionne le texte et fais Copier.");
       }
     }
-    function restoreBackup(text) {
+    async function restoreBackup(text) {
       let data;
       try { data = JSON.parse(text); } catch (e) { showToast("Ce n'est pas une sauvegarde valide."); return; }
       if (!data || data.app !== "cahier-chimie-sn2" || typeof data.items !== "object") { showToast("Ce n'est pas une sauvegarde du cahier."); return; }
@@ -2819,21 +4132,37 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
           if (/^sn2/.test(k) && k !== LS.key && typeof v === "string") { localStorage.setItem(k, v); n++; }
         });
       } catch (e) { showToast("Mémoire pleine : restauration incomplète."); }
+      try {
+        for (const [k, v] of Object.entries(data.ink || {})) {
+          await idbPut("ink", k, v);
+          if (!k.startsWith(DOC_PREFIX)) inkCache.set(k, v);
+        }
+        for (const m of data.docs || []) {
+          await idbPut("docs", m.id, m);
+          if (!docs.some(d => d.id === m.id)) docs.push(m);
+        }
+      } catch (e) { showToast("Mémoire pleine : restauration incomplète."); }
       Object.keys(sessions).forEach(id => delete sessions[id]);
       pagesMap = null;
       dirty.clear();
       exStatusMap = safeGet(LS.status, {});
       doc = null;
       closeModal("backupModal");
-      selectExercise(currentExId, true);
+      if (docView) closeDocView();
+      currentExId = null;
+      setScreen("home");
+      renderHome();
       showToast(`Sauvegarde du ${new Date(data.date).toLocaleDateString("fr-CA")} restaurée.`);
     }
     function importBackupFile(input) {
       const f = input.files && input.files[0];
       if (!f) return;
-      const r = new FileReader();
-      r.onload = () => restoreBackup(String(r.result));
-      r.readAsText(f);
+      f.slice(0, 8).text().then(magic => {
+        if (magic === ARCHIVE_MAGIC) { restoreArchive(f); return; }
+        const r = new FileReader();
+        r.onload = () => restoreBackup(String(r.result));
+        r.readAsText(f);
+      });
     }
     function importBackupText() {
       const t = $("backupText").value.trim();
@@ -2866,8 +4195,8 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
 
     function selectChapter(ch) {
       currentChapter = ch;
-      [2, 3, 4].forEach(c => $("tabCh" + c).classList.toggle("on", c === ch));
-      const chExercises = EXERCISES.filter(e => e.chapter === ch);
+      currentCourse.chapters.forEach(([c]) => $("tabCh" + c).classList.toggle("on", c === ch));
+      const chExercises = courseExercises(currentCourse.id).filter(e => e.chapter === ch);
       const sections = [...new Set(chExercises.map(e => e.section))];
       $("sectionFilter").innerHTML = `<option value="ALL">Toutes les sections (${chExercises.length})</option>` +
         sections.map(s => `<option value="${s}">${s}</option>`).join("");
@@ -2881,11 +4210,16 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
       const sec = $("sectionFilter").value;
       const typ = $("typeFilter").value;
       const q = $("searchInput").value.trim().toLowerCase();
-      return EXERCISES.filter(ex => {
+      const stf = $("statusFilter").value;
+      return courseExercises(currentCourse.id).filter(ex => {
         if (ex.chapter !== currentChapter) return false;
         if (sec && sec !== "ALL" && ex.section !== sec) return false;
         if (typ !== "ALL" && ex.type !== typ) return false;
-        if (q && !(ex.title + " " + ex.section + " " + ex.statement).toLowerCase().includes(q)) return false;
+        if (stf === "todo" ? exStatusMap[ex.id] : (stf !== "ALL" && exStatusMap[ex.id] !== stf)) return false;
+        if (q) {
+          const short = ex.type[0].toUpperCase() + ex.title.replace(/\D*(\d+).*/, "$1");
+          if (!(short + " " + ex.title + " " + ex.section + " " + (ex.course === "em" ? ex.hint : ex.statement)).toLowerCase().includes(q)) return false;
+        }
         return true;
       });
     }
@@ -2894,18 +4228,20 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
       for (let n = 1; n <= pageCount(id); n++) {
         const k = pageKey(id, n);
         if (sessions[k]) { if (sessions[k].doc.strokes.length > 0) return true; continue; }
-        try { if (localStorage.getItem(LS.ink + k) !== null) return true; } catch (e) {}
+        if (inkRaw(k) !== null) return true;
       }
       return false;
     }
 
     function renderExerciseList() {
+      if (!currentCourse || docView) return;
       const filtered = getFilteredExercises();
-      const count = st => EXERCISES.filter(e => exStatusMap[e.id] === st).length;
+      const all = courseExercises(currentCourse.id);
+      const count = st => all.filter(e => exStatusMap[e.id] === st).length;
       const doneCount = count("done");
       $("countText").textContent = `${filtered.length} exos`;
-      $("progressText").textContent = `✅ ${doneCount}  🟡 ${count("almost")}  ❌ ${count("review")}  / ${EXERCISES.length}`;
-      $("progressFill").style.width = `${Math.round(doneCount / EXERCISES.length * 100)}%`;
+      $("progressText").textContent = `✅ ${doneCount}  🟡 ${count("almost")}  ❌ ${count("review")}  / ${all.length}`;
+      $("progressFill").style.width = `${Math.round(doneCount / Math.max(1, all.length) * 100)}%`;
 
       let html = "", lastSection = "";
       filtered.forEach(ex => {
@@ -2913,11 +4249,7 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
           lastSection = ex.section;
           html += `<div class="ex-sec">${ex.section}</div>`;
         }
-        const st = exStatusMap[ex.id];
-        const icon = STATUS_ICON[st] || (hasInk(ex.id) ? "✏️" : "");
-        html += `<button class="ex-item${ex.id === currentExId ? " on" : ""}" onclick="selectExercise('${ex.id}')">
-            <span class="tag${ex.type === "interne" ? " int" : ""}">${ex.type === "interne" ? "Int." : "Prob."}</span>
-            <span class="t">${ex.title}</span><span>${icon}</span></button>`;
+        html += exItemHTML(ex, "selectExercise");
       });
       $("exList").innerHTML = html || `<div style="padding:20px;text-align:center;color:#94a3b8">Aucun exercice trouvé.</div>`;
     }
@@ -2928,15 +4260,18 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
       if (act) cancelStroke();
       saveNow();
       currentExId = exId;
-      prefs.lastEx = exId;
+      if (ex.course === "chimie") prefs.lastEx = exId;
+      prefs.lastByCourse = prefs.lastByCourse || {};
+      prefs.lastByCourse[ex.course] = exId;
       savePrefs();
 
-      const isInt = ex.type === "interne";
-      $("exTypePill").textContent = isInt ? "Ex. interne" : "Problème";
-      $("exTypePill").className = "pill" + (isInt ? "" : " prob");
+      const info = TYPE_INFO[ex.type] || TYPE_INFO.probleme;
+      $("exTypePill").textContent = info[0];
+      $("exTypePill").className = "pill" + (ex.type === "probleme" ? " prob" : "");
       $("exTitle").textContent = ex.title;
       $("exSectionPill").textContent = ex.section;
       $("exStatement").innerHTML = renderBlocks(ex.statement);
+      hydrateCrops();
       $("tbTitle").textContent = ex.title;
       $("tbSub").textContent = `Chap. ${ex.chapter} · ${ex.section}`;
       $("focusTitle").textContent = ex.title;
@@ -2958,12 +4293,17 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
       layoutPaper();
       ensureTile(true);
       updateUndoUI();
+      if (docView && docView.nodes.length) {
+        $("pager").hidden = docView.nodes.length < 2;
+        return;
+      }
       const n = pageCount(currentExId);
       $("pager").hidden = n < 2;
       $("pagerText").textContent = `Page ${currentPage}/${n}`;
       $("deletePageItem").style.display = n > 1 ? "" : "none";
     }
     function changePage(delta) {
+      if (docView && docView.nodes.length) { jumpDocPage(delta); return; }
       const n = pageCount(currentExId);
       const p = currentPage + delta;
       if (p < 1 || p > n) return;
@@ -2989,13 +4329,11 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
       // décale les pages suivantes d'un cran
       for (let p = currentPage; p < n; p++) {
         const from = pageKey(id, p + 1), to = pageKey(id, p);
-        try {
-          const v = localStorage.getItem(LS.ink + from);
-          if (v === null) localStorage.removeItem(LS.ink + to); else localStorage.setItem(LS.ink + to, v);
-        } catch (e) {}
+        const v = inkRaw(from);
+        if (v === null) inkRemove(to); else inkWrite(to, v);
         delete sessions[to];
       }
-      try { localStorage.removeItem(LS.ink + pageKey(id, n)); } catch (e) {}
+      inkRemove(pageKey(id, n));
       delete sessions[pageKey(id, n)];
       setPageCount(id, n - 1);
       currentPage = Math.min(currentPage, n - 1);
@@ -3015,7 +4353,7 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
     function setExerciseStatus(status) {
       if (exStatusMap[currentExId] === status) delete exStatusMap[currentExId];
       else exStatusMap[currentExId] = status;
-      safeSet(LS.status, exStatusMap);
+      if (!safeSet(LS.status, exStatusMap)) showToast("Mémoire pleine : ce statut n'a pas pu être enregistré.");
       updateStatusUI();
       renderExerciseList();
     }
@@ -3144,7 +4482,8 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
     function cur() { return session(curKey()); }
 
     function loadDoc(id) {
-      const raw = safeGet(LS.ink + id, null);
+      let raw = null;
+      try { raw = JSON.parse(inkRaw(id)); } catch (e) {}
       const d = { strokes: [], pageH: MIN_PAGE_H };
       if (raw && Array.isArray(raw.s)) {
         d.pageH = Math.max(MIN_PAGE_H, raw.h || 0);
@@ -3172,16 +4511,8 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
       dirty.forEach(id => {
         const d = sessions[id] && sessions[id].doc;
         if (!d) return;
-        const key = LS.ink + id;
-        try {
-          if (!d.strokes.length) localStorage.removeItem(key);
-          else localStorage.setItem(key, JSON.stringify({ v: 2, h: Math.round(d.pageH), s: d.strokes.map(serialize) }));
-        } catch (e) {
-          if (!warnedQuota) {
-            warnedQuota = true;
-            showToast("Mémoire pleine : efface des feuilles d'anciens exercices pour pouvoir sauvegarder.");
-          }
-        }
+        if (!d.strokes.length) inkRemove(id);
+        else inkWrite(id, JSON.stringify({ v: 2, h: Math.round(d.pageH), s: d.strokes.map(serialize) }));
       });
       dirty.clear();
     }
@@ -3225,9 +4556,12 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
       if (!doc) return;
       const s = (paperEl.clientWidth || 1) / PAGE_W;
       const minH = Math.max(0, pageEl.clientHeight - 90) / s;   // la feuille remplit au moins l'écran
-      const h = Math.max(doc.pageH, minH);
+      const isPdf = docView && docView.nodes.length;
+      if (isPdf) doc.pageH = docView.total;
+      const h = isPdf ? docView.total : Math.max(doc.pageH, minH);
       paperEl.style.height = Math.round(h * s) + "px";
       paperEl.style.setProperty("--g", (30 * s).toFixed(2) + "px");
+      if (isPdf) placeDocPages();
     }
 
     function ensureTile(force) {
@@ -3402,12 +4736,12 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
       // les boutons du menu de sélection ne doivent pas démarrer un nouveau lasso
       ["pointerdown", "touchstart"].forEach(t => $("selMenu").addEventListener(t, e => e.stopPropagation(), { passive: true }));
 
-      pageEl.addEventListener("scroll", () => ensureTile(false), { passive: true });
+      pageEl.addEventListener("scroll", () => { ensureTile(false); docTick(); }, { passive: true });
       let rafPending = false;
       const relayout = () => {
         if (rafPending) return;
         rafPending = true;
-        requestAnimationFrame(() => { rafPending = false; layoutPaper(); ensureTile(true); });
+        requestAnimationFrame(() => { rafPending = false; layoutPaper(); ensureTile(true); docTick(true); });
       };
       if (window.ResizeObserver) new ResizeObserver(relayout).observe(pageEl);
       window.addEventListener("resize", relayout);
@@ -3429,7 +4763,7 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
           if (e.shiftKey) redo(); else undo();
         } else if (e.key === "Escape") {
           closeMoreMenu(); closeSheet();
-          ["apiModal", "refModal", "clearModal"].forEach(closeModal);
+          ["apiModal", "refModal", "clearModal", "deletePageModal", "backupModal", "docModal", "docDeleteModal", "pptModal"].forEach(closeModal);
         }
       });
     }
@@ -3563,6 +4897,7 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
     }
 
     function maybeGrow(y) {
+      if (docView && docView.nodes.length) return;   // un PDF a une hauteur fixe
       const effH = paperEl.clientHeight / tile.s;
       if (y > effH - 250) {
         doc.pageH = effH + 700;
@@ -3644,7 +4979,7 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
       afterChange();
     }
     function undo() {
-      if (act) return;
+      if (act || !doc) return;
       const ss = cur(), a = ss.undo.pop();
       if (!a) return;
       clearSelection();
@@ -3658,7 +4993,7 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
       redrawInk();
     }
     function redo() {
-      if (act) return;
+      if (act || !doc) return;
       const ss = cur(), a = ss.redo.pop();
       if (!a) return;
       clearSelection();
@@ -3874,10 +5209,15 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
       return out;
     }
 
-    function exportImage() {
-      if (!inkStrokes().length) { showToast("La feuille est vide."); return; }
-      const name = `demarche_${currentExId}.png`;
-      renderExport().toBlob(async blob => {
+    async function exportImage() {
+      const isPdf = docView && docView.nodes.length;
+      if (!isPdf && !inkStrokes().length) { showToast("La feuille est vide."); return; }
+      let name = `demarche_${currentExId}.png`, source = null;
+      if (isPdf) {
+        try { const r = await exportDocPage(); source = r.canvas; name = r.name; }
+        catch (e) { showToast("Cette page n'a pas pu être exportée."); return; }
+      } else source = renderExport();
+      source.toBlob(async blob => {
         if (!blob) return;
         try {
           const file = new File([blob], name, { type: "image/png" });
@@ -3962,7 +5302,7 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
       } else if (mode === "error") {
         local = `
           <div class="box amber">
-            <div class="box-title">Indice (rappel du Cahier NDC)</div>
+            <div class="box-title">${ex.course === "chimie" ? "Indice (rappel du Cahier NDC)" : "Indice"}</div>
             ${renderBlocks(ex.hint)}
             <div class="btn-row"><button class="mini blue" onclick="runAssistantAction('explain')">Voir la solution détaillée</button></div>
           </div>`;
@@ -3973,7 +5313,7 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
             <div class="box-title">Solution détaillée</div>
             ${renderBlocks(ex.solution)}
           </div>
-          <div class="box slate"><div class="box-title">Rappel du Cahier NDC</div>${renderBlocks(ex.hint)}</div>`;
+          <div class="box slate"><div class="box-title">${ex.course === "chimie" ? "Rappel du Cahier NDC" : "Idée clé"}</div>${renderBlocks(ex.hint)}</div>`;
       }
       const aiLabel = { verify: "L'IA vérifie ma feuille", error: "L'IA trouve mon erreur", explain: "L'IA m'explique à partir de ma feuille" }[mode];
       const aiRow = apiKey
@@ -4073,10 +5413,11 @@ INTERDIT : salutations, compliments, encouragements, questions, conseils génér
         modeInstruction = `TÂCHE : donner la solution complète, courte et claire, en tenant compte de la feuille de l'étudiant sur l'image${note}.
 Format : étapes numérotées « 1. », « 2. »… Chaque étape = une phrase de 15 mots maximum, suivie de son calcul sur une ligne $$…$$.
 Si une étape de l'étudiant est fausse, commence cette étape par ❌ et recopie sa ligne fautive avant la bonne. Termine par la ligne « **Réponse finale :** $…$ ».
-Respecte les notations du Cahier NDC (tableaux I-R-E ou I-R-F, $K_{e}$, critère $\\frac{C_{i}}{K} \\geq 100$). Pas de salutation ni de conclusion.`;
+${ex.course === "chimie" ? "Respecte les notations du Cahier NDC (tableaux I-R-E ou I-R-F, $K_{e}$, critère $\\frac{C_{i}}{K} \\geq 100$). " : ""}Pas de salutation ni de conclusion.`;
       }
 
-      const systemPrompt = `Tu es le tuteur personnel de chimie du cours « Chimie des solutions (202-SN2-RE) » au Cégep.
+      const stmtImage = ex.course === "em" ? statementImage() : null;
+      const intro = ex.course === "chimie" ? `Tu es le tuteur personnel de chimie du cours « Chimie des solutions (202-SN2-RE) » au Cégep.
 Voici l'exercice sur lequel travaille l'étudiant :
 Titre : ${ex.title} (Chapitre ${ex.chapter} — ${ex.section})
 (Les formules ci-dessous sont écrites en notation LaTeX simplifiée ; \\ce{} = formule chimique.)
@@ -4089,7 +5430,14 @@ Conventions importantes du cahier de notes de cours (NDC) à accepter :
 - Les tableaux d'équilibre sont notés I - R - E (Initiale, Réagit/Variation, Équilibre) et I - R - F pour les acides/bases forts.
 - La constante de l'eau est notée Ke = [H3O+][OH-] = 1,0e-14.
 - Pour Kp, l'unité est écrite entre parenthèses, ex: Kp = 150 (en kPa).
-- L'approximation Ci - x ≈ Ci est acceptée dès que Ci / K >= 100.
+- L'approximation Ci - x ≈ Ci est acceptée dès que Ci / K >= 100.`
+        : `Tu es le tuteur personnel du cours « Électricité et magnétisme (203-SN2-RE) » au Cégep.
+Voici l'exercice sur lequel travaille l'étudiant :
+Titre : ${ex.title} (Chapitre ${ex.chapter} — ${ex.section})
+L'énoncé et ses figures sont sur la PREMIÈRE image. La feuille manuscrite de l'étudiant est sur la DEUXIÈME image.
+Réponse attendue : ${ex.shortAnswer}
+Corrigé : ${ex.solution}`;
+      const systemPrompt = `${intro}
 
 ${modeInstruction}
 Réponds en français, de façon très brève et précise : uniquement le format demandé, aucune phrase de remplissage.
@@ -4104,7 +5452,11 @@ FORMAT OBLIGATOIRE (ta réponse est affichée par un moteur qui dessine les form
 Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_{t}} = \\frac{1}{0,028\\text{ s}^{-1}}\\ln\\frac{0,88}{0,14} \\approx 66\\text{ s}$$ »`;
 
       const body = JSON.stringify({
-        contents: [{ parts: [{ text: systemPrompt }, { inline_data: { mime_type: "image/png", data: base64Data } }] }],
+        contents: [{ parts: [
+          { text: systemPrompt },
+          ...(stmtImage ? [{ inline_data: { mime_type: "image/jpeg", data: stmtImage } }] : []),
+          { inline_data: { mime_type: "image/png", data: base64Data } }
+        ] }],
         generationConfig: { temperature: 0.2 }
       });
       // Si le modèle choisi est surchargé (503) ou limité (429), on réessaie puis on passe à un modèle de secours
@@ -4133,6 +5485,659 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
       throw new Error("tous les modèles Gemini sont surchargés pour le moment, réessaie dans quelques minutes (" + lastErr + ")");
     }
 
+    // =========================================================================
+    // ESPACE DE SESSION : cours, stockage IndexedDB, documents annotables
+    //  La chimie garde ses clés localStorage. Les nouvelles données (dessins des
+    //  nouveaux cours, documents importés) vont dans IndexedDB, sur l'iPad seulement.
+    // =========================================================================
+    const IDB_NAME = "sn2_session", DOC_PREFIX = "zd~", COURSE_PDF_ID = "em-exercices";
+    let idb = null, idbPending = Promise.resolve();
+    function idbOpen() {
+      return new Promise(resolve => {
+        const giveUp = setTimeout(() => resolve(null), 4000);
+        try {
+          const r = indexedDB.open(IDB_NAME, 1);
+          r.onupgradeneeded = () => ["ink", "files", "docs"].forEach(s => r.result.createObjectStore(s));
+          r.onsuccess = () => { clearTimeout(giveUp); resolve(r.result); };
+          r.onerror = () => { clearTimeout(giveUp); resolve(null); };
+        } catch (e) { clearTimeout(giveUp); resolve(null); }
+      });
+    }
+    function idbReq(store, mode, fn) {
+      return new Promise((resolve, reject) => {
+        if (!idb) { reject(new Error("IndexedDB indisponible")); return; }
+        const tx = idb.transaction(store, mode);
+        const req = fn(tx.objectStore(store));
+        tx.oncomplete = () => resolve(req ? req.result : undefined);
+        tx.onerror = tx.onabort = () => reject(tx.error || new Error("IndexedDB"));
+      });
+    }
+    const idbGet = (s, k) => idbReq(s, "readonly", o => o.get(k));
+    const idbPut = (s, k, v) => idbReq(s, "readwrite", o => o.put(v, k));
+    const idbDel = (s, k) => idbReq(s, "readwrite", o => o.delete(k));
+
+    async function idbPairs(store, range) {
+      if (!idb) return [];
+      return new Promise((resolve, reject) => {
+        const tx = idb.transaction(store), o = tx.objectStore(store);
+        const k = o.getAllKeys(range), v = o.getAll(range);
+        tx.oncomplete = () => resolve(k.result.map((key, i) => [key, v.result[i]]));
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+    function queueIdb(fn) {
+      idbPending = idbPending.then(fn).catch(() => {
+        if (!warnedQuota) { warnedQuota = true; showToast("Mémoire de l'iPad pleine : ta dernière modification n'a pas pu être enregistrée."); }
+      });
+      return idbPending;
+    }
+    const docRange = id => IDBKeyRange.bound(DOC_PREFIX + id, DOC_PREFIX + id + "￿");
+
+    // Dessins : la chimie lit et écrit dans localStorage, avec IndexedDB en secours si c'est plein
+    const inkCache = new Map();
+    function inkRaw(k) {
+      if (inkCache.has(k)) return inkCache.get(k);
+      try { return localStorage.getItem(LS.ink + k); } catch (e) { return null; }
+    }
+    function isLegacyInk(k) { return /^ch\d/.test(k); }
+    function inkWrite(k, str) {
+      if (isLegacyInk(k)) {
+        try {
+          localStorage.setItem(LS.ink + k, str);
+          if (inkCache.delete(k)) queueIdb(() => idbDel("ink", k));
+          return;
+        } catch (e) {
+          try { localStorage.removeItem(LS.ink + k); } catch (err) {}
+        }
+      }
+      inkCache.set(k, str);
+      queueIdb(() => idbPut("ink", k, str));
+    }
+    function inkRemove(k) {
+      try { localStorage.removeItem(LS.ink + k); } catch (e) {}
+      if (inkCache.delete(k)) queueIdb(() => idbDel("ink", k));
+    }
+
+    // ---------- Les cours ----------
+    const COURSES = [
+      { id: "anat", name: "Anatomie et physiologie humaines", icon: "🫀", color: "#be123c", chapters: [] },
+      { id: "em", name: "Électricité et magnétisme", icon: "⚡", color: "#b45309", chapters: [[5, "Condensateurs"], [6, "Courant"], [7, "Circuits"]], search: "Rechercher (E13, P7, RC…)" },
+      { id: "chimie", name: "Chimie des solutions", icon: "🧪", color: "#0f766e", chapters: [[2, "Cinétique"], [3, "Équilibre"], [4, "Acides/bases"]], search: "Rechercher (2.4, pH, Kp…)" },
+      { id: "proba", name: "Probabilité et statistique", icon: "📊", color: "#4338ca", chapters: [] }
+    ];
+    const courseById = id => COURSES.find(c => c.id === id);
+    const courseExercises = id => EXERCISES.filter(e => e.course === id);
+    let currentCourse = null, courseTab = "exercises", docs = [];
+
+    function setScreen(name) {
+      $("home").classList.toggle("open", name === "home");
+      $("courseScreen").classList.toggle("open", name === "course");
+    }
+    function goHome() {
+      if (doc) saveNow();
+      setScreen("home");
+      renderHome();
+      tryReload();
+    }
+    function renderHome() {
+      $("courseGrid").innerHTML = COURSES.map(c => {
+        const ex = courseExercises(c.id);
+        const done = ex.filter(e => exStatusMap[e.id] === "done").length;
+        const n = docs.filter(d => d.course === c.id).length;
+        const parts = [];
+        if (ex.length) parts.push(`✅ ${done} sur ${ex.length} exercices`);
+        parts.push(n ? `${n} document${n > 1 ? "s" : ""}` : "Aucun document");
+        return `<button class="course-card" style="--cc:${c.color}" onclick="openCourse('${c.id}')">
+          <span class="ci">${c.icon}</span><b>${c.name}</b>
+          ${ex.length ? `<div class="bar"><div style="width:${Math.round(done / ex.length * 100)}%"></div></div>` : ""}
+          <small>${parts.join(" · ")}</small></button>`;
+      }).join("");
+      updateStorageInfo();
+    }
+    async function updateStorageInfo() {
+      const el = $("storageInfo");
+      if (!idb) { el.textContent = "Le stockage des documents n'est pas disponible dans ce navigateur."; return; }
+      try {
+        const e = await navigator.storage.estimate();
+        el.textContent = `Espace utilisé sur cet iPad : ${fmtSize(e.usage)} sur ${fmtSize(e.quota)}.`;
+      } catch (err) { el.textContent = ""; }
+    }
+    function fmtSize(b) {
+      if (b >= 1e9) return (b / 1e9).toFixed(1).replace(".", ",") + " Go";
+      if (b >= 1e6) return Math.round(b / 1e6) + " Mo";
+      return Math.max(1, Math.round(b / 1e3)) + " Ko";
+    }
+
+    function openCourse(id, tab) {
+      currentCourse = courseById(id);
+      courseTab = tab || (courseExercises(id).length ? "exercises" : "notes");
+      $("courseTitle").textContent = currentCourse.name;
+      setCourseTab(courseTab);
+      setScreen("course");
+    }
+    function setCourseTab(tab) {
+      courseTab = tab;
+      $("tabExercises").classList.toggle("on", tab === "exercises");
+      $("tabNotes").classList.toggle("on", tab === "notes");
+      if (tab === "exercises") renderCourseExercises(); else renderCourseNotes();
+    }
+    function coursePdfPrompt() {
+      return `<div class="notice"><b>Une seule étape :</b> importe le PDF <i>Physique_SN2_Examen2_Exercices_Lafrance</i>. Les énoncés et les figures s'afficheront ensuite dans chaque exercice, même hors ligne. Le PDF reste seulement sur cet iPad.
+        <div><button class="btn primary" onclick="$('emPdfFile').click()">Importer le PDF</button></div></div>`;
+    }
+    async function renderCourseExercises() {
+      const c = currentCourse, list = courseExercises(c.id);
+      if (!list.length) {
+        $("courseBody").innerHTML = `<div class="cs-empty">Pas encore d'exercices dans ce cours.<br>Ils seront ajoutés ici plus tard.</div>`;
+        return;
+      }
+      const last = list.find(e => e.id === lastExerciseOf(c.id));
+      let html = "";
+      if (c.id === "em" && !(await hasCoursePdf())) html += coursePdfPrompt();
+      if (last) html += `<div class="cs-actions"><button class="btn primary" onclick="openExercise('${last.id}')">Reprendre : ${last.title}</button></div>`;
+      c.chapters.forEach(([n, label]) => {
+        const items = list.filter(e => e.chapter === n);
+        const done = items.filter(e => exStatusMap[e.id] === "done").length;
+        html += `<div class="cs-group"><h2>Chapitre ${n} · ${label} <small style="font-weight:500;color:#64748b">(${done}/${items.length})</small></h2>`;
+        let sec = "";
+        items.forEach(e => {
+          if (e.section !== sec) { sec = e.section; html += `<div class="ex-sec">${sec}</div>`; }
+          html += exItemHTML(e, "openExercise");
+        });
+        html += "</div>";
+      });
+      if (courseTab === "exercises" && currentCourse === c) $("courseBody").innerHTML = html;
+    }
+    function lastExerciseOf(id) {
+      if (prefs.lastByCourse && prefs.lastByCourse[id]) return prefs.lastByCourse[id];
+      return id === "chimie" ? prefs.lastEx : null;
+    }
+    const TYPE_INFO = {
+      interne: ["Ex. interne", "Int.", " int"], probleme: ["Problème", "Prob.", ""],
+      question: ["Question", "Q", " int"], exercice: ["Exercice", "Ex.", " ex"]
+    };
+    function exItemHTML(ex, fn) {
+      const st = exStatusMap[ex.id];
+      const icon = STATUS_ICON[st] || (hasInk(ex.id) ? "✏️" : "");
+      const info = TYPE_INFO[ex.type] || TYPE_INFO.probleme;
+      return `<button class="ex-item${fn === "selectExercise" && ex.id === currentExId ? " on" : ""}" onclick="${fn}('${ex.id}')">
+          <span class="tag${info[2]}">${info[1]}</span>
+          <span class="t">${ex.title}</span><span>${icon}</span></button>`;
+    }
+
+    // ---------- Ouvrir un exercice ----------
+    function applyCourseChrome(c) {
+      $("chapterTabs").innerHTML = c.chapters.map(([n, label]) =>
+        `<button id="tabCh${n}" onclick="selectChapter(${n})">Chap. ${n}<small>${label}</small></button>`).join("");
+      const types = [...new Set(courseExercises(c.id).map(e => e.type))];
+      const labels = { interne: "Internes", probleme: "Problèmes", question: "Questions", exercice: "Exercices" };
+      $("typeFilter").innerHTML = `<option value="ALL">Tous</option>` + types.map(t => `<option value="${t}">${labels[t]}</option>`).join("");
+      $("searchInput").value = "";
+      $("searchInput").placeholder = c.search || "Rechercher";
+      const chem = c.id === "chimie";
+      $("refBtn").style.display = chem ? "" : "none";
+      $("focusRefBtn").classList.toggle("chem-only", !chem);
+      $("ireItem").style.display = chem ? "" : "none";
+    }
+    function setMode(mode) {
+      document.body.classList.toggle("mode-doc", mode !== "ex");
+      document.body.classList.toggle("mode-pdf", mode === "pdf");
+      if (mode !== "pdf") {
+        paperEl.style.width = "";
+        $("pdfLayer").innerHTML = "";
+        setPaper(prefs.paper);
+      } else {
+        paperEl.classList.remove("paper-grid", "paper-lined", "paper-dots", "paper-blank");
+      }
+    }
+    function openExercise(id) {
+      const ex = EXERCISES.find(e => e.id === id);
+      if (!ex) return;
+      setMode("ex");
+      docView = null;
+      currentCourse = courseById(ex.course);
+      applyCourseChrome(currentCourse);
+      $("statusFilter").value = "ALL";
+      setScreen("none");
+      currentExId = id;
+      selectChapter(ex.chapter);
+      selectExercise(id, true);
+    }
+    function leaveToCourse() {
+      if (act) cancelStroke();
+      saveNow();
+      clearSelection();
+      closeSheet();
+      if (document.body.classList.contains("focus")) toggleFocus();
+      const wasDoc = !!docView;
+      if (wasDoc) closeDocView();
+      openCourse(currentCourse.id, wasDoc ? "notes" : "exercises");
+    }
+
+    // ---------- PDF.js, chargé seulement quand il sert ----------
+    let pdfJsReady = null;
+    function loadPdfJs() {
+      if (!pdfJsReady) pdfJsReady = new Promise((resolve, reject) => {
+        const s = document.createElement("script");
+        s.src = "pdf.min.js";
+        s.onload = () => { pdfjsLib.GlobalWorkerOptions.workerSrc = "pdf.worker.min.js"; resolve(); };
+        s.onerror = () => { pdfJsReady = null; reject(new Error("PDF.js")); };
+        document.head.appendChild(s);
+      });
+      return pdfJsReady;
+    }
+    async function openPdfData(buf) {
+      await loadPdfJs();
+      return pdfjsLib.getDocument({ data: buf, isEvalSupported: false }).promise;
+    }
+    function showBusy(text) { $("busyText").textContent = text; $("busy").classList.add("open"); }
+    function hideBusy() { $("busy").classList.remove("open"); }
+
+    // ---------- PDF d'exercices du cours : importé une fois, gardé sur l'iPad ----------
+    const COURSE_PDF_PRINT = "ad163f7a1d9f3fb241b1b03fbc83e4c5";
+    let coursePdf = null, coursePdfLoading = null, coursePdfKnown = null;
+    const cropPages = new Map();
+    async function hasCoursePdf() {
+      if (coursePdfKnown !== null) return coursePdfKnown;
+      try { coursePdfKnown = !!(await idbGet("files", COURSE_PDF_ID)); } catch (e) { coursePdfKnown = false; }
+      return coursePdfKnown;
+    }
+    async function getCoursePdf() {
+      if (coursePdf) return coursePdf;
+      if (!coursePdfLoading) coursePdfLoading = (async () => {
+        const blob = await idbGet("files", COURSE_PDF_ID);
+        if (!blob) return null;
+        coursePdf = await openPdfData(await blob.arrayBuffer());
+        return coursePdf;
+      })().finally(() => { coursePdfLoading = null; });
+      return coursePdfLoading;
+    }
+    async function importCoursePdf(input) {
+      const f = input.files && input.files[0];
+      input.value = "";
+      if (!f) return;
+      showBusy("Vérification du PDF…");
+      try {
+        const pdf = await openPdfData(await f.arrayBuffer());
+        const ok = pdf.fingerprints[0] === COURSE_PDF_PRINT;
+        pdf.destroy();
+        if (!ok) { hideBusy(); showToast("Ce n'est pas le bon PDF. Choisis Physique_SN2_Examen2_Exercices_Lafrance."); return; }
+        await idbPut("files", COURSE_PDF_ID, new Blob([f], { type: "application/pdf" }));
+        coursePdf = null; cropPages.clear(); coursePdfKnown = true;
+        hideBusy();
+        showToast("PDF importé : les énoncés sont prêts.");
+        if ($("courseScreen").classList.contains("open")) renderCourseExercises();
+        else if (currentExId) selectExercise(currentExId, true);
+      } catch (e) {
+        hideBusy();
+        showToast("Impossible d'importer ce PDF. Vérifie l'espace libre sur l'iPad.");
+      }
+    }
+    async function cropPageCanvas(pdf, n, targetW) {
+      const key = n + "@" + targetW;
+      if (cropPages.has(key)) return cropPages.get(key);
+      const page = await pdf.getPage(n);
+      const base = page.getViewport({ scale: 1 });
+      const vp = page.getViewport({ scale: targetW / base.width });
+      const c = document.createElement("canvas");
+      c.width = Math.round(vp.width); c.height = Math.round(vp.height);
+      await page.render({ canvasContext: c.getContext("2d"), viewport: vp }).promise;
+      cropPages.set(key, c);
+      if (cropPages.size > 4) cropPages.delete(cropPages.keys().next().value);
+      return c;
+    }
+    let cropToken = 0;
+    async function hydrateCrops() {
+      const root = $("exStatement"), token = ++cropToken;
+      const els = [...root.querySelectorAll(".pdfcrop")];
+      if (!els.length) return;
+      try {
+        const pdf = await getCoursePdf();
+        if (token !== cropToken) return;
+        if (!pdf) { root.innerHTML = coursePdfPrompt(); ensureTile(false); return; }
+        const X0 = 0.07, X1 = 0.93;
+        const cssW = Math.min(780, (root.clientWidth || pageEl.clientWidth) || 780);
+        const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+        const pageW = Math.round(cssW * dpr / (X1 - X0));
+        for (const el of els) {
+          const src = await cropPageCanvas(pdf, Number(el.dataset.p), pageW);
+          if (token !== cropToken) return;
+          const y0 = Number(el.dataset.a) / 1000 * src.height, y1 = Number(el.dataset.b) / 1000 * src.height;
+          const W = Math.round(src.width * (X1 - X0)), H = Math.max(1, Math.round(y1 - y0));
+          // on retire le blanc du bas de la découpe
+          const px = src.getContext("2d").getImageData(Math.round(src.width * X0), Math.round(y0), W, H).data;
+          let last = H - 1;
+          for (; last > 0; last--) {
+            let ink = false;
+            for (let q = last * W * 4; q < (last + 1) * W * 4; q += 4) if (px[q] < 235 || px[q + 1] < 235 || px[q + 2] < 235) { ink = true; break; }
+            if (ink) break;
+          }
+          const c = document.createElement("canvas");
+          c.width = W; c.height = Math.min(H, last + Math.round(10 * dpr));
+          c.getContext("2d").drawImage(src, -src.width * X0, -y0);
+          el.innerHTML = "";
+          el.appendChild(c);
+        }
+        ensureTile(false);
+      } catch (e) {
+        if (token === cropToken) root.innerHTML = `<div class="notice">L'énoncé n'a pas pu s'afficher. Ferme puis rouvre l'exercice.</div>`;
+      }
+    }
+    // Image de l'énoncé affiché, envoyée à l'IA pour les exercices issus du PDF
+    function statementImage() {
+      const cs = [...$("exStatement").querySelectorAll(".pdfcrop canvas")];
+      if (!cs.length) return null;
+      const W = Math.min(1100, cs[0].width), k = W / cs[0].width;
+      const out = document.createElement("canvas");
+      out.width = W;
+      out.height = Math.round(cs.reduce((h, c) => h + c.height * k, 0));
+      const x = out.getContext("2d");
+      x.fillStyle = "#fff"; x.fillRect(0, 0, out.width, out.height);
+      let y = 0;
+      cs.forEach(c => { x.drawImage(c, 0, y, W, c.height * k); y += c.height * k; });
+      return out.toDataURL("image/jpeg", 0.85).split(",")[1];
+    }
+
+    // ---------- Notes de cours : tes documents ----------
+    function renderCourseNotes() {
+      const list = docs.filter(d => d.course === currentCourse.id).sort((a, b) => a.added - b.added);
+      let html = `<div class="cs-actions">
+        <button class="btn primary" onclick="$('docFile').click()">+ Ajouter un document</button>
+        <button class="btn plain" onclick="newNotebook()">+ Nouveau cahier</button></div>`;
+      if (!list.length) {
+        html += `<div class="cs-empty">Aucun document pour l'instant.<br>Ajoute un PDF ou une image depuis Fichiers, puis écris dessus avec ton Apple Pencil.</div>`;
+      }
+      const folders = [...new Set(list.map(d => d.folder || ""))].sort((a, b) => (a === "") - (b === "") || a.localeCompare(b, "fr", { numeric: true }));
+      folders.forEach(fo => {
+        html += `<div class="cs-group">` + (fo ? `<h2>${escapeHtml(fo)}</h2>` : (folders.length > 1 ? `<h2>Autres</h2>` : ""));
+        list.filter(d => (d.folder || "") === fo).forEach(d => {
+          const icon = d.kind === "blank" ? "📓" : d.kind === "image" ? "🖼️" : "📄";
+          const info = d.kind === "blank" ? "Cahier" : `${d.sizes.length} page${d.sizes.length > 1 ? "s" : ""} · ${fmtSize(d.size)}`;
+          html += `<div class="doc-item"><button class="doc-open" onclick="openDoc('${d.id}')"><span class="di">${icon}</span><span><b>${escapeHtml(d.name)}</b><small>${info}</small></span></button>
+            <button class="tool" onclick="editDoc('${d.id}')" aria-label="Modifier"><span data-ic="more"></span></button></div>`;
+        });
+        html += "</div>";
+      });
+      $("courseBody").innerHTML = html;
+      injectIcons($("courseBody"));
+    }
+    function newDocId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+    async function saveDocMeta(m) { await idbPut("docs", m.id, m); }
+    async function newNotebook() {
+      if (!idb) { showToast("Le stockage n'est pas disponible."); return; }
+      const n = docs.filter(d => d.course === currentCourse.id && d.kind === "blank").length + 1;
+      const m = { id: newDocId(), course: currentCourse.id, name: `Cahier ${n}`, folder: "", kind: "blank", sizes: [], size: 0, added: Date.now() };
+      await saveDocMeta(m);
+      docs.push(m);
+      openDoc(m.id);
+    }
+    async function importDocs(input) {
+      const files = [...(input.files || [])];
+      input.value = "";
+      if (!files.length) return;
+      if (!idb) { showToast("Le stockage n'est pas disponible."); return; }
+      let added = 0, needPpt = false, failed = 0;
+      for (const f of files) {
+        const low = f.name.toLowerCase();
+        if (/\.pptx?$/.test(low)) { needPpt = true; continue; }
+        const isPdf = f.type === "application/pdf" || low.endsWith(".pdf");
+        const isImg = f.type.startsWith("image/");
+        if (!isPdf && !isImg) { failed++; continue; }
+        showBusy(`Import de ${f.name}…`);
+        try {
+          const sizes = [];
+          if (isPdf) {
+            const pdf = await openPdfData(await f.arrayBuffer());
+            for (let i = 1; i <= pdf.numPages; i++) {
+              const vp = (await pdf.getPage(i)).getViewport({ scale: 1 });
+              sizes.push([Math.round(vp.width), Math.round(vp.height)]);
+              if (i % 20 === 0) $("busyText").textContent = `Import de ${f.name} : page ${i} sur ${pdf.numPages}…`;
+            }
+            pdf.destroy();
+          } else {
+            const url = URL.createObjectURL(f);
+            const img = await new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = url; });
+            sizes.push([img.naturalWidth, img.naturalHeight]);
+            URL.revokeObjectURL(url);
+          }
+          const m = { id: newDocId(), course: currentCourse.id, name: f.name.replace(/\.[^.]+$/, ""), folder: "", kind: isPdf ? "pdf" : "image", sizes, size: f.size, type: f.type || "application/pdf", added: Date.now() };
+          await idbPut("files", m.id, new Blob([f], { type: m.type }));
+          await saveDocMeta(m);
+          docs.push(m);
+          added++;
+        } catch (e) { failed++; }
+      }
+      hideBusy();
+      renderCourseNotes();
+      if (needPpt) openModal("pptModal");
+      if (failed) showToast(`${failed} fichier(s) n'ont pas pu être importés. Vérifie que c'est un PDF valide et l'espace libre.`);
+      else if (added) showToast(added > 1 ? `${added} documents ajoutés.` : "Document ajouté.");
+    }
+    let editingDoc = null;
+    function editDoc(id) {
+      editingDoc = docs.find(d => d.id === id);
+      if (!editingDoc) return;
+      $("docNameInput").value = editingDoc.name;
+      $("docFolderInput").value = editingDoc.folder || "";
+      $("docFolderList").innerHTML = [...new Set(docs.filter(d => d.course === editingDoc.course && d.folder).map(d => d.folder))].map(f => `<option value="${escapeHtml(f)}">`).join("");
+      openModal("docModal");
+    }
+    async function saveDocEdit() {
+      if (!editingDoc) return;
+      editingDoc.name = $("docNameInput").value.trim() || editingDoc.name;
+      editingDoc.folder = $("docFolderInput").value.trim();
+      closeModal("docModal");
+      try { await saveDocMeta(editingDoc); } catch (e) { showToast("Modification non enregistrée."); }
+      renderCourseNotes();
+    }
+    async function deleteDoc() {
+      closeModal("docDeleteModal");
+      const m = editingDoc;
+      if (!m) return;
+      try {
+        await idbDel("docs", m.id);
+        await idbDel("files", m.id);
+        await idbReq("ink", "readwrite", o => o.delete(docRange(m.id)));
+      } catch (e) { showToast("Suppression incomplète."); }
+      [...inkCache.keys()].forEach(k => { if (k.startsWith(DOC_PREFIX + m.id)) inkCache.delete(k); });
+      docs = docs.filter(d => d !== m);
+      setPageCount(DOC_PREFIX + m.id, 1);
+      if (prefs.docPos) delete prefs.docPos[m.id];
+      savePrefs();
+      renderCourseNotes();
+      showToast("Document supprimé.");
+    }
+
+    // ---------- Lecteur : le document est une longue feuille, l'encre passe par le moteur de dessin ----------
+    const PAGE_GAP = 20, ZOOMS = [0.6, 0.8, 1, 1.25, 1.5, 2];
+    let docView = null;
+    async function loadDocInk(id) {
+      const pairs = await idbPairs("ink", docRange(id));
+      pairs.forEach(([k, v]) => inkCache.set(k, v));
+    }
+    async function openDoc(id) {
+      const m = docs.find(d => d.id === id);
+      if (!m) return;
+      showBusy(`Ouverture de ${m.name}…`);
+      try {
+        await loadDocInk(id);
+        let file = null, pdf = null;
+        if (m.kind !== "blank") {
+          file = await idbGet("files", id);
+          if (!file) { hideBusy(); showToast("Fichier absent de cet iPad : importe-le de nouveau."); return; }
+          if (m.kind === "pdf") pdf = await openPdfData(await file.arrayBuffer());
+        }
+        currentCourse = courseById(m.course);
+        $("ireItem").style.display = m.course === "chimie" ? "" : "none";
+        docView = { m, pdf, file, tops: [], heights: [], total: 0, nodes: [], token: 0, img: null };
+        currentExId = DOC_PREFIX + id;
+        $("tbTitle").textContent = m.name;
+        $("tbSub").textContent = currentCourse.name;
+        setScreen("none");
+        if (m.kind === "blank") {
+          setMode("blank");
+          currentPage = pageCount(currentExId);
+          openPage();
+        } else {
+          setMode("pdf");
+          buildDocLayout();
+          currentPage = 1;
+          applyDocZoom();
+          openPage();
+          const pos = prefs.docPos && prefs.docPos[id];
+          if (pos) pageEl.scrollTop = pos * (paperEl.clientWidth / PAGE_W);
+          docTick();
+        }
+        hideBusy();
+      } catch (e) {
+        hideBusy();
+        showToast("Impossible d'ouvrir ce document.");
+      }
+    }
+    function buildDocLayout() {
+      const v = docView;
+      let y = 0;
+      v.m.sizes.forEach(([w, h]) => {
+        const lh = PAGE_W * h / w;
+        v.tops.push(y); v.heights.push(lh);
+        y += lh + PAGE_GAP;
+      });
+      v.total = y - PAGE_GAP;
+      const layer = $("pdfLayer");
+      layer.innerHTML = "";
+      v.nodes = v.m.sizes.map(() => { const d = document.createElement("div"); d.className = "pg"; layer.appendChild(d); return { el: d, w: 0, busy: false }; });
+    }
+    function placeDocPages() {
+      const v = docView;
+      if (!v || !v.nodes.length) return;
+      const s = paperEl.clientWidth / PAGE_W;
+      v.nodes.forEach((n, i) => { n.el.style.top = v.tops[i] * s + "px"; n.el.style.height = v.heights[i] * s + "px"; });
+    }
+    function applyDocZoom() {
+      const z = prefs.docZoom || 1;
+      paperEl.style.width = z * 100 + "%";
+      $("zoomText").textContent = Math.round(z * 100) + " %";
+    }
+    function changeZoom(dir) {
+      const z = prefs.docZoom || 1;
+      let i = ZOOMS.indexOf(z);
+      if (i < 0) i = 2;
+      const next = ZOOMS[Math.max(0, Math.min(ZOOMS.length - 1, i + dir))];
+      if (next === z) return;
+      const ratio = pageEl.scrollTop / Math.max(1, pageEl.scrollHeight);
+      prefs.docZoom = next;
+      savePrefs();
+      applyDocZoom();
+      layoutPaper();
+      pageEl.scrollTop = ratio * pageEl.scrollHeight;
+      ensureTile(true);
+      docTick(true);
+    }
+    function currentDocPage() {
+      const v = docView;
+      const y = pageEl.scrollTop / (paperEl.clientWidth / PAGE_W) + 60;
+      let i = 0;
+      while (i + 1 < v.tops.length && v.tops[i + 1] <= y) i++;
+      return i;
+    }
+    function docTick(force) {
+      const v = docView;
+      if (!v || !v.nodes.length) return;
+      if (force) placeDocPages();
+      const s = paperEl.clientWidth / PAGE_W;
+      const top = pageEl.scrollTop / s, h = pageEl.clientHeight / s;
+      const cur = currentDocPage();
+      $("pagerText").textContent = `Page ${cur + 1}/${v.nodes.length}`;
+      const pw = paperEl.clientWidth;
+      v.nodes.forEach((n, i) => {
+        const near = v.tops[i] + v.heights[i] > top - h && v.tops[i] < top + 2 * h;
+        if (near) { if (n.w !== pw && !n.busy) renderDocPage(n, i, pw); }
+        else if (n.el.firstChild) { n.el.innerHTML = ""; n.w = 0; }
+      });
+      if (!prefs.docPos) prefs.docPos = {};
+      clearTimeout(window._docPosTimer);
+      window._docPosTimer = setTimeout(() => {
+        if (docView === v) { prefs.docPos[v.m.id] = pageEl.scrollTop / (paperEl.clientWidth / PAGE_W); savePrefs(); }
+      }, 500);
+    }
+    async function renderDocPage(n, i, pw) {
+      const v = docView;
+      n.busy = true;
+      try {
+        if (v.m.kind === "image") {
+          if (!v.img) v.img = URL.createObjectURL(v.file);
+          n.el.innerHTML = `<img alt="" src="${v.img}">`;
+          n.w = pw;
+        } else {
+          const page = await v.pdf.getPage(i + 1);
+          const base = page.getViewport({ scale: 1 });
+          let dpr = Math.min(window.devicePixelRatio || 1, 2);
+          const hCss = pw * base.height / base.width;
+          if (pw * hCss * dpr * dpr > 6e6) dpr = Math.sqrt(6e6 / (pw * hCss));
+          const vp = page.getViewport({ scale: pw * dpr / base.width });
+          const c = document.createElement("canvas");
+          c.width = Math.round(vp.width); c.height = Math.round(vp.height);
+          await page.render({ canvasContext: c.getContext("2d"), viewport: vp }).promise;
+          if (docView === v) { n.el.innerHTML = ""; n.el.appendChild(c); n.w = pw; }
+        }
+      } catch (e) {}
+      n.busy = false;
+      if (docView === v && n.w !== paperEl.clientWidth) docTick();
+    }
+    function closeDocView() {
+      const v = docView;
+      if (!v) return;
+      if (v.nodes.length) { prefs.docPos = prefs.docPos || {}; prefs.docPos[v.m.id] = pageEl.scrollTop / (paperEl.clientWidth / PAGE_W); savePrefs(); }
+      if (v.pdf) v.pdf.destroy();
+      if (v.img) URL.revokeObjectURL(v.img);
+      Object.keys(sessions).forEach(k => { if (k.startsWith(DOC_PREFIX)) delete sessions[k]; });
+      docView = null;
+      doc = null;
+      currentExId = null;
+      setMode("ex");
+    }
+    function jumpDocPage(delta) {
+      const v = docView, s = paperEl.clientWidth / PAGE_W;
+      const i = Math.max(0, Math.min(v.nodes.length - 1, currentDocPage() + delta));
+      pageEl.scrollTop = v.tops[i] * s;
+    }
+    // Image d'une page avec tes annotations, à partager
+    async function exportDocPage() {
+      const v = docView, i = currentDocPage();
+      const sc = 1.6, W = Math.round(PAGE_W * sc), H = Math.round(v.heights[i] * sc);
+      const out = document.createElement("canvas");
+      out.width = W; out.height = H;
+      const x = out.getContext("2d");
+      x.fillStyle = "#fff"; x.fillRect(0, 0, W, H);
+      if (v.pdf) {
+        const page = await v.pdf.getPage(i + 1);
+        const vp = page.getViewport({ scale: W / page.getViewport({ scale: 1 }).width });
+        await page.render({ canvasContext: x, viewport: vp }).promise;
+      } else {
+        const url = URL.createObjectURL(v.file);
+        const im = await new Promise((res, rej) => { const m = new Image(); m.onload = () => res(m); m.onerror = rej; m.src = url; });
+        x.drawImage(im, 0, 0, W, H);
+        URL.revokeObjectURL(url);
+      }
+      const ink = document.createElement("canvas");
+      ink.width = W; ink.height = H;
+      const lx = ink.getContext("2d");
+      lx.setTransform(sc, 0, 0, sc, 0, -v.tops[i] * sc);
+      doc.strokes.forEach(st => drawStroke(lx, st, false));
+      x.drawImage(ink, 0, 0);
+      return { canvas: out, name: `${v.m.name}_page_${i + 1}.png` };
+    }
+
+    // ---------- Mise à jour : la nouvelle version s'installe toute seule ----------
+    let pendingReload = false;
+    function tryReload() {
+      if (!pendingReload || act) return;
+      if ($("home").classList.contains("open") || performance.now() < 10000) {
+        pendingReload = false;
+        saveNow();
+        idbPending.finally(() => location.reload());
+      }
+    }
     initApp();
   </script>
 </body>
