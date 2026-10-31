@@ -266,6 +266,7 @@
     .tbl-wrap { overflow-x: auto; margin: .5em 0; }
     .tbl-wrap .data-table { width: auto; min-width: 50%; margin: 0; }
     .fig { margin: .6em 0; }
+    .fig-cap { font-size: 13px; font-weight: 700; color: #475569; margin-top: 4px; }
     .fig svg { width: 100%; max-width: 560px; height: auto; display: block; background: #f8fafc; border-radius: 12px; }
     #exStatement ul, #sheetBody ul, #sheetBody ol { margin: .4em 0; padding-left: 1.3em; }
     #sheetBody { overflow-x: hidden; }
@@ -352,10 +353,6 @@
     #busy.open { display: flex; }
     #busy > div { background: #fff; border-radius: 16px; padding: 18px 20px; display: flex; align-items: center; gap: 12px; font-weight: 600; max-width: 420px; }
 
-    /* ---------- Énoncé affiché depuis le PDF importé ---------- */
-    .pdfcrop { margin: 0 auto; max-width: 780px; min-height: 40px; }
-    .pdfcrop canvas { display: block; width: 100%; height: auto; }
-
     /* ---------- Modes : exercice, cahier vierge, document PDF ---------- */
     .doc-only { display: none !important; }
     body.mode-doc .ex-only, body.mode-doc #statementCard, body.mode-doc #assist, body.mode-doc #drawer, body.mode-doc #scrim { display: none !important; }
@@ -407,7 +404,6 @@
     </div>
   </div>
   <input id="docFile" type="file" multiple accept="application/pdf,.pdf,image/*,.ppt,.pptx" style="display:none" onchange="importDocs(this)">
-  <input id="emPdfFile" type="file" accept="application/pdf,.pdf" style="display:none" onchange="importCoursePdf(this)">
 
   <!-- ===================== BARRE DU HAUT ===================== -->
   <header id="topbar">
@@ -422,7 +418,7 @@
     <button id="markDoneBtn" class="tb-btn ex-only" onclick="setExerciseStatus('done')" title="Réussi du premier coup"><span>✅</span><span class="lbl">Réussi</span></button>
     <button id="markAlmostBtn" class="tb-btn ex-only" onclick="setExerciseStatus('almost')" title="Presque : petit détail manqué ou j'ai hésité"><span>🟡</span><span class="lbl">Presque</span></button>
     <button id="markReviewBtn" class="tb-btn ex-only" onclick="setExerciseStatus('review')" title="Raté : à refaire"><span>❌</span><span class="lbl">À refaire</span></button>
-    <button id="refBtn" class="tb-btn ex-only" onclick="openModal('refModal')" title="Aide-mémoire (formules, Ka)"><span data-ic="book"></span><span class="lbl">Formules</span></button>
+    <button id="refBtn" class="tb-btn ex-only" onclick="openRef()" title="Aide-mémoire (formules, Ka)"><span data-ic="book"></span><span class="lbl">Formules</span></button>
     <button class="tb-btn ex-only" onclick="openModal('apiModal')" title="Réglages de l'IA"><span id="apiDot" class="dot"></span><span>IA</span></button>
     <button class="tb-btn doc-only pdf-zoom" onclick="changeZoom(-1)" aria-label="Réduire"><span style="font-size:22px">−</span></button>
     <span id="zoomText" class="zoom-txt doc-only pdf-zoom">100 %</span>
@@ -455,7 +451,7 @@
       <button class="tool" onclick="changePage(1)" aria-label="Page suivante"><span data-ic="right"></span></button>
     </span>
     <button class="tool focus-only ex-only" onclick="runAssistantAction('verify')" title="Voir la réponse" aria-label="Voir la réponse"><span data-ic="check"></span></button>
-    <button id="focusRefBtn" class="tool focus-only ex-only" onclick="openModal('refModal')" title="Formules" aria-label="Formules"><span data-ic="book"></span></button>
+    <button id="focusRefBtn" class="tool focus-only ex-only" onclick="openRef()" title="Formules" aria-label="Formules"><span data-ic="book"></span></button>
     <button id="moreBtn" class="tool" onclick="openMoreMenu()" title="Plus d'options" aria-label="Plus d'options"><span data-ic="more"></span></button>
     <button id="focusBtn" class="tool" onclick="toggleFocus()" title="Plein écran" aria-label="Plein écran"><span id="focusIc" data-ic="maximize"></span></button>
   </div>
@@ -679,6 +675,84 @@ $$x = \frac{-b + \sqrt{b^2 - 4ac}}{2a}$$
         <textarea id="backupText" class="field selectable" style="height:80px;padding:8px;font-size:13px;resize:vertical"></textarea>
         <div class="modal-actions">
           <button class="btn plain" onclick="importBackupText()">Restaurer le texte collé</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== MODALE : FORMULES D'ÉLECTRICITÉ ===================== -->
+  <div id="refModalEm" class="modal" onclick="if(event.target===this) closeModal('refModalEm')">
+    <div class="modal-card wide">
+      <div class="modal-head"><h3>Formules : Électricité et magnétisme (203-SN2-RE)</h3><button class="tb-btn" onclick="closeModal('refModalEm')" aria-label="Fermer"><span data-ic="x"></span></button></div>
+      <div class="modal-body selectable">
+        <div class="ref-grid">
+          <div class="box amber" data-render>
+<div class="box-title">Chapitre 5 : condensateurs</div>
+$C = \frac{Q}{\Delta V}$ $\qquad C = \frac{\kappa\varepsilon_{0}A}{d}$ (plan) $\qquad E = \frac{\Delta V}{d}$
+$U = \frac{1}{2}Q\Delta V = \frac{1}{2}C\Delta V^{2} = \frac{Q^{2}}{2C}$
+**Parallèle :** $C_{\text{éq}} = C_{1} + C_{2} + \dots$ (même $\Delta V$)
+**Série :** $\frac{1}{C_{\text{éq}}} = \frac{1}{C_{1}} + \frac{1}{C_{2}} + \dots$ (même $Q$)
+          </div>
+          <div class="box blue" data-render>
+<div class="box-title">Chapitre 6 : courant électrique</div>
+$i = \frac{dq}{dt}$ $\qquad i = neAv_{d}$ $\qquad J = \frac{i}{A} = nev_{d} = \frac{E}{\rho}$
+$R = \frac{\rho\ell}{A}$ $\qquad \Delta V = Ri$
+$\rho = \rho_{0}[1 + \alpha(T - T_{0})]$ $\qquad R = R_{0}[1 + \alpha(T - T_{0})]$
+$P = \Delta V i = Ri^{2} = \frac{\Delta V^{2}}{R}$
+          </div>
+          <div class="box green" data-render>
+<div class="box-title">Chapitre 7 : circuits</div>
+**Nœud :** $\sum i_{\text{entre}} = \sum i_{\text{sort}}$ $\qquad$ **Maille :** $\sum\Delta V = 0$
+**Série :** $R_{\text{éq}} = R_{1} + R_{2} + \dots$
+**Parallèle :** $\frac{1}{R_{\text{éq}}} = \frac{1}{R_{1}} + \frac{1}{R_{2}} + \dots$
+**Pile réelle :** $\Delta V = ℰ - ir$ $\qquad P_{ℰ} = ℰ i$ $\qquad P_{r} = i^{2}r$
+          </div>
+          <div class="box indigo" data-render>
+<div class="box-title">Chapitre 7 : circuits RC</div>
+$\tau = RC$ $\qquad Q_{m} = Cℰ$ $\qquad i_{m} = \frac{ℰ}{R}$
+**Charge :** $Q = Q_{m}(1 - e^{-t/\tau})$ $\qquad i = i_{m}e^{-t/\tau}$
+**Décharge :** $Q = Q_{0}e^{-t/\tau}$ $\qquad i = \frac{Q_{0}}{\tau}e^{-t/\tau}$
+$t = 0$ : $C$ vide agit comme un fil. $t \to \infty$ : $C$ agit comme un circuit ouvert.
+          </div>
+        </div>
+        <p style="margin:0 0 12px;color:#64748b;font-size:13px">Ces quatre encadrés sont un résumé des chapitres 5 à 7. Ils ne sont pas sur l'aide-mémoire ci-dessous.</p>
+        <div class="box-title" style="margin-top:6px">Aide-mémoire du cours (formules_A26)</div>
+        <div class="box slate" data-render>
+<div class="box-title">Constantes et valeurs utiles</div>
+$g = 9,81\u{N/kg}$ $\qquad N_{A} = 6,022\times10^{-23}$ (écrit ainsi sur la feuille ; la valeur usuelle est $6,022\times10^{23}$) $\qquad c = 3,00\times10^{8}\u{m/s}$
+$\varepsilon_{0} = 8,854\times10^{-12}\u{C^{2}/(N·m^{2})}$ $\qquad e = 1,602\times10^{-19}\u{C}$ $\qquad k = \frac{1}{4\pi\varepsilon_{0}} = 8,9876\times10^{9}\u{N·m^{2}/C^{2}}$
+$m_{e} = 9,1094\times10^{-31}\u{kg}$ $\qquad m_{p} = 1,6726\times10^{-27}\u{kg}$ $\qquad m_{n} = 1,6749\times10^{-27}\u{kg}$ $\qquad \mu_{0} = 4\pi\times10^{-7}\u{T·m/A}$
+        </div>
+        <div class="box slate" data-render>
+<div class="box-title">Mécanique</div>
+$\sum\vec{F} = m\vec{a}$ $\qquad \vec{v} = \frac{d\vec{r}}{dt}$ $\qquad \vec{a} = \frac{d\vec{v}}{dt} = \frac{d^{2}\vec{r}}{dt^{2}}$ $\qquad a_{c} = \frac{v^{2}}{r}$
+$v_{x} = v_{0x} + a_{x}t$ $\qquad v_{x}^{2} = v_{0x}^{2} + 2a_{x}(x - x_{0})$
+$x = x_{0} + v_{x}t + \frac{1}{2}a_{x}t^{2}$ $\qquad x = x_{0} + \left(\frac{v_{0x} + v_{x}}{2}\right)t$
+$E = K + U$ $\qquad \Delta K + \Delta U = W_{nc} + W_{ext}$ $\qquad K = \frac{1}{2}mv^{2}$ $\qquad W_{c} = -\Delta U$
+$W = \int\vec{F}\cdot d\vec{s}$ $\qquad W = \vec{F}\cdot\Delta\vec{s}$ $\qquad P = \frac{dE}{dt}$ $\qquad P_{\text{moy}} = \frac{\Delta E}{\Delta t}$
+        </div>
+        <div class="box slate" data-render>
+<div class="box-title">Vecteurs</div>
+$\vec{A}\cdot\vec{B} = A_{x}B_{x} + A_{y}B_{y} + A_{z}B_{z} = |\vec{A}||\vec{B}|\cos\theta$
+$|\vec{A}\times\vec{B}| = |\vec{A}||\vec{B}|\sin\theta$
+$\vec{A}\times\vec{B} = (A_{y}B_{z} - A_{z}B_{y})\vec{i} + (A_{z}B_{x} - A_{x}B_{z})\vec{j} + (A_{x}B_{y} - A_{y}B_{x})\vec{k}$
+        </div>
+        <div class="box slate" data-render>
+<div class="box-title">Intégrales</div>
+$\int ax^{n}\,dx = a\frac{x^{n+1}}{n+1}$ $(n \neq -1)$ $\qquad \int\frac{dx}{x} = \ln|x|$ $\qquad \int e^{ax}\,dx = \frac{1}{a}e^{ax}$
+$\int\frac{dx}{(a + bx)^{2}} = -\frac{1}{b(a + bx)}$ $\qquad \int\sin(ax)\,dx = -\frac{1}{a}\cos(ax)$ $\qquad \int\cos(ax)\,dx = \frac{1}{a}\sin(ax)$
+$\int\frac{dx}{\sqrt{x^{2} + a^{2}}} = \ln\left|x + \sqrt{x^{2} + a^{2}}\right|$
+$\int\frac{dx}{(x^{2} + a^{2})^{3/2}} = \frac{x}{a^{2}\sqrt{x^{2} + a^{2}}}$ $\qquad \int\frac{x\,dx}{(x^{2} + a^{2})^{3/2}} = -\frac{1}{\sqrt{x^{2} + a^{2}}}$
+        </div>
+        <div class="box slate" data-render>
+<div class="box-title">Électrostatique</div>
+$\lambda = \frac{dq}{dL}$ $\qquad \sigma = \frac{dq}{dA}$ $\qquad \rho = \frac{dq}{dV}$
+$\vec{F}_{12} = k\frac{q_{1}q_{2}}{r_{12}^{2}}\vec{u}_{12}$ $\qquad \vec{u}_{12} = \frac{\vec{r}_{12}}{r_{12}} = \frac{\vec{r}_{1} - \vec{r}_{2}}{r_{12}}$ $\qquad \vec{F}_{e} = q\vec{E}$
+$\vec{E} = \sum_{i=1}^{N}k\frac{q_{i}}{r_{i}^{2}}\vec{u}_{ri}$ $\qquad \vec{E} = \int k\frac{dq}{r^{2}}\vec{u}_{r}$
+$\vec{E} = \frac{\sigma}{2\varepsilon_{0}}\vec{u}_{n}$ $\qquad \vec{E} = \frac{|\sigma|}{\varepsilon_{0}}\vec{u}_{-+}$
+$U_{e} = \sum_{i&lt;j}^{N}k\frac{q_{i}q_{j}}{r_{ij}}$ $\qquad \Delta U_{e} = q\Delta V$
+$\Delta V = V_{b} - V_{a} = -\int_{a}^{b}\vec{E}\cdot d\vec{s}$ $\qquad V = \sum_{i=1}^{N}\frac{kq_{i}}{r_{i}}$ $\qquad V = k\int\frac{dq}{r}$
+$\vec{E} = -\left(\frac{\partial V}{\partial x}\vec{i} + \frac{\partial V}{\partial y}\vec{j} + \frac{\partial V}{\partial z}\vec{k}\right)$
         </div>
       </div>
     </div>
@@ -2345,7 +2419,9 @@ $$\text{pOH} = -\log(9,2\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 
   <script type="text/plain" id="exDataEm">
 === em-ch5-q1 | 5 | 5.1 La capacité d'un condensateur | question | Question 1 (p. 183)
 Q:
-[[crop:2:204:299]]
+Les armatures d'un condensateur sont reliées à une pile.
+**a.** Que devient la charge sur les armatures si on débranche la pile?
+**b.** Que devient la charge si on relie les deux armatures avec un fil conducteur?
 A:
 a. La charge reste la même. b. La charge devient nulle.
 H:
@@ -2355,7 +2431,10 @@ S:
 **b.** Le fil relie $+Q$ et $-Q$ : les charges se neutralisent jusqu'à $\Delta V = 0$, donc $Q = C\Delta V = 0$.
 === em-ch5-q2 | 5 | 5.1 La capacité d'un condensateur | question | Question 2 (p. 183)
 Q:
-[[crop:2:322:444]]
+Qu'arrive-t-il à la capacité d'un condensateur lorsqu'on double :
+**a.** la charge sur le condensateur ;
+**b.** le champ électrique entre les plaques ;
+**c.** la différence de potentiel aux bornes du condensateur?
 A:
 a., b. et c. La capacité reste la même.
 H:
@@ -2366,7 +2445,7 @@ Si $Q$ double, $\Delta V$ et le champ $E = \frac{\Delta V}{d}$ doublent aussi : 
 **a., b. et c.** La capacité reste la même dans les trois cas.
 === em-ch5-e3 | 5 | 5.1 La capacité d'un condensateur | exercice | Exercice 3 (p. 183)
 Q:
-[[crop:2:467:529]]
+Un condensateur de 8,20 μF est branché à une pile de 9,00 V. Quelle est la charge sur l'armature positive du condensateur à l'équilibre?
 A:
 $Q = 73,8\u{µC}$
 H:
@@ -2375,7 +2454,10 @@ S:
 $$Q = C\Delta V = (8,20\times10^{-6}\u{F})(9,00\u{V}) = 73,8\times10^{-6}\u{C} = 73,8\u{µC}$$
 === em-ch5-q5 | 5 | 5.2 Le calcul de la capacité | question | Question 5 (p. 183)
 Q:
-[[crop:2:583:723]]
+Un condensateur plan est constitué d'armatures séparées de vide. Qu'arrive-t-il à la capacité du condensateur lorsqu'on :
+**a.** divise par 2 la distance entre les armatures ;
+**b.** divise par 2 l'aire de ses armatures ;
+**c.** insère entre ses armatures un diélectrique dont la constante diélectrique est de 2,5?
 A:
 a. $C$ double. b. $C$ est divisée par 2. c. $C$ est multipliée par 2,5.
 H:
@@ -2387,8 +2469,13 @@ $$C = \frac{\kappa\varepsilon_{0}A}{d}$$
 **c.** $\kappa$ passe de 1 à 2,5 : $C$ est multipliée par 2,5.
 === em-ch5-q6 | 5 | 5.2 Le calcul de la capacité | question | Question 6 (p. 183)
 Q:
-[[crop:2:746:955]]
-[[crop:3:45:199]]
+La figure 5.15 montre la charge en fonction de la différence de potentiel pour des condensateurs plans. Le tableau suivant donne les caractéristiques de quatre condensateurs. Associez les courbes du graphique aux condensateurs énumérés dans le tableau.
+[[fig:em-5.15]]
+| Condensateur | Aire | Distance | $\kappa$ |
+| $C_{1}$ | $A$ | $d$ | 1 |
+| $C_{2}$ | $2A$ | $d$ | 1 |
+| $C_{3}$ | $A$ | $2d$ | 1 |
+| $C_{4}$ | $2A$ | $2d$ | 2 |
 A:
 Courbe a : $C_{2}$ et $C_{4}$. Courbe b : $C_{1}$. Courbe c : $C_{3}$.
 H:
@@ -2399,7 +2486,9 @@ $$C_{1} = C_{0} \quad C_{2} = 2C_{0} \quad C_{3} = \frac{C_{0}}{2} \quad C_{4} =
 La plus grande pente (a) va avec $C_{2}$ et $C_{4}$, la moyenne (b) avec $C_{1}$, la plus petite (c) avec $C_{3}$.
 === em-ch5-e7 | 5 | 5.2 Le calcul de la capacité | exercice | Exercice 7 (p. 183)
 Q:
-[[crop:3:222:359]]
+Un condensateur plan a une charge de 0,96 μC, et il est composé de deux armatures parallèles dont l'aire est de 112 cm^{2} chacune. L'espace entre les armatures est rempli par un diélectrique. Le module du champ électrique résultant entre les armatures est de 1,3 × 10^{6} V/m.
+**a.** Quelle est la constante diélectrique de ce matériau?
+**b.** Selon le tableau 5.1, quel est le matériau utilisé comme diélectrique dans ce condensateur?
 A:
 a. $\kappa = 7,45$ b. De la porcelaine (selon le tableau 5.1 du manuel).
 H:
@@ -2410,7 +2499,9 @@ $$\kappa = \frac{Q}{\varepsilon_{0}AE} = \frac{0,96\times10^{-6}}{(8,854\times10
 **b.** Cette valeur correspond à la porcelaine dans le tableau 5.1 du manuel.
 === em-ch5-q11 | 5 | 5.3 L'énergie emmagasinée dans un condensateur | question | Question 11 (p. 184)
 Q:
-[[crop:3:413:539]]
+Un condensateur C_{1} a une capacité trois fois plus petite qu'un condensateur C_{2}. Le condensateur C_{1} a trois fois plus d'énergie que le condensateur C_{2}.
+**a.** Quel est le rapport Q_{1}/Q_{2}?
+**b.** Quel est le rapport (ΔV_{1})/(ΔV_{2})?
 A:
 a. $\frac{Q_{1}}{Q_{2}} = 1$ b. $\frac{\Delta V_{1}}{\Delta V_{2}} = 3$
 H:
@@ -2423,7 +2514,10 @@ $$\frac{U_{1}}{U_{2}} = \frac{Q_{1}^{2}}{Q_{2}^{2}}\times\frac{C_{2}}{C_{1}} \Ri
 $$\frac{\Delta V_{1}}{\Delta V_{2}} = \frac{Q_{1}}{Q_{2}}\times\frac{C_{2}}{C_{1}} = 1\times3 = 3$$
 === em-ch5-q12 | 5 | 5.3 L'énergie emmagasinée dans un condensateur | question | Question 12 (p. 184)
 Q:
-[[crop:3:562:683]]
+Classez par ordre croissant d'énergie électrique les situations suivantes :
+(i) un condensateur de 2 μF branché à une pile de 2 V ;
+(ii) un condensateur de 2 μF possédant une charge de 2 μC ;
+(iii) un condensateur branché à une pile de 2 V et possédant une charge de 2 μC.
 A:
 $U_{(ii)} < U_{(iii)} < U_{(i)}$
 H:
@@ -2435,7 +2529,10 @@ $$U_{(iii)} = \frac{1}{2}Q\Delta V = \frac{1}{2}(2\u{µC})(2\u{V}) = 2\u{µJ}$$
 Donc $U_{(ii)} < U_{(iii)} < U_{(i)}$.
 === em-ch5-e13 | 5 | 5.3 L'énergie emmagasinée dans un condensateur | exercice | Exercice 13 (p. 184)
 Q:
-[[crop:3:706:848]]
+Un condensateur plan comporte deux armatures parallèles dont l'aire est de 53,0 cm^{2} chacune, séparées de 4,00 mm. Il y a une différence de potentiel de 720 V entre ses armatures. Déterminez :
+**a.** la capacité du condensateur ;
+**b.** la charge du condensateur ;
+**c.** l'énergie emmagasinée dans le condensateur.
 A:
 a. $C = 11,7\u{pF}$ b. $Q = 8,45\u{nC}$ c. $U = 3,04\u{µJ}$
 H:
@@ -2449,8 +2546,11 @@ $$Q = C\Delta V = (11,73\times10^{-12})(720) = 8,45\times10^{-9}\u{C}$$
 $$U = \frac{1}{2}Q\Delta V = \frac{1}{2}(8,45\times10^{-9})(720) = 3,04\times10^{-6}\u{J}$$
 === em-ch5-p16 | 5 | 5.3 L'énergie emmagasinée dans un condensateur | probleme | Problème 16 (p. 184)
 Q:
-[[crop:3:871:955]]
-[[crop:4:45:179]]
+Un condensateur plan est conçu pour être soumis à une différence de potentiel maximale de 400 V et emmagasiner une énergie électrique maximale de 80,0 mJ. Il utilise un diélectrique dont la rigidité diélectrique est de 150 × 10^{6} V/m, et la constante diélectrique est de 4,70. Déterminez :
+**a.** la capacité du condensateur ;
+**b.** la distance entre les armatures ;
+**c.** l'aire d'une armature ;
+**d.** la charge du condensateur si l'énergie emmagasinée est de 50,0 mJ.
 A:
 a. $C = 1,00\u{µF}$ b. $d = 2,67\u{µm}$ c. $A = 641\u{cm^{2}}$ d. $Q = 316\u{µC}$
 H:
@@ -2466,7 +2566,10 @@ $$A = \frac{Cd}{\kappa\varepsilon_{0}} = \frac{(1,00\times10^{-6})(2,67\times10^
 $$Q = \sqrt{2CU} = \sqrt{2(1,00\times10^{-6})(50,0\times10^{-3})} = 316\times10^{-6}\u{C}$$
 === em-ch5-p18 | 5 | 5.3 L'énergie emmagasinée dans un condensateur | probleme | Problème 18 (p. 184)
 Q:
-[[crop:4:202:379]]
+Un appareil photo utilise une pile de 3,00 V pour charger un condensateur. Ce dernier est ensuite branché à un flash pour produire de la lumière. Le condensateur se décharge en 18,0 μs avec une puissance moyenne de 12,5 W.
+**a.** Quelle est la charge sur le condensateur lorsque celui-ci est complètement chargé?
+**b.** Quelle est la capacité du condensateur?
+**c.** Quel est le taux de variation moyen de la charge i = |(ΔQ)/(Δt)|? (Nous verrons au chapitre 6 que ce taux de variation représente le courant électrique.)
 A:
 a. $Q_{i} = 150\u{µC}$ b. $C = 50,0\u{µF}$ c. $i = 8,33\u{C/s}$
 H:
@@ -2481,7 +2584,7 @@ $$C = \frac{Q}{\Delta V} = \frac{150\times10^{-6}}{3,00} = 50,0\times10^{-6}\u{F
 $$i = \frac{\Delta Q}{\Delta t} = \frac{150\times10^{-6}}{18,0\times10^{-6}} = 8,33\u{C/s}$$
 === em-ch5-p20 | 5 | 5.3 L'énergie emmagasinée dans un condensateur | probleme | Problème 20 (p. 184)
 Q:
-[[crop:4:402:503]]
+Un condensateur plan est composé d'armatures, dont l'aire est de 0,250 m^{2}, séparées d'un diélectrique ayant une épaisseur de 600 μm et dont la constante diélectrique est de 6,00. On charge le condensateur en le branchant à une source de f.é.m. de 120 V, puis on débranche la source de f.é.m. Quel est le travail nécessaire pour enlever le diélectrique?
 A:
 $W = 797\u{µJ}$
 H:
@@ -2494,7 +2597,8 @@ La source est débranchée, donc $Q$ reste constante. Sans diélectrique, $C$ es
 $$W = U_{f} - U_{i} = (\kappa - 1)U_{i} = 5(159,4\u{µJ}) = 797\u{µJ}$$
 === em-ch5-q21 | 5 | 5.4 L'association de condensateurs | question | Question 21 (p. 184)
 Q:
-[[crop:4:557:768]]
+Trois condensateurs ont des capacités C, 2C et C/2 respectivement. On les branche de trois façons différentes, comme il est indiqué à la figure 5.16. Classez les situations par ordre croissant de C_{éq}.
+[[fig:em-5.16]]
 A:
 (i) < (iii) < (ii)
 H:
@@ -2508,7 +2612,10 @@ $$C_{\text{éq}} = \frac{(3C)(C/2)}{3C + C/2} = 0,43C$$
 Donc (i) < (iii) < (ii).
 === em-ch5-e22 | 5 | 5.4 L'association de condensateurs | exercice | Exercice 22 (p. 184)
 Q:
-[[crop:4:791:955]]
+On branche en parallèle un condensateur C_{1} = 6,00 μF et un condensateur C_{2} = 4,00 μF. On applique une différence de potentiel de 200 V à cette association. Déterminez :
+**a.** la capacité équivalente ;
+**b.** la charge de chaque condensateur ;
+**c.** la différence de potentiel aux bornes de chaque condensateur.
 A:
 a. $C_{\text{éq}} = 10,00\u{µF}$ b. $Q_{1} = 1,20\u{mC}$ et $Q_{2} = 0,80\u{mC}$ c. $\Delta V_{1} = \Delta V_{2} = 200\u{V}$
 H:
@@ -2521,7 +2628,10 @@ $$Q_{1} = (6,00\u{µF})(200\u{V}) = 1,20\u{mC}$$
 $$Q_{2} = (4,00\u{µF})(200\u{V}) = 0,80\u{mC}$$
 === em-ch5-e23 | 5 | 5.4 L'association de condensateurs | exercice | Exercice 23 (p. 184)
 Q:
-[[crop:5:79:222]]
+On branche en série un condensateur C_{1} = 6,00 μF et un condensateur C_{2} = 4,00 μF. On applique une différence de potentiel de 200 V à cette association. Déterminez :
+**a.** la capacité équivalente ;
+**b.** la charge de chaque condensateur ;
+**c.** la différence de potentiel aux bornes de chaque condensateur.
 A:
 a. $C_{\text{éq}} = 2,40\u{µF}$ b. $Q_{1} = Q_{2} = 480\u{µC}$ c. $\Delta V_{1} = 80,0\u{V}$ et $\Delta V_{2} = 120\u{V}$
 H:
@@ -2535,7 +2645,8 @@ $$Q = C_{\text{éq}}\Delta V = (2,40\u{µF})(200\u{V}) = 480\u{µC}$$
 $$\Delta V_{1} = \frac{480}{6,00} = 80,0\u{V} \quad \Delta V_{2} = \frac{480}{4,00} = 120\u{V}$$
 === em-ch5-e24 | 5 | 5.4 L'association de condensateurs | exercice | Exercice 24 (p. 185)
 Q:
-[[crop:5:245:445]]
+Déterminez la capacité équivalente de l'association des condensateurs de la figure 5.17 si C_{1} = 12,0 μF, C_{2} = 15,0 μF et C_{3} = 23,0 μF.
+[[fig:em-5.17]]
 A:
 $C_{\text{éq}} = 29,7\u{µF}$
 H:
@@ -2547,7 +2658,7 @@ Cette branche est en parallèle avec $C_{3}$ :
 $$C_{\text{éq}} = 6,67 + 23,0 = 29,7\u{µF}$$
 === em-ch5-e28 | 5 | 5.4 L'association de condensateurs | exercice | Exercice 28 (p. 185)
 Q:
-[[crop:5:468:534]]
+On place deux condensateurs en série, C_{1} = 3,0 μF et C_{2} = 5,0 μF. On les branche à une source de f.é.m. de 180 V. Calculez l'énergie électrique emmagasinée dans le circuit.
 A:
 $U = 0,030\u{J}$
 H:
@@ -2557,7 +2668,9 @@ $$C_{\text{éq}} = \frac{(3,0)(5,0)}{8,0} = 1,875\u{µF}$$
 $$U = \frac{1}{2}C_{\text{éq}}\Delta V^{2} = \frac{1}{2}(1,875\times10^{-6})(180)^{2} = 0,030\u{J}$$
 === em-ch5-e29 | 5 | 5.4 L'association de condensateurs | exercice | Exercice 29 (p. 185)
 Q:
-[[crop:5:557:794]]
+La figure 5.19 montre deux condensateurs en série ayant une aire A. La partie centrale est mobile. Montrez que la capacité équivalente est indépendante de la position centrale et qu'elle est donnée par l'expression :
+C_{éq} = (ε_{0}A) / (b − a) .
+[[fig:em-5.19]]
 A:
 $C_{\text{éq}} = \frac{\varepsilon_{0}A}{b - a}$ (démonstration)
 H:
@@ -2571,8 +2684,12 @@ $$C_{\text{éq}} = \frac{\varepsilon_{0}A}{b - a}$$
 Seule la somme $d_{1} + d_{2}$ intervient : le résultat ne dépend pas de la position de la partie centrale.
 === em-ch5-p30 | 5 | 5.4 L'association de condensateurs | probleme | Problème 30 (p. 185)
 Q:
-[[crop:5:817:955]]
-[[crop:6:45:242]]
+Soit le circuit illustré à la figure 5.20, avec C_{1} = 3,00 μF, C_{2} = 5,00 μF et C_{3} = 6,00 μF, branché à une pile ℰ = 10,0 V. Déterminez :
+**a.** la capacité équivalente du circuit ;
+**b.** la charge sur chaque condensateur ;
+**c.** la différence de potentiel aux bornes de chaque condensateur ;
+**d.** l'énergie emmagasinée dans chaque condensateur.
+[[fig:em-5.20]]
 A:
 a. $C_{\text{éq}} = 3,43\u{µF}$ b. $Q_{1} = 12,9\u{µC}$, $Q_{2} = 21,4\u{µC}$, $Q_{3} = 34,3\u{µC}$ c. $\Delta V_{1} = \Delta V_{2} = 4,29\u{V}$, $\Delta V_{3} = 5,71\u{V}$ d. $U_{1} = 27,6\u{µJ}$, $U_{2} = 45,9\u{µJ}$, $U_{3} = 98,0\u{µJ}$
 H:
@@ -2590,7 +2707,13 @@ $$Q_{1} = (3,00)(4,29) = 12,9\u{µC} \quad Q_{2} = (5,00)(4,29) = 21,4\u{µC}$$
 $$U_{1} = 27,6\u{µJ} \quad U_{2} = 45,9\u{µJ} \quad U_{3} = 98,0\u{µJ}$$
 === em-ch5-p31 | 5 | 5.4 L'association de condensateurs | probleme | Problème 31 (p. 185)
 Q:
-[[crop:6:265:607]]
+Pour le circuit de la figure 5.21, les capacités des condensateurs sont C_{1} = 12,0 μF, C_{2} = 6,00 μF et C_{3} = 8,00 μF. Les condensateurs sont branchés à une source de f.é.m. ℰ = 120 V.
+**a.** Quelle est la capacité équivalente du circuit?
+**b.** Quelle est l'énergie électrique emmagasinée dans le circuit complet?
+**c.** Calculez la charge de chaque condensateur.
+**d.** Quelle est la différence de potentiel aux bornes de chaque condensateur?
+**e.** Calculez l'énergie emmagasinée sur chaque condensateur.
+[[fig:em-5.21]]
 A:
 a. $C_{\text{éq}} = 10,80\u{µF}$ b. $U = 77,8\u{mJ}$ c. $Q_{1} = 576\u{µC}$, $Q_{2} = 720\u{µC}$, $Q_{3} = 576\u{µC}$ d. $\Delta V_{1} = 48,0\u{V}$, $\Delta V_{2} = 120\u{V}$, $\Delta V_{3} = 72,0\u{V}$ e. $U_{1} = 13,8\u{mJ}$, $U_{2} = 43,2\u{mJ}$, $U_{3} = 20,7\u{mJ}$
 H:
@@ -2607,7 +2730,10 @@ $$\Delta V_{1} = \frac{576}{12,0} = 48,0\u{V} \quad \Delta V_{3} = \frac{576}{8,
 $$U_{1} = 13,8\u{mJ} \quad U_{2} = 43,2\u{mJ} \quad U_{3} = 20,7\u{mJ}$$
 === em-ch5-p33 | 5 | 5.4 L'association de condensateurs | probleme | Problème 33 (p. 186)
 Q:
-[[crop:6:630:955]]
+Dans le circuit de la figure 5.23, la pile a une f.é.m. de 9,00 V et les condensateurs sont C_{1} = 2,00 μF, C_{2} = 4,00 μF, C_{3} = 3,00 μF et C_{4} = 5,00 μF. Le circuit possède aussi un interrupteur qui peut être ouvert ou fermé. Déterminez la charge sur chaque condensateur :
+**a.** lorsque l'interrupteur est ouvert ;
+**b.** lorsque l'interrupteur est fermé.
+[[fig:em-5.23]]
 A:
 a. $Q_{1} = Q_{3} = 10,8\u{µC}$ et $Q_{2} = Q_{4} = 20,0\u{µC}$ b. $Q_{1} = 10,3\u{µC}$, $Q_{2} = 20,6\u{µC}$, $Q_{3} = 11,6\u{µC}$, $Q_{4} = 19,3\u{µC}$
 H:
@@ -2622,7 +2748,9 @@ $$\Delta V_{12} = \frac{30,86}{6,00} = 5,14\u{V} \quad \Delta V_{34} = \frac{30,
 $$Q_{1} = 10,3\u{µC} \quad Q_{2} = 20,6\u{µC} \quad Q_{3} = 11,6\u{µC} \quad Q_{4} = 19,3\u{µC}$$
 === em-ch5-p34 | 5 | 5.4 L'association de condensateurs | probleme | Problème 34 (p. 186)
 Q:
-[[crop:7:79:233]]
+Deux condensateurs C_{1} = 5,0 μF et C_{2} = 8,0 μF sont branchés en série avec une pile de 12,0 V.
+**a.** Trouvez la charge sur chaque condensateur et la différence de potentiel aux bornes de chaque condensateur.
+**b.** On débranche la pile et on relie les armatures de même polarité ensemble. Trouvez la nouvelle charge sur chaque condensateur ainsi que la nouvelle différence de potentiel aux bornes de chaque condensateur.
 A:
 a. $Q_{1} = Q_{2} = 37\u{µC}$, $\Delta V_{1} = 7,4\u{V}$, $\Delta V_{2} = 4,6\u{V}$ b. $Q_{1}' = 28\u{µC}$, $Q_{2}' = 45\u{µC}$, $\Delta V_{1}' = \Delta V_{2}' = 5,7\u{V}$
 H:
@@ -2636,7 +2764,9 @@ $$Q_{\text{tot}} = 2(36,9) = 73,8\u{µC} \Rightarrow \Delta V' = \frac{73,8}{13,
 $$Q_{1}' = (5,0)(5,68) = 28\u{µC} \quad Q_{2}' = (8,0)(5,68) = 45\u{µC}$$
 === em-ch5-p35 | 5 | 5.4 L'association de condensateurs | probleme | Problème 35 (p. 186)
 Q:
-[[crop:7:256:392]]
+Deux condensateurs C_{1} = 1,50 μF et C_{2} = 5,60 μF sont tous les deux chargés avec une pile de 60,0 V. Une fois chargés, on branche les deux condensateurs de sorte que leurs armatures de polarités opposées soient reliées.
+**a.** Déterminez la différence de potentiel aux bornes de chaque condensateur à l'équilibre.
+**b.** Déterminez la charge sur chaque condensateur à l'équilibre.
 A:
 a. $\Delta V_{1} = \Delta V_{2} = 34,7\u{V}$ b. $Q_{1} = 0,052\u{mC}$ et $Q_{2} = 0,19\u{mC}$
 H:
@@ -2650,7 +2780,11 @@ $$\Delta V = \frac{246}{1,50 + 5,60} = 34,7\u{V}$$
 $$Q_{1}' = (1,50)(34,65) = 52\u{µC} \quad Q_{2}' = (5,60)(34,65) = 194\u{µC}$$
 === em-ch5-p36 | 5 | 5.4 L'association de condensateurs | probleme | Problème 36 (p. 186)
 Q:
-[[crop:7:415:744]]
+Les armatures d'un condensateur ont une aire A et sont séparées d'une distance d. On place entre les armatures deux diélectriques différents, de deux façons distinctes, comme le montre la figure 5.24.
+**a.** Quelle est la capacité équivalente dans la situation illustrée à la figure 5.24a?
+**b.** Quelle est la capacité équivalente dans la situation illustrée à la figure 5.24b?
+(Indice : Le condensateur peut être considéré comme une association de condensateurs.)
+[[fig:em-5.24]]
 A:
 a. $C_{\text{éq}} = \frac{\varepsilon_{0}A(\kappa_{1} + \kappa_{2})}{2d}$ b. $C_{\text{éq}} = \frac{2\varepsilon_{0}A}{d}\times\frac{\kappa_{1}\kappa_{2}}{\kappa_{1} + \kappa_{2}}$
 H:
@@ -2663,8 +2797,8 @@ $$C_{1} = \frac{2\kappa_{1}\varepsilon_{0}A}{d} \quad C_{2} = \frac{2\kappa_{2}\
 $$C_{\text{éq}} = \frac{C_{1}C_{2}}{C_{1} + C_{2}} = \frac{2\varepsilon_{0}A}{d}\times\frac{\kappa_{1}\kappa_{2}}{\kappa_{1} + \kappa_{2}}$$
 === em-ch6-q2 | 6 | 6.1 Le courant électrique | question | Question 2 (p. 214)
 Q:
-[[crop:7:875:955]]
-[[crop:8:45:230]]
+Le circuit de la figure 6.26 présente les courants circulant dans des conducteurs. Quel est le courant i et dans quel sens est-il?
+[[fig:em-6.26]]
 A:
 $i = 4\u{mA}$, vers la gauche
 H:
@@ -2674,7 +2808,7 @@ Courants qui entrent : $6 + 2 = 8\u{mA}$. Courants qui sortent : $3 + 1 = 4\u{mA
 Il manque $8 - 4 = 4\u{mA}$ en sortie : $i = 4\u{mA}$ sort par la branche du haut à gauche, donc vers la gauche.
 === em-ch6-e4 | 6 | 6.1 Le courant électrique | exercice | Exercice 4 (p. 214)
 Q:
-[[crop:8:253:316]]
+Un courant de 2,5 A traverse une pile pendant un temps de 4,00 min. Combien d'électrons traversent une section de la pile pendant ce temps?
 A:
 $N = 3,7\times10^{21}$ électrons
 H:
@@ -2684,7 +2818,9 @@ $$Q = i\Delta t = (2,5)(4,00\times60) = 600\u{C}$$
 $$N = \frac{Q}{e} = \frac{600}{1,602\times10^{-19}} = 3,7\times10^{21}$$
 === em-ch6-e5 | 6 | 6.1 Le courant électrique | exercice | Exercice 5 (p. 214)
 Q:
-[[crop:8:339:455]]
+La charge q(t) traversant une surface varie en fonction du temps selon l'équation suivante :
+q(t) = 6,0t^{2} − 2,0t + 4,0 ,
+où t est mesuré en secondes et q, en millicoulombs. Quel est le courant traversant cette surface à t = 3,0 s?
 A:
 $i = 34\u{mA}$
 H:
@@ -2695,7 +2831,10 @@ $$i = \frac{dq}{dt} = 12,0t - 2,0$$
 $$i = 12,0(3,0) - 2,0 = 34\u{mA}$$
 === em-ch6-p6 | 6 | 6.1 Le courant électrique | probleme | Problème 6 (p. 214)
 Q:
-[[crop:8:478:618]]
+Un courant de 1,50 A circule dans un fil d'aluminium ayant un diamètre de 5,19 mm. On suppose que chaque atome d'aluminium a un électron de conduction.
+**a.** Quelle est la densité de porteurs de charge dans le fil d'aluminium?
+**b.** Quel est le module de la vitesse de dérive des électrons?
+**c.** Quel est le temps nécessaire pour qu'un électron parcoure une distance de 1,00 m?
 A:
 a. $n = 6,026\times10^{28}\u{m^{-3}}$ b. $v_{d} = 7,34\times10^{-6}\u{m/s}$ c. $\Delta t = 1,58$ jour
 H:
@@ -2709,7 +2848,9 @@ $$v_{d} = \frac{i}{neA} = \frac{1,50}{(6,026\times10^{28})(1,602\times10^{-19})(
 $$\Delta t = \frac{1,00}{7,34\times10^{-6}} = 1,36\times10^{5}\u{s} = 1,58\text{ jour}$$
 === em-ch6-p7 | 6 | 6.1 Le courant électrique | probleme | Problème 7 (p. 214)
 Q:
-[[crop:8:641:756]]
+Dans un fil de cuivre de 0,500 cm de diamètre, 270 × 10^{10} électrons traversent vers la droite une section transversale du fil toutes les millisecondes.
+**a.** Quelle est la densité de courant qui traverse cette section?
+**b.** Quelle est la vitesse de dérive des électrons dans le fil de cuivre?
 A:
 a. $J = 22\u{A/m^{2}}$ vers la gauche b. $v_{d} = 1,63\times10^{-9}\u{m/s}$ vers la droite
 H:
@@ -2725,8 +2866,11 @@ $$v_{d} = \frac{J}{ne} = \frac{22}{(8,45\times10^{28})(1,602\times10^{-19})} = 1
 Les électrons dérivent vers la droite.
 === em-ch6-q10 | 6 | 6.2 Le champ électrique et la conduction | question | Question 10 (p. 214)
 Q:
-[[crop:8:811:955]]
-[[crop:9:45:121]]
+Un fil de cuivre a un diamètre d. Initialement, le champ électrique a un module E, et un courant i circule dans le fil. Déterminez ce qui arrive à la densité du courant dans les situations suivantes :
+**a.** le module du champ électrique double ;
+**b.** le courant double ;
+**c.** on utilise un fil ayant un diamètre deux fois plus grand.
+**d.** Le même champ électrique existe dans un fil d'aluminium ayant le même diamètre que le fil de cuivre. Dans quel fil la densité de courant est-elle la plus faible?
 A:
 a. $J$ double. b. $J$ double. c. $J$ est divisée par 4. d. $J$ est plus faible dans l'aluminium.
 H:
@@ -2739,7 +2883,7 @@ $$J = \frac{E}{\rho} = \frac{i}{A}$$
 **d.** Même $E$ : $J$ est plus faible là où $\rho$ est plus grande, donc dans l'aluminium.
 === em-ch6-e13 | 6 | 6.2 Le champ électrique et la conduction | exercice | Exercice 13 (p. 215)
 Q:
-[[crop:9:144:224]]
+Pour faire démarrer le moteur d'une automobile, un fil de cuivre de 7,00 mm de diamètre relie la batterie et le démarreur. Le courant au démarrage est de 140 A. Quel est le module du champ électrique dans le fil?
 A:
 $E = 61,1\u{mV/m}$
 H:
@@ -2750,7 +2894,7 @@ Avec $\rho_{\text{Cu}} = 1,68\times10^{-8}\u{Ω·m}$ :
 $$E = \rho J = (1,68\times10^{-8})(3,64\times10^{6}) = 61,1\times10^{-3}\u{V/m}$$
 === em-ch6-e17 | 6 | 6.3 La résistivité et la température | exercice | Exercice 17 (p. 215)
 Q:
-[[crop:9:279:342]]
+À quelle température la résistivité du cuivre sera-t-elle égale à celle de l'aluminium lorsque ce dernier est à 20,0 °C?
 A:
 $T = 1,7\times10^{2}\u{°C}$
 H:
@@ -2762,7 +2906,7 @@ $$T - 20,0 = \frac{(2,65/1,68) - 1}{3,9\times10^{-3}} = 148\u{°C}$$
 $$T = 1,7\times10^{2}\u{°C}$$
 === em-ch6-e18 | 6 | 6.3 La résistivité et la température | exercice | Exercice 18 (p. 215)
 Q:
-[[crop:9:365:447]]
+Un fil de haute tension fait d'aluminium permet de fournir une densité de courant de 0,100 A/m^{2} durant l'été, lorsque la température ambiante est de 20,0 °C. Si le même champ électrique est maintenu dans le fil lorsqu'il fait −30,0 °C en hiver, que devient le module de la densité de courant de ce fil?
 A:
 $J = 0,124\u{A/m^{2}}$
 H:
@@ -2774,7 +2918,10 @@ $E = \rho J$ est constant :
 $$J = J_{0}\frac{\rho_{0}}{\rho} = \frac{0,100}{0,805} = 0,124\u{A/m^{2}}$$
 === em-ch6-q19 | 6 | 6.4 Le courant dans les fils conducteurs | question | Question 19 (p. 215)
 Q:
-[[crop:9:502:623]]
+Classez par ordre croissant les résistances des trois fils suivants :
+(i) un fil de cuivre de longueur ℓ et de section A ;
+(ii) un fil de cuivre de longueur 2ℓ et de section 4A ;
+(iii) un fil de laiton de longueur ℓ et de section A.
 A:
 $R_{(ii)} < R_{(i)} < R_{(iii)}$
 H:
@@ -2784,7 +2931,13 @@ $$R_{(i)} = \frac{\rho_{\text{Cu}}\ell}{A} \quad R_{(ii)} = \frac{\rho_{\text{Cu
 Le laiton a une résistivité plus grande que le cuivre, donc $R_{(iii)} > R_{(i)}$.
 === em-ch6-q20 | 6 | 6.4 Le courant dans les fils conducteurs | question | Question 20 (p. 215)
 Q:
-[[crop:9:646:955]]
+Le tableau suivant montre les données de trois fils composés du même conducteur dans lesquels circule un même courant. Classez les fils selon un ordre croissant :
+**a.** de la résistance ;
+**b.** de la différence de potentiel à leurs extrémités.
+| Fil | Diamètre | Longueur |
+| 1 | $d$ | $\ell$ |
+| 2 | $2d$ | $2\ell$ |
+| 3 | $\frac{d}{2}$ | $\ell$ |
 A:
 a. $R_{2} < R_{1} < R_{3}$ b. $\Delta V_{2} < \Delta V_{1} < \Delta V_{3}$
 H:
@@ -2795,7 +2948,7 @@ $$R_{1} = 1 \quad R_{2} = \frac{2}{2^{2}} = 0,5 \quad R_{3} = \frac{1}{(1/2)^{2}
 **b.** Même courant, donc $\Delta V = Ri$ suit le même ordre que $R$.
 === em-ch6-q21 | 6 | 6.4 Le courant dans les fils conducteurs | question | Question 21 (p. 215)
 Q:
-[[crop:10:79:142]]
+On étire un fil cylindrique de telle sorte que sa longueur est doublée. Si le fil conserve sa forme cylindrique, par quel facteur change la résistance du fil?
 A:
 La résistance est multipliée par 4.
 H:
@@ -2805,7 +2958,7 @@ Volume constant : si $\ell$ double, $A$ est divisée par 2.
 $$R' = \frac{\rho(2\ell)}{A/2} = 4\frac{\rho\ell}{A} = 4R$$
 === em-ch6-e24 | 6 | 6.4 Le courant dans les fils conducteurs | exercice | Exercice 24 (p. 215)
 Q:
-[[crop:10:165:230]]
+Un rail de chemin de fer (en fer) a une aire transversale de 60,0 cm^{2}. Calculez la résistance du rail pour une longueur de 1,00 km.
 A:
 $R = 0,0143\u{Ω}$
 H:
@@ -2815,7 +2968,7 @@ Valeur du manuel : $\rho_{\text{Fe}} \approx 8,57\times10^{-8}\u{Ω·m}$ (d'autr
 $$R = \frac{\rho\ell}{A} = \frac{(8,57\times10^{-8})(1000)}{60,0\times10^{-4}} = 0,0143\u{Ω}$$
 === em-ch6-e25 | 6 | 6.4 Le courant dans les fils conducteurs | exercice | Exercice 25 (p. 215)
 Q:
-[[crop:10:253:353]]
+On fabrique un fil à partir de trois cylindres reliés bout à bout. Le premier matériau est du nickel de 10,0 cm de longueur, le deuxième est du platine de 5,00 cm de longueur et le troisième, du nickel de 8,00 cm de longueur. En supposant que la résistance totale est la somme des trois résistances, déterminez la résistance totale de ce fil si chacun de ces morceaux a un rayon de 5,00 mm.
 A:
 $R = 2,25\times10^{-4}\u{Ω}$
 H:
@@ -2826,7 +2979,7 @@ Avec $\rho_{\text{Ni}} \approx 6,9\times10^{-8}$ et $\rho_{\text{Pt}} \approx 1,
 $$R = \frac{\rho_{\text{Ni}}(0,100 + 0,0800) + \rho_{\text{Pt}}(0,0500)}{A} = 2,25\times10^{-4}\u{Ω}$$
 === em-ch6-p26 | 6 | 6.4 Le courant dans les fils conducteurs | probleme | Problème 26 (p. 215)
 Q:
-[[crop:10:376:439]]
+Un fil de 3,00 m de longueur a une résistance de 1,50 Ω. On l'étire jusqu'à une longueur de 10,0 m. Quelle est la nouvelle résistance du fil?
 A:
 $R = 16,7\u{Ω}$
 H:
@@ -2836,7 +2989,10 @@ Volume constant : $A = \frac{V}{\ell}$, donc $R = \frac{\rho\ell^{2}}{V}$.
 $$R' = R\left(\frac{\ell'}{\ell}\right)^{2} = 1,50\left(\frac{10,0}{3,00}\right)^{2} = 16,7\u{Ω}$$
 === em-ch6-p27 | 6 | 6.4 Le courant dans les fils conducteurs | probleme | Problème 27 (p. 215)
 Q:
-[[crop:10:462:602]]
+Un fil a une longueur de 10,0 m et un diamètre de 4,12 mm. Lorsqu'on applique une différence de potentiel de 0,100 V, un courant de 5,03 A y circule.
+**a.** Quelle est la résistivité du matériau?
+**b.** Quel est le module de la densité de courant?
+**c.** Quel est le module du champ électrique à l'intérieur du fil?
 A:
 a. $\rho = 2,65\times10^{-8}\u{Ω·m}$ b. $J = 3,77\times10^{5}\u{A/m^{2}}$ c. $E = 10,0\u{mV/m}$
 H:
@@ -2851,7 +3007,7 @@ $$J = \frac{i}{A} = \frac{5,03}{1,333\times10^{-5}} = 3,77\times10^{5}\u{A/m^{2}
 $$E = \frac{\Delta V}{\ell} = \frac{0,100}{10,0} = 10,0\u{mV/m}$$
 === em-ch6-p29 | 6 | 6.4 Le courant dans les fils conducteurs | probleme | Problème 29 (p. 216)
 Q:
-[[crop:10:625:725]]
+Un fil de platine est utilisé pour mesurer la température d'un four. Le fil a une longueur de 20,0 cm et un diamètre de 0,2019 mm. La différence de potentiel à ses extrémités est gardée constante à 0,400 V. Lorsque la résistance est placée dans le four, on mesure un courant de 237 mA. Quelle est la température du four?
 A:
 $T = 421\u{°C}$
 H:
@@ -2865,7 +3021,10 @@ Avec $\alpha_{\text{Pt}} = 3,92\times10^{-3}\u{°C^{-1}}$ :
 $$T = 20,0 + \frac{(1,688/0,656) - 1}{3,92\times10^{-3}} = 421\u{°C}$$
 === em-ch6-p30 | 6 | 6.4 Le courant dans les fils conducteurs | probleme | Problème 30 (p. 216)
 Q:
-[[crop:10:748:955]]
+Un fil de cuivre de 1,00 m de longueur et ayant un diamètre de 0,455 mm est soumis à une différence de potentiel de 0,020 V. On place le fil dans de l'azote liquide, à une température de −196 °C. Négligez la dilatation thermique.
+**a.** Quelle est la résistance du fil dans l'azote liquide?
+**b.** Quel est le courant dans le fil?
+**c.** Quel est le module de la vitesse de dérive des électrons de conduction?
 A:
 a. $R = 0,016\u{Ω}$ b. $i = 1,2\u{A}$ c. $v_{d} = 0,55\u{mm/s}$
 H:
@@ -2880,7 +3039,11 @@ $$i = \frac{0,020}{0,016} = 1,2\u{A}$$
 $$v_{d} = \frac{i}{neA} = \frac{1,2}{(8,45\times10^{28})(1,602\times10^{-19})(1,626\times10^{-7})} = 0,55\u{mm/s}$$
 === em-ch6-q31 | 6 | 6.5 La résistance et la loi d'Ohm | question | Question 31 (p. 216)
 Q:
-[[crop:11:114:280]]
+Quatre fils sont branchés indépendamment à une pile. Classez les situations selon un ordre croissant du courant qui circule dans les fils suivants :
+(i) un fil de cuivre de longueur ℓ et de section A ;
+(ii) un fil d'aluminium de longueur ℓ et de section A ;
+(iii) un fil de cuivre de longueur 2ℓ et de section A ;
+(iv) un fil d'aluminium de longueur ℓ et de section 2A.
 A:
 $i_{(iii)} < i_{(ii)} < i_{(i)} < i_{(iv)}$
 H:
@@ -2891,7 +3054,7 @@ $$R_{(i)} \propto 1,68 \quad R_{(ii)} \propto 2,65 \quad R_{(iii)} \propto 3,36 
 $i = \frac{\Delta V}{R}$ donne l'ordre inverse : $i_{(iii)} < i_{(ii)} < i_{(i)} < i_{(iv)}$.
 === em-ch6-e33 | 6 | 6.5 La résistance et la loi d'Ohm | exercice | Exercice 33 (p. 216)
 Q:
-[[crop:11:303:383]]
+Une ampoule est faite d'un filament de tungstène. Lorsqu'elle est branchée à une source de f.é.m. de 120 V, la température monte jusqu'à 2100 °C, et un courant de 0,500 A circule à travers l'ampoule. Calculez la résistance de l'ampoule lorsque celle-ci est à une température de 20 °C.
 A:
 $R_{0} = 23\u{Ω}$
 H:
@@ -2902,7 +3065,9 @@ Avec $\alpha_{\text{W}} = 4,5\times10^{-3}\u{°C^{-1}}$ :
 $$R_{0} = \frac{240}{1 + (4,5\times10^{-3})(2100 - 20)} = 23\u{Ω}$$
 === em-ch6-e35 | 6 | 6.6 La puissance dans les circuits électriques | exercice | Exercice 35 (p. 216)
 Q:
-[[crop:11:438:534]]
+Un radiateur de 1250 W fonctionne lorsqu'une différence de potentiel de 115,0 V est appliquée.
+**a.** Déterminez le courant qui circule dans le radiateur.
+**b.** Quelle est la résistance du radiateur?
 A:
 a. $i = 10,87\u{A}$ b. $R = 10,6\u{Ω}$
 H:
@@ -2914,7 +3079,7 @@ $$i = \frac{P}{\Delta V} = \frac{1250}{115,0} = 10,87\u{A}$$
 $$R = \frac{\Delta V}{i} = \frac{115,0}{10,87} = 10,6\u{Ω}$$
 === em-ch6-e37 | 6 | 6.6 La puissance dans les circuits électriques | exercice | Exercice 37 (p. 216)
 Q:
-[[crop:11:557:656]]
+Une bouilloire a une puissance de 1,50 kW lorsqu'elle est utilisée en Amérique du Nord, avec une différence de potentiel de 120 V. Quelle est la puissance de cette bouilloire si on l'utilise en Europe, où la différence de potentiel des prises de courant est de 220 V? Négligez la variation de résistance avec la température.
 A:
 $P = 5,04\u{kW}$
 H:
@@ -2924,7 +3089,10 @@ $$R = \frac{\Delta V^{2}}{P} = \frac{120^{2}}{1500} = 9,60\u{Ω}$$
 $$P' = \frac{220^{2}}{9,60} = 5,04\u{kW}$$
 === em-ch6-e38 | 6 | 6.6 La puissance dans les circuits électriques | exercice | Exercice 38 (p. 216)
 Q:
-[[crop:11:679:837]]
+Un radiateur est branché à une source de f.é.m. de 240 V. Sa résistance, lorsqu'il est chaud, est de 24,0 Ω.
+**a.** Quelle est la puissance du radiateur?
+**b.** Déterminez le courant qui circule dans le radiateur.
+**c.** Si l'électricité coûte 0,0800 $ par kilowattheure, quel est le coût d'utilisation du radiateur pendant 4,00 h?
 A:
 a. $P = 2,40\u{kW}$ b. $i = 10,0\u{A}$ c. Coût : 0,77 dollar
 H:
@@ -2937,8 +3105,10 @@ $$i = \frac{\Delta V}{R} = \frac{240}{24,0} = 10,0\u{A}$$
 **c.** Énergie : $(2,40\u{kW})(4,00\u{h}) = 9,60\u{kWh}$. À 0,0800 dollar par kilowattheure, le coût est de 0,77 dollar.
 === em-ch6-e39 | 6 | 6.6 La puissance dans les circuits électriques | exercice | Exercice 39 (p. 216)
 Q:
-[[crop:11:860:955]]
-[[crop:12:45:102]]
+Une pile de f.é.m. de 1,45 V est branchée à un circuit. Le courant est de 4,00 mA.
+**a.** Quelle est la charge qui circule dans la pile chaque seconde?
+**b.** Quelle est la puissance fournie par la pile?
+**c.** Quelle est l'énergie potentielle électrique obtenue en 1,00 min?
 A:
 a. $q = 4,00\u{mC}$ b. $P = 5,80\u{mW}$ c. $\Delta U = 0,348\u{J}$
 H:
@@ -2952,7 +3122,10 @@ $$P = ℰ i = (1,45)(4,00\times10^{-3}) = 5,80\u{mW}$$
 $$\Delta U = P\Delta t = (5,80\times10^{-3})(60,0) = 0,348\u{J}$$
 === em-ch6-p40 | 6 | 6.6 La puissance dans les circuits électriques | probleme | Problème 40 (p. 216)
 Q:
-[[crop:12:125:291]]
+Un élément chauffant en forme de serpentin est fabriqué en enroulant un fil de nichrome de 2,59 mm de diamètre sur un cylindre de 5,00 cm de rayon. Le fil est branché à une source de f.é.m. de 120 V. L'élément chauffant a alors une puissance de 800 W, et sa température est de 120 °C.
+**a.** Quelle est la résistance du fil lorsque celui-ci est chaud?
+**b.** Quelle est la résistance du fil à 20,0 °C?
+**c.** Quel est le nombre de spires du serpentin?
 A:
 a. $R = 18,0\u{Ω}$ b. $R_{0} = 17,3\u{Ω}$ c. $N = 269$ spires
 H:
@@ -2967,7 +3140,8 @@ $$\ell = \frac{R_{0}A}{\rho_{0}} = 84,4\u{m}$$
 $$N = \frac{\ell}{2\pi r} = \frac{84,4}{2\pi(0,0500)} = 269$$
 === em-ch7-q2 | 7 | 7.2 Les lois de Kirchhoff | question | Question 2 (p. 244)
 Q:
-[[crop:12:424:599]]
+La figure 7.25 montre une partie d'un circuit. Quel est le courant dans la branche verticale? Indiquez aussi son sens.
+[[fig:em-7.25]]
 A:
 $i = 0,70\u{A}$, vers le haut
 H:
@@ -2979,7 +3153,11 @@ $$i_{\text{droite}} = \frac{2,4}{6,0} = 0,40\u{A} \text{ vers le nœud}$$
 Loi des nœuds : $i = 0,30 + 0,40 = 0,70\u{A}$, qui sort du nœud vers le haut.
 === em-ch7-q3 | 7 | 7.2 Les lois de Kirchhoff | question | Question 3 (p. 244)
 Q:
-[[crop:12:622:955]]
+Pour le circuit de la figure 7.26, écrivez les équations de Kirchhoff :
+**a.** pour le nœud c ;
+**b.** pour la maille abca ;
+**c.** pour la maille cdac.
+[[fig:em-7.26]]
 A:
 a. $i_{1} = i_{2} + i_{3}$ b. $ℰ_{1} - R_{1}i_{1} - R_{4}i_{3} = 0$ c. $-R_{2}i_{2} - ℰ_{2} - R_{3}i_{2} - \frac{Q}{C} + R_{4}i_{3} = 0$
 H:
@@ -2993,7 +3171,8 @@ $$ℰ_{1} - R_{1}i_{1} - R_{4}i_{3} = 0$$
 $$-R_{2}i_{2} - ℰ_{2} - R_{3}i_{2} - \frac{Q}{C} + R_{4}i_{3} = 0$$
 === em-ch7-e4 | 7 | 7.2 Les lois de Kirchhoff | exercice | Exercice 4 (p. 244)
 Q:
-[[crop:13:79:255]]
+Dans le circuit de la figure 7.27, ℰ_{1} = 12,0 V, ℰ_{2} = 15,0 V, R_{1} = 3,00 Ω, R_{2} = 25,0 Ω et R_{3} = 60,0 Ω. Déterminez le courant qui circule dans la maille et indiquez son sens.
+[[fig:em-7.27]]
 A:
 $i = 34,1\u{mA}$, en sens antihoraire
 H:
@@ -3003,7 +3182,10 @@ Les deux sources s'opposent. $ℰ_{2}$, à droite, est la plus forte : elle pous
 $$i = \frac{ℰ_{2} - ℰ_{1}}{R_{1} + R_{2} + R_{3}} = \frac{15,0 - 12,0}{88,0} = 34,1\u{mA}$$
 === em-ch7-e6 | 7 | 7.2 Les lois de Kirchhoff | exercice | Exercice 6 (p. 244)
 Q:
-[[crop:13:278:523]]
+La figure 7.29 montre une partie d'un circuit. Dans ce circuit, ℰ = 5,00 V, R_{1} = 250 Ω, R_{2} = 125 Ω, i_{1} = 12,0 mA et i_{2} = 6,00 mA.
+**a.** Quel est le courant i_{3} et quel est son sens?
+**b.** Calculez la différence de potentiel V_{b} − V_{a}.
+[[fig:em-7.29]]
 A:
 a. $i_{3} = 18,0\u{mA}$, vers le bas b. $V_{b} - V_{a} = -2,75\u{V}$
 H:
@@ -3016,7 +3198,10 @@ $$V_{b} + ℰ - R_{1}i_{1} + R_{2}i_{2} = V_{a}$$
 $$V_{b} - V_{a} = -5,00 + (250)(0,0120) - (125)(0,00600) = -2,75\u{V}$$
 === em-ch7-p7 | 7 | 7.2 Les lois de Kirchhoff | probleme | Problème 7 (p. 244–245)
 Q:
-[[crop:13:546:955]]
+Dans le circuit de la figure 7.30, ℰ = 11,5 V, C_{1} = 32,0 μF, C_{2} = 64,0 μF, R_{1} = 320 Ω, R_{2} = 160 Ω, R_{3} = 160 Ω et R_{4} = 320 Ω.
+**a.** À un instant donné, le courant dans la résistance R_{1} est de 15,0 mA. Quelle est la charge sur le condensateur C_{1} à cet instant?
+**b.** À un autre instant, la charge sur le condensateur C_{2} est la même que la charge calculée en a. Quel est alors le courant dans la résistance R_{2} et le courant dans la résistance R_{4}?
+[[fig:em-7.30]]
 A:
 a. $Q_{1} = 138\u{µC}$ b. $i_{R_{2}} = 58,4\u{mA}$ et $i_{R_{4}} = 6,72\u{mA}$
 H:
@@ -3032,7 +3217,8 @@ $R_{2}$ reçoit le reste de la tension de la source :
 $$i_{R_{2}} = \frac{11,5 - 2,15}{160} = 58,4\u{mA}$$
 === em-ch7-q9 | 7 | 7.3 Les piles réelles | question | Question 9 (p. 245)
 Q:
-[[crop:14:114:362]]
+La figure 7.32 montre trois situations où la même pile réelle est utilisée dans un circuit (qui n'est pas complètement illustré). Classez les situations par ordre croissant de la différence de potentiel ΔV = V_{b} − V_{a}.
+[[fig:em-7.32]]
 A:
 $\Delta V_{(iii)} < \Delta V_{(i)} < \Delta V_{(ii)}$
 H:
@@ -3044,7 +3230,7 @@ S:
 Donc $\Delta V_{(iii)} < \Delta V_{(i)} < \Delta V_{(ii)}$.
 === em-ch7-e11 | 7 | 7.3 Les piles réelles | exercice | Exercice 11 (p. 245)
 Q:
-[[crop:14:385:448]]
+Une batterie réelle a une f.é.m. de 12,0 V. Elle est branchée à une résistance de 1,50 Ω. La résistance dissipe une puissance de 60,0 W. Quelle est la valeur de la résistance interne de la batterie?
 A:
 $r = 0,40\u{Ω}$
 H:
@@ -3054,7 +3240,10 @@ $$i = \sqrt{\frac{P}{R}} = \sqrt{\frac{60,0}{1,50}} = 6,32\u{A}$$
 $$r = \frac{ℰ}{i} - R = \frac{12,0}{6,32} - 1,50 = 0,40\u{Ω}$$
 === em-ch7-e12 | 7 | 7.3 Les piles réelles | exercice | Exercice 12 (p. 245)
 Q:
-[[crop:14:471:611]]
+Une batterie ayant une f.é.m. de 6,00 V a une résistance interne de 0,800 Ω. On la branche à une résistance R = 2,50 Ω.
+**a.** Quelle est la puissance produite par les réactions chimiques de la batterie?
+**b.** Quelle est la puissance dissipée à l'intérieur de la batterie?
+**c.** Quelle est la puissance nette fournie par la batterie à la résistance R?
 A:
 a. $P_{ℰ} = 10,9\u{W}$ b. $P_{r} = 2,64\u{W}$ c. $P_{\text{batterie}} = 8,26\u{W}$
 H:
@@ -3066,7 +3255,7 @@ $$i = \frac{ℰ}{R + r} = \frac{6,00}{3,30} = 1,82\u{A}$$
 **c.** $P = i^{2}R = (1,818)^{2}(2,50) = 8,26\u{W}$
 === em-ch7-p16 | 7 | 7.3 Les piles réelles | probleme | Problème 16 (p. 245)
 Q:
-[[crop:14:634:714]]
+Lorsqu'une cellule photovoltaïque est branchée à une résistance de 250 Ω, elle fournit un courant de 1,21 mA. Lorsqu'on la branche à une résistance de 500 Ω, elle fournit un courant de 0,840 mA. Déterminez la f.é.m. et la résistance interne de la cellule photovoltaïque.
 A:
 $ℰ = 0,687\u{V}$ et $r = 318\u{Ω}$
 H:
@@ -3078,7 +3267,8 @@ $$r = \frac{0,1175}{0,370\times10^{-3}} = 318\u{Ω}$$
 $$ℰ = (1,21\times10^{-3})(250 + 318) = 0,687\u{V}$$
 === em-ch7-q17 | 7 | 7.4 L'association de résistances | question | Question 17 (p. 245)
 Q:
-[[crop:14:769:955]]
+Pour les circuits suivants, indiquez si les résistances sont en série ou en parallèle.
+[[fig:em-7.33]]
 A:
 a. En parallèle. b. En série. c. En parallèle.
 H:
@@ -3089,7 +3279,9 @@ S:
 **c.** Chaque résistance relie les deux mêmes bornes de la pile : en parallèle.
 === em-ch7-q18 | 7 | 7.4 L'association de résistances | question | Question 18 (p. 246)
 Q:
-[[crop:15:79:193]]
+Une ampoule de 60 W et une ampoule de 100 W sont conçues pour être utilisées dans un circuit en parallèle, branché à une source de f.é.m. de 120 V.
+**a.** Quelle ampoule a la plus petite résistance?
+**b.** Si on branche les deux ampoules en série à une source de f.é.m., laquelle éclairera le plus?
 A:
 a. L'ampoule de 100 W. b. L'ampoule de 60 W.
 H:
@@ -3101,7 +3293,8 @@ L'ampoule de 100 W a la plus petite résistance.
 **b.** En série, même courant : $P = i^{2}R$ est plus grande pour la plus grande résistance, donc l'ampoule de 60 W éclaire le plus.
 === em-ch7-q19 | 7 | 7.4 L'association de résistances | question | Question 19 (p. 246)
 Q:
-[[crop:15:216:562]]
+Les circuits de la figure 7.34 sont constitués de résistances identiques R. Classez les circuits par ordre croissant de leur résistance équivalente.
+[[fig:em-7.34]]
 A:
 (vi) < (ii) = (iii) < (iv) < (i) < (v)
 H:
@@ -3115,7 +3308,11 @@ S:
 Donc (vi) < (ii) = (iii) < (iv) < (i) < (v).
 === em-ch7-e20 | 7 | 7.4 L'association de résistances | exercice | Exercice 20 (p. 246)
 Q:
-[[crop:15:585:751]]
+Une guirlande lumineuse est composée de 25 ampoules identiques branchées en série. Chaque ampoule dissipe une puissance de 13 W lorsque la guirlande est branchée dans une prise de 120 V.
+**a.** Quelle est la différence de potentiel aux bornes d'une ampoule?
+**b.** Quelle est la résistance de chaque ampoule?
+**c.** Quel est le courant qui circule dans une ampoule?
+**d.** Quel est le courant fourni par la prise de courant?
 A:
 a. $\Delta V = 4,8\u{V}$ b. $R = 1,8\u{Ω}$ c. $i = 2,7\u{A}$ d. $i_{\text{total}} = 2,7\u{A}$
 H:
@@ -3130,7 +3327,8 @@ $$i = \frac{P}{\Delta V} = \frac{13}{4,8} = 2,7\u{A}$$
 **d.** En série, le courant de la prise est celui de chaque ampoule : $2,7\u{A}$.
 === em-ch7-e21 | 7 | 7.4 L'association de résistances | exercice | Exercice 21 (p. 246)
 Q:
-[[crop:15:774:955]]
+Dans le circuit de la figure 7.35, ℰ = 24,0 V, R_{1} = 124 Ω, R_{2} = 210 Ω, R_{3} = 144 Ω et R_{4} = 1,08 kΩ. Quelle est la puissance fournie par la source de f.é.m.?
+[[fig:em-7.35]]
 A:
 $P_{ℰ} = 1,90\u{W}$
 H:
@@ -3142,7 +3340,8 @@ $$R_{\text{éq}} = 124 + 179,2 = 303,2\u{Ω}$$
 $$P = \frac{ℰ^{2}}{R_{\text{éq}}} = \frac{24,0^{2}}{303,2} = 1,90\u{W}$$
 === em-ch7-p24 | 7 | 7.4 L'association de résistances | probleme | Problème 24 (p. 246)
 Q:
-[[crop:16:94:273]]
+Dans le circuit de la figure 7.37, R_{o} est une valeur connue. Quelle est la valeur de la résistance R pour que la résistance équivalente entre les points a et b soit R_{éq} = R_{o}?
+[[fig:em-7.37]]
 A:
 $R = \frac{R_{o}}{\sqrt{3}}$
 H:
@@ -3156,7 +3355,8 @@ $$3R^{2} + 2RR_{o} = 2RR_{o} + R_{o}^{2}$$
 $$R = \frac{R_{o}}{\sqrt{3}}$$
 === em-ch7-p26 | 7 | 7.4 L'association de résistances | probleme | Problème 26 (p. 247)
 Q:
-[[crop:16:296:486]]
+Dans le circuit de la figure 7.39, ℰ = 12,0 V, R_{1} = 12,0 kΩ, R_{2} = 7,50 kΩ, R_{3} = 24,0 kΩ, R_{4} = 53,0 kΩ et R_{5} = 8,20 kΩ. Calculez le courant et la différence de potentiel aux bornes de chaque résistance.
+[[fig:em-7.39]]
 A:
 $i_{1} = 0,112\u{mA}$, $\Delta V_{1} = 1,34\u{V}$ ; $i_{2} = 0,179\u{mA}$, $\Delta V_{2} = 1,34\u{V}$ ; $i_{3} = 0,291\u{mA}$, $\Delta V_{3} = 6,98\u{V}$ ; $i_{4} = 0,157\u{mA}$, $\Delta V_{4} = 8,33\u{V}$ ; $i_{5} = 0,448\u{mA}$, $\Delta V_{5} = 3,67\u{V}$
 H:
@@ -3174,7 +3374,11 @@ Dans l'autre branche, $i_{3} = 0,448 - 0,157 = 0,291\u{mA}$ et $\Delta V_{3} = 6
 Il reste $\Delta V_{1} = \Delta V_{2} = 8,33 - 6,98 = 1,34\u{V}$, donc $i_{1} = 0,112\u{mA}$ et $i_{2} = 0,179\u{mA}$.
 === em-ch7-p27 | 7 | 7.4 L'association de résistances | probleme | Problème 27 (p. 247)
 Q:
-[[crop:16:509:753]]
+Dans le circuit de la figure 7.40, R_{1} = 10,0 Ω, R_{2} = 4,00 Ω et la résistance R est une résistance variable (ce qui est indiqué par une flèche sur la résistance dans la figure). La pile a une f.é.m. constante.
+**a.** Quel est le courant dans la résistance R?
+**b.** Quelle est la puissance dissipée dans la résistance R?
+**c.** Pour quelle valeur de R la puissance dissipée dans celle-ci sera-t-elle maximale?
+[[fig:em-7.40]]
 A:
 a. $i = \frac{4ℰ}{40 + 14R}$ b. $P = \frac{16ℰ^{2}R}{(40 + 14R)^{2}}$ c. $R = 2,86\u{Ω}$
 H:
@@ -3191,7 +3395,8 @@ $$P = i^{2}R = \frac{16ℰ^{2}R}{(40 + 14R)^{2}}$$
 $$(40 + 14R) - 28R = 0 \Rightarrow R = \frac{40}{14} = 2,86\u{Ω}$$
 === em-ch7-q28 | 7 | 7.5 Les instruments de mesure | question | Question 28 (p. 247)
 Q:
-[[crop:16:807:955]]
+Classez par ordre croissant la lecture des voltmètres de la figure 7.41.
+[[fig:em-7.41]]
 A:
 $\Delta V_{2} < \Delta V_{1} = \Delta V_{3}$
 H:
@@ -3201,7 +3406,12 @@ $V_{1}$ et $V_{3}$ sont branchés aux bornes de la source : ils lisent $ℰ$.
 $V_{2}$ est aux bornes de $R_{2}$ seulement : il lit une partie de $ℰ$, car $R_{1}$ prend l'autre partie.
 === em-ch7-e29 | 7 | 7.5 Les instruments de mesure | exercice | Exercice 29 (p. 247)
 Q:
-[[crop:17:94:377]]
+On veut mesurer le courant dans le circuit de la figure 7.42, où ℰ = 3,00 V, R_{1} = 200 Ω et R_{2} = 500 Ω. On utilise un ampèremètre dont la résistance interne est r = 20 Ω.
+**a.** Quel est le courant i_{réel} dans le circuit sans ampèremètre?
+**b.** Quel est le courant affiché i_{mes} par l'ampèremètre?
+**c.** Calculez l'erreur relative de l'ampèremètre :
+erreur relative = ((i_{réel} − i_{mes}) / i_{réel}) × 100 % .
+[[fig:em-7.42]]
 A:
 a. $i_{\text{réel}} = 4,29\u{mA}$ b. $i_{\text{mes}} = 4,17\u{mA}$ c. Erreur relative : 2,8 %
 H:
@@ -3215,7 +3425,8 @@ $$i_{\text{mes}} = \frac{3,00}{200 + 500 + 20} = 4,17\u{mA}$$
 $$\frac{4,286 - 4,167}{4,286}\times100\% = 2,8\%$$
 === em-ch7-e32 | 7 | 7.6 Les circuits à plusieurs sources de f.é.m. | exercice | Exercice 32 (p. 247)
 Q:
-[[crop:17:431:649]]
+Dans le circuit de la figure 7.43, ℰ_{1} = 1,5 V, ℰ_{2} = 9,0 V, ℰ_{3} = 6,0 V, R_{1} = 15 Ω, R_{2} = 180 Ω, R_{3} = 62 Ω et R_{4} = 120 Ω. Déterminez le courant qui circule dans chacune des sources de f.é.m., en indiquant aussi le sens du courant.
+[[fig:em-7.43]]
 A:
 $i_{ℰ_{1}} = 38\u{mA}$, de la borne + à la borne − ; $i_{ℰ_{2}} = 55\u{mA}$, de la borne − à la borne + ; $i_{ℰ_{3}} = 16\u{mA}$, de la borne + à la borne −
 H:
@@ -3233,7 +3444,10 @@ $$i_{2} = 38,5 + 16,5 = 55\u{mA}$$
 Il traverse $ℰ_{2}$ de la borne − à la borne +.
 === em-ch7-p34 | 7 | 7.6 Les circuits à plusieurs sources de f.é.m. | probleme | Problème 34 (p. 248)
 Q:
-[[crop:17:672:955]]
+Dans le circuit de la figure 7.45, ℰ_{1} = 12,0 V, ℰ_{2} = 17,0 V, ℰ_{3} = 8,00 V, R_{1} = 2,00 kΩ, R_{2} = 4,00 kΩ, R_{3} = 3,00 kΩ et R_{4} = 5,00 kΩ.
+**a.** Quel est le courant qui circule dans l'ampèremètre? Indiquez aussi son sens.
+**b.** Calculez la différence de potentiel V_{b} − V_{a}.
+[[fig:em-7.45]]
 A:
 a. $i = 0,714\u{mA}$, vers la gauche b. $V_{b} - V_{a} = 1,04\u{V}$
 H:
@@ -3251,7 +3465,10 @@ $$V_{b} = (2,32)(5,00) = 11,61\u{V}$$
 $$V_{b} - V_{a} = 11,61 - 10,57 = 1,04\u{V}$$
 === em-ch7-p35 | 7 | 7.6 Les circuits à plusieurs sources de f.é.m. | probleme | Problème 35 (p. 248)
 Q:
-[[crop:18:79:369]]
+Dans le circuit de la figure 7.46, ℰ_{1} = 6,00 V, ℰ_{2} = 2,00 V et ℰ_{3} = 4,00 V. Les résistances R = 3,00 Ω sont identiques. La résistance interne des sources de f.é.m. n'est pas négligeable, mais elle est égale à r = 1,00 Ω.
+**a.** Quelle est la valeur et le sens des courants qui circulent dans les sources de f.é.m.?
+**b.** Pour chaque source de f.é.m., calculez la différence de potentiel à leurs bornes, c'est-à-dire V_{+} − V_{−}.
+[[fig:em-7.46]]
 A:
 a. $i_{ℰ_{1}} = 0,500\u{A}$, vers le haut ; $i_{ℰ_{2}} = 0,500\u{A}$, vers le bas ; $i_{ℰ_{3}} = 0$ b. $\Delta V_{1} = 5,50\u{V}$ ; $\Delta V_{2} = 2,50\u{V}$ ; $\Delta V_{3} = 4,00\u{V}$
 H:
@@ -3268,7 +3485,11 @@ $$\Delta V_{2} = 2,00 + (0,500)(1,00) = 2,50\u{V}$$
 $$\Delta V_{3} = 4,00\u{V}$$
 === em-ch7-p36 | 7 | 7.6 Les circuits à plusieurs sources de f.é.m. | probleme | Problème 36 (p. 248)
 Q:
-[[crop:18:392:737]]
+Le circuit de la figure 7.47 est constitué des sources ℰ_{1} = 6,00 V et ℰ_{2} = 4,00 V, de la résistance R_{2} = 1,20 kΩ et de deux résistances inconnues, R_{1} et R_{3}. On mesure la différence de potentiel entre les points a et b, qui est V_{b} − V_{a} = −5,12 V. De plus, le courant i_{3} = 2,56 mA circule vers le bas dans la résistance R_{3}.
+**a.** Quel est le courant dans la résistance R_{2}? Indiquez aussi son sens.
+**b.** Quelle est la résistance R_{3}?
+**c.** Quelle est la résistance R_{1}?
+[[fig:em-7.47]]
 A:
 a. $i_{2} = 933\u{µA}$, vers le bas b. $R_{3} = 2,00\u{kΩ}$ c. $R_{1} = 252\u{Ω}$
 H:
@@ -3284,8 +3505,12 @@ $$i_{1} = 2,56 + 0,933 = 3,49\u{mA}$$
 $$R_{1} = \frac{6,00 - 5,12}{3,49\times10^{-3}} = 252\u{Ω}$$
 === em-ch7-p37 | 7 | 7.6 Les circuits à plusieurs sources de f.é.m. | probleme | Problème 37 (p. 248)
 Q:
-[[crop:18:760:955]]
-[[crop:19:45:232]]
+Le circuit de la figure 7.48 possède trois sources ayant des f.é.m. inconnues (indiquées par des cercles) et les résistances R_{1} = 1330 Ω, R_{2} = 454 Ω et R_{3} = 894 Ω. On mesure que V_{b} − V_{a} = 2,00 V, i_{1} = 4,51 mA et i_{2} = 2,20 mA. Calculez :
+**a.** le courant i_{3} ;
+**b.** la différence de potentiel V_{b} − V_{c} ;
+**c.** la différence de potentiel V_{b} − V_{d} ;
+**d.** la différence de potentiel V_{b} − V_{f}.
+[[fig:em-7.48]]
 A:
 a. $i_{3} = 6,71\u{mA}$ (le manuel indique 6,70 mA) b. $V_{b} - V_{c} = 8,00\u{V}$ c. $V_{b} - V_{d} = -4,00\u{V}$ d. $V_{b} - V_{f} = 3,00\u{V}$
 H:
@@ -3301,7 +3526,7 @@ $$V_{b} - V_{d} = 2,00 - 6,00 = -4,00\u{V}$$
 $$V_{b} - V_{f} = 2,00 + 1,00 = 3,00\u{V}$$
 === em-ch7-q40 | 7 | 7.7 Les circuits RC | question | Question 40 (p. 249)
 Q:
-[[crop:19:287:368]]
+On branche en série une pile, une ampoule lumineuse, un interrupteur et un condensateur. Initialement, le condensateur n'est pas chargé. On ferme l'interrupteur à t = 0. Comment évolue l'intensité de la lumière émise par l'ampoule?
 A:
 L'intensité est maximale au départ, puis diminue graduellement jusqu'à zéro.
 H:
@@ -3311,7 +3536,11 @@ S:
 Le condensateur se charge et le courant diminue selon $i = \frac{ℰ}{R}e^{-t/\tau}$. L'ampoule faiblit jusqu'à s'éteindre.
 === em-ch7-q41 | 7 | 7.7 Les circuits RC | question | Question 41 (p. 249)
 Q:
-[[crop:19:391:715]]
+La figure 7.51 montre trois circuits RC. Les circuits sont composés de dispositifs identiques. On ferme les interrupteurs en même temps. Classez les circuits selon un ordre croissant :
+**a.** de la constante de temps ;
+**b.** de la charge maximale sur le condensateur ;
+**c.** du courant maximal dans la branche du condensateur.
+[[fig:em-7.51]]
 A:
 a. $\tau_{(ii)} < \tau_{(i)} < \tau_{(iii)}$ b. Toutes égales, car $Q_{m} = Cℰ$. c. $i_{m,(iii)} < i_{m,(i)} < i_{m,(ii)}$
 H:
@@ -3324,8 +3553,11 @@ $$R_{(i)} = R \quad R_{(ii)} = \frac{R}{2} \quad R_{(iii)} = 2R$$
 **c.** $i_{m} = \frac{ℰ}{R}$ suit l'ordre inverse de la résistance.
 === em-ch7-q42 | 7 | 7.7 Les circuits RC | question | Question 42 (p. 249)
 Q:
-[[crop:19:738:955]]
-[[crop:20:45:232]]
+La figure 7.52 illustre le graphique de la charge en fonction du temps pour quatre situations différentes où un condensateur C se décharge dans une résistance. La capacité du condensateur est la même dans chaque cas. Classez les situations par ordre croissant selon :
+**a.** la constante de temps du circuit ;
+**b.** la résistance du circuit ;
+**c.** le courant initial dans la résistance.
+[[fig:em-7.52]]
 A:
 a. $\tau_{(ii)} = \tau_{(iv)} < \tau_{(i)} = \tau_{(iii)}$ b. $R_{(ii)} = R_{(iv)} < R_{(i)} = R_{(iii)}$ c. $i_{m,(iii)} < i_{m,(i)} = i_{m,(iv)} < i_{m,(ii)}$
 H:
@@ -3337,7 +3569,11 @@ S:
 $$i_{m,(iii)} \propto \frac{1}{2} \quad i_{m,(i)} \propto 1 \quad i_{m,(iv)} \propto 1 \quad i_{m,(ii)} \propto 2$$
 === em-ch7-e44 | 7 | 7.7 Les circuits RC | exercice | Exercice 44 (p. 249)
 Q:
-[[crop:20:255:526]]
+Dans le circuit RC de la figure 7.53, ℰ = 120 V, R = 200 kΩ et C = 50,0 μF. Le condensateur est complètement déchargé avant que l'interrupteur soit fermé. À t = 0, on ferme l'interrupteur.
+**a.** Quelle est la différence de potentiel aux bornes du condensateur après une constante de temps?
+**b.** Quelle est la différence de potentiel aux bornes de la résistance après une constante de temps?
+**c.** Quelle est l'énergie emmagasinée dans le condensateur à t = 5,0 s?
+[[fig:em-7.53]]
 A:
 a. $\Delta V_{C} = 75,9\u{V}$ b. $\Delta V_{R} = 44,1\u{V}$ c. $U_{E} = 0,056\u{J}$
 H:
@@ -3353,7 +3589,9 @@ $$\Delta V_{C} = 120(1 - e^{-0,5}) = 47,2\u{V}$$
 $$U_{E} = \frac{1}{2}C\Delta V_{C}^{2} = \frac{1}{2}(50,0\times10^{-6})(47,2)^{2} = 0,056\u{J}$$
 === em-ch7-e46 | 7 | 7.7 Les circuits RC | exercice | Exercice 46 (p. 249)
 Q:
-[[crop:20:549:664]]
+Dans un circuit RC qui se décharge, la constante de temps est égale à 60,0 ms. Déterminez le temps nécessaire pour que :
+**a.** la charge diminue de moitié ;
+**b.** l'énergie emmagasinée diminue de moitié.
 A:
 a. $t = 41,6\u{ms}$ b. $t = 20,8\u{ms}$
 H:
@@ -3365,7 +3603,10 @@ $$Q = Q_{0}e^{-t/\tau} \Rightarrow t = \tau\ln2 = (60,0)(0,693) = 41,6\u{ms}$$
 $$U = U_{0}e^{-2t/\tau} \Rightarrow t = \frac{\tau}{2}\ln2 = 20,8\u{ms}$$
 === em-ch7-e47 | 7 | 7.7 Les circuits RC | exercice | Exercice 47 (p. 249)
 Q:
-[[crop:20:687:827]]
+L'énergie potentielle emmagasinée dans un condensateur de 2,50 μF est de 0,120 J. On branche le condensateur à une résistance de 1,50 MΩ à t = 0.
+**a.** Quelle est la constante de temps du circuit?
+**b.** Quelle est la charge initiale sur le condensateur?
+**c.** Quel est le courant dans la résistance à t = 5,00 s après le branchement?
 A:
 a. $\tau = 3,75\u{s}$ b. $Q_{m} = 775\u{µC}$ c. $i = 54,4\u{µA}$
 H:
@@ -3379,8 +3620,10 @@ $$Q_{m} = \sqrt{2CU} = \sqrt{2(2,50\times10^{-6})(0,120)} = 775\u{µC}$$
 $$i = \frac{Q_{m}}{\tau}e^{-t/\tau} = \frac{775\u{µC}}{3,75\u{s}}e^{-5,00/3,75} = 54,4\u{µA}$$
 === em-ch7-e48 | 7 | 7.7 Les circuits RC | exercice | Exercice 48 (p. 249)
 Q:
-[[crop:20:850:955]]
-[[crop:21:45:281]]
+Une pile, ayant une f.é.m. ℰ, est reliée à un interrupteur, à un condensateur de capacité C et à une résistance R (voir la figure 7.54). La résistance peut être changée (ce qui est indiqué par une flèche dans la figure). Lorsqu'on ouvre l'interrupteur, le condensateur se décharge dans la résistance.
+**a.** Lorsqu'on ouvre l'interrupteur, combien de temps le condensateur prend-il pour que la différence de potentiel à ses bornes diminue de moitié?
+**b.** On mesure le temps de demi-décharge, c'est-à-dire le temps pour que le condensateur perde la moitié de sa charge initiale, en fonction de la résistance. Quel type de graphique obtient-on?
+[[fig:em-7.54]]
 A:
 a. $t_{1/2} = RC\ln2$ b. Une droite de pente $C\ln2$ passant par l'origine.
 H:
@@ -3391,7 +3634,11 @@ $$\frac{\Delta V_{0}}{2} = \Delta V_{0}e^{-t/RC} \Rightarrow t_{1/2} = RC\ln2$$
 **b.** $t_{1/2}$ est proportionnel à $R$ : le graphique de $t_{1/2}$ en fonction de $R$ est une droite de pente $C\ln2$, avec une ordonnée à l'origine nulle.
 === em-ch7-p49 | 7 | 7.7 Les circuits RC | probleme | Problème 49 (p. 250)
 Q:
-[[crop:21:304:596]]
+Un condensateur de 2,75 μF possédant une charge initiale de 12,2 μC est relié à un circuit, comme l'illustre la figure 7.55. Dans ce circuit, R_{1} = 4,00 kΩ, R_{2} = 5,00 kΩ, R_{3} = 6,75 kΩ et R_{4} = 7,35 kΩ. On ferme l'interrupteur à t = 0.
+**a.** Quelle est la charge du condensateur à t = 3,70 ms?
+**b.** Quel est le courant qui circule dans la résistance R_{2} à t = 3,70 ms?
+**c.** À quel temps la charge du condensateur est-elle égale à Q = 1,22 μC?
+[[fig:em-7.55]]
 A:
 a. $Q = 10,2\u{µC}$ b. $i_{2} = 357\u{µA}$ c. $t = 48,7\u{ms}$
 H:
@@ -3409,7 +3656,10 @@ $$i_{2} = 484\times\frac{14,1}{19,1} = 357\u{µA}$$
 $$t = \tau\ln\frac{12,2}{1,22} = (21,15)\ln10 = 48,7\u{ms}$$
 === em-ch7-p51 | 7 | 7.7 Les circuits RC | probleme | Problème 51 (p. 250)
 Q:
-[[crop:21:619:955]]
+Soit le circuit de la figure 7.57, où ℰ = 120 V, R_{1} = R_{2} = R_{3} = 730 Ω et C = 6,50 μF. La charge du condensateur est nulle avant la fermeture de l'interrupteur. À t = 0, on ferme ce dernier.
+**a.** Déterminez le courant dans chaque résistance tout juste après la fermeture de l'interrupteur.
+**b.** Déterminez le courant dans chaque résistance pour t → ∞.
+[[fig:em-7.57]]
 A:
 a. $i_{1} = 110\u{mA}$ et $i_{2} = i_{3} = 54,8\u{mA}$ b. $i_{1} = i_{2} = 82,2\u{mA}$ et $i_{3} = 0$
 H:
@@ -3510,6 +3760,7 @@ $$i_{1} = i_{2} = \frac{120}{730 + 730} = 82,2\u{mA}$$
       Delta: '<mi mathvariant="normal">Δ</mi>', chi: "<mi>χ</mi>", alpha: "<mi>α</mi>",
       times: "<mo>×</mo>", cdot: "<mo>·</mo>", approx: "<mo>≈</mo>", Rightarrow: '<mo lspace="0.4em" rspace="0.4em">⇒</mo>',
       to: "<mo>→</mo>", rightleftharpoons: "<mo>⇌</mo>", geq: "<mo>≥</mo>", leq: "<mo>≤</mo>", neq: "<mo>≠</mo>",
+      int: '<mo>∫</mo>', sum: '<mo>∑</mo>', partial: '<mi>∂</mi>', cos: '<mi>cos</mi><mspace width="0.17em"/>',
       kappa: "<mi>κ</mi>", varepsilon: "<mi>ε</mi>", epsilon: "<mi>ε</mi>", tau: "<mi>τ</mi>", rho: "<mi>ρ</mi>", ell: "<mi>ℓ</mi>",
       Omega: '<mi mathvariant="normal">Ω</mi>', parallel: "<mo>∥</mo>",
       pm: "<mo>±</mo>", dots: "<mo>…</mo>", ln: '<mi>ln</mi><mspace width="0.17em"/>', log: '<mi>log</mi><mspace width="0.17em"/>',
@@ -3587,6 +3838,7 @@ $$i_{1} = i_{2} = \frac{120}{730 + 730} = 82,2\u{mA}$$
           if (name === "underbrace" || name === "overbrace" || name === "underline" || name === "overline" || name === "bar" || name === "vec" || name === "hat") {
             const g = readGroupRaw();
             if (name === "overline" || name === "bar") return [`<mover><mrow>${sub(g)}</mrow><mo>‾</mo></mover>`];
+            if (name === "vec") return [`<mover><mrow>${sub(g)}</mrow><mo stretchy="false">→</mo></mover>`];
             return [`<mrow>${sub(g)}</mrow>`];
           }
           if (name === "u") return [`<mrow>${unitML(readGroupRaw())}</mrow>`];
@@ -3712,9 +3964,10 @@ $$i_{1} = i_{2} = \frac{120}{730 + 730} = 82,2\u{mA}$$
           continue;
         }
         const fig = line.match(/^\[\[fig:([\w.-]+)\]\]$/);
-        if (fig) { html += `<figure class="fig">${FIGURES[fig[1]] || ""}</figure>`; i++; continue; }
-        const crop = line.match(/^\[\[crop:(\d+):(\d+):(\d+)\]\]$/);
-        if (crop) { html += `<div class="pdfcrop" data-p="${crop[1]}" data-a="${crop[2]}" data-b="${crop[3]}"></div>`; i++; continue; }
+        if (fig) {
+          const num = /^em-(?!7\.33)/.test(fig[1]) ? `<figcaption class="fig-cap">Figure ${fig[1].slice(3)}</figcaption>` : "";
+          html += `<figure class="fig">${FIGURES[fig[1]] || ""}${num}</figure>`; i++; continue;
+        }
         if (/^\$\$[\s\S]*\$\$$/.test(line) && line.indexOf("$$", 2) === line.length - 2) {
           html += `<div class="mdisp">${texToMathML(line.slice(2, -2), true)}</div>`; i++; continue;
         }
@@ -3748,6 +4001,140 @@ $$i_{1} = i_{2} = \frac{120}{730 + 730} = 82,2\u{mA}$$
         </g>`).join("")}
       </svg>`
     };
+
+    // --- Figures d'électricité, dessinées en SVG pour rester nettes et hors ligne
+    const EMF = (() => {
+      const INK = "#0f172a", BLUE = "#2563eb";
+      const lab = (x, y, t, o) => t ? `<text x="${x}" y="${y}" font-size="${(o && o.s) || 15}" text-anchor="${(o && o.a) || "middle"}" font-style="${o && o.up ? "normal" : "italic"}" fill="${(o && o.c) || INK}" dominant-baseline="middle">${t.replace(/_(\w+)/g, '<tspan font-size="11" dy="4">$1</tspan><tspan dy="-4"> </tspan>').replace(/\^(\S+)/g, "$1")}</text>` : "";
+      const w = (...p) => `<polyline points="${p.join(" ")}" fill="none" stroke="${INK}" stroke-width="2"/>`;
+      const dot = (x, y) => `<circle cx="${x}" cy="${y}" r="3.6" fill="${INK}"/>`;
+      const place = (x1, y1, x2, y2, len, body) => {
+        const L = Math.hypot(x2 - x1, y2 - y1), a = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+        const cx = (x1 + x2) / 2, cy = (y1 + y2) / 2;
+        return `<g transform="translate(${cx} ${cy}) rotate(${a})"><path d="M${-L / 2} 0H${-len / 2}M${len / 2} 0H${L / 2}" stroke="${INK}" stroke-width="2"/>${body}</g>`;
+      };
+      const zig = "M-22 0l3.7-8 7.3 16 7.3-16 7.3 16 7.3-16 7.3 16 3.7-8";
+      // résistance, condensateur, pile (le + du côté du 2e point), interrupteur, source inconnue, appareil
+      const r = (x1, y1, x2, y2, t, dx = 0, dy = -17, o) => place(x1, y1, x2, y2, 44, `<path d="${zig}" fill="none" stroke="${INK}" stroke-width="2"/>`) + lab((x1 + x2) / 2 + dx, (y1 + y2) / 2 + dy, t, o);
+      const varr = (x1, y1, x2, y2, t, dx, dy) => r(x1, y1, x2, y2, t, dx, dy) + `<path d="M${(x1 + x2) / 2 - 16} ${(y1 + y2) / 2 - 22}L${(x1 + x2) / 2 + 16} ${(y1 + y2) / 2 + 24}m-1-10 1 10-9-4" fill="none" stroke="${INK}" stroke-width="2"/>`;
+      const c = (x1, y1, x2, y2, t, dx = 0, dy = -24, o) => place(x1, y1, x2, y2, 10, `<path d="M-5-15V15M5-15V15" stroke="${INK}" stroke-width="2.6"/>`) + lab((x1 + x2) / 2 + dx, (y1 + y2) / 2 + dy, t, o);
+      const b = (x1, y1, x2, y2, t, dx = -26, dy = 0) => {
+        const L = Math.hypot(x2 - x1, y2 - y1) || 1, ux = (x2 - x1) / L, uy = (y2 - y1) / L;
+        return place(x1, y1, x2, y2, 10, `<path d="M5-16V16" stroke="${INK}" stroke-width="2.4"/><path d="M-5-8V8" stroke="${INK}" stroke-width="4"/>`) +
+          lab((x1 + x2) / 2 + ux * 16 + uy * 13, (y1 + y2) / 2 + uy * 16 - ux * 13, "+", { s: 15, up: 1 }) + lab((x1 + x2) / 2 + dx, (y1 + y2) / 2 + dy, t);
+      };
+      const sw = (x1, y1, x2, y2, t, dx = 0, dy = -22) => {
+        const cx = (x1 + x2) / 2, cy = (y1 + y2) / 2, L = Math.hypot(x2 - x1, y2 - y1), a = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+        return `<g transform="translate(${cx} ${cy}) rotate(${a})"><path d="M${-L / 2} 0H-16M16 0H${L / 2}M-16 0L12-13" fill="none" stroke="${INK}" stroke-width="2"/><circle cx="-16" r="3" fill="#fff" stroke="${INK}" stroke-width="2"/><circle cx="16" r="3" fill="#fff" stroke="${INK}" stroke-width="2"/></g>` + lab(cx + dx, cy + dy, t);
+      };
+      const box = (x1, y1, x2, y2, t, tx, ty) => place(x1, y1, x2, y2, 30, `<circle r="15" fill="#fff" stroke="${INK}" stroke-width="2"/>`) + lab((x1 + x2) / 2 + (tx || 0), (y1 + y2) / 2 + (ty || 0), t, { up: 1, s: 13 });
+      const arr = (x1, y1, x2, y2, t, dx = 0, dy = -11) => {
+        const a = Math.atan2(y2 - y1, x2 - x1);
+        const hx = x2 - 9 * Math.cos(a - .45), hy = y2 - 9 * Math.sin(a - .45), kx = x2 - 9 * Math.cos(a + .45), ky = y2 - 9 * Math.sin(a + .45);
+        return `<path d="M${x1} ${y1}L${x2} ${y2}M${hx} ${hy}L${x2} ${y2}L${kx} ${ky}" fill="none" stroke="${BLUE}" stroke-width="2"/>` + lab((x1 + x2) / 2 + dx, (y1 + y2) / 2 + dy, t, { c: BLUE, s: 14 });
+      };
+      const svg = (W, H, desc, ...parts) => `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${desc}">${parts.join("")}</svg>`;
+      const tag = (x, y, t) => lab(x, y, t, { up: 1, s: 15 });
+      const pos = (x, y, t) => lab(x, y, t, { s: 15 });
+      return { lab, w, dot, r, varr, c, b, sw, box, arr, svg, tag, pos, INK, BLUE };
+    })();
+    Object.assign(FIGURES, (() => {
+      const { lab, w, dot, r, varr, c, b, sw, box, arr, svg, tag, pos, INK, BLUE } = EMF;
+      const line2 = (x1, y1, x2, y2, col) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${col}" stroke-width="3"/>`;
+      return {
+        "em-5.15": svg(420, 230, "Graphique de Q selon delta V : trois droites a, b, c, de la plus grande à la plus petite pente",
+          `<path d="M60 20V195H390" fill="none" stroke="${INK}" stroke-width="2"/>`, line2(60, 195, 330, 45, "#16a34a"), line2(60, 195, 340, 95, "#dc2626"), line2(60, 195, 345, 140, "#2563eb"),
+          pos(342, 40, "a"), pos(352, 90, "b"), pos(357, 135, "c"), pos(40, 25, "Q"), pos(378, 215, "ΔV")),
+        "em-5.16": svg(640, 245, "Trois montages : (i) C, 2C et C/2 en série ; (ii) les trois en parallèle ; (iii) C et 2C en parallèle, en série avec C/2",
+          w("15,80 40,80"), c(40, 80, 80, 80, "C"), c(80, 80, 120, 80, "2C"), c(120, 80, 160, 80, "C/2"), w("160,80 185,80"), dot(15, 80), dot(185, 80), tag(100, 236, "(i)"),
+          w("225,110 250,110"), w("250,40 250,180"), w("350,40 350,180"), c(250, 40, 350, 40, "C"), c(250, 110, 350, 110, "2C"), c(250, 180, 350, 180, "C/2", 0, 26), w("350,110 375,110"), dot(225, 110), dot(375, 110), tag(300, 236, "(ii)"),
+          w("410,110 430,110"), w("430,65 430,155"), w("510,65 510,155"), c(430, 65, 510, 65, "C"), c(430, 155, 510, 155, "2C", 0, 26), c(510, 110, 600, 110, "C/2"), w("600,110 625,110"), dot(410, 110), dot(625, 110), tag(515, 236, "(iii)")),
+        "em-5.17": svg(420, 240, "Source à gauche ; C1 et C2 en série dans une branche, en parallèle avec C3",
+          b(70, 200, 70, 40, "ℰ"), w("70,40 330,40 "), w("70,200 330,200"), c(210, 40, 210, 120, "C_1", -34, 0), c(210, 120, 210, 200, "C_2", -34, 0), c(330, 40, 330, 200, "C_3", 36, 0)),
+        "em-5.19": svg(460, 200, "Deux armatures extérieures distantes de b, et une partie centrale conductrice mobile de largeur a",
+          `<path d="M20 95H105M355 95H440" stroke="${INK}" stroke-width="2"/><rect x="105" y="35" width="14" height="120" fill="#475569"/><rect x="341" y="35" width="14" height="120" fill="#475569"/>`,
+          `<path d="M195 35H212V50H248V35H265V155H248V140H212V155H195Z" fill="#475569"/><path d="M119 95H195M265 95H341" stroke="#94a3b8" stroke-dasharray="4 4"/>`,
+          arr(230, 18, 119, 18), arr(230, 18, 341, 18), pos(230, 8, "b"), arr(230, 178, 197, 178), arr(230, 178, 263, 178), pos(230, 192, "a")),
+        "em-5.20": svg(420, 250, "Source à gauche ; C1 et C2 en parallèle ; C3 en série sur le fil du bas",
+          b(60, 150, 60, 40, "ℰ"), w("60,40 340,40"), w("60,150 60,210"), c(60, 210, 200, 210, "C_3", 0, -26), w("200,210 340,210"), c(200, 40, 200, 210, "C_1", -32, 0), c(340, 40, 340, 210, "C_2", 32, 0)),
+        "em-5.21": svg(420, 240, "Source à gauche ; C2 sur la diagonale, aux bornes de la source ; C1 en haut et C3 à droite, en série",
+          b(60, 200, 60, 40, "ℰ"), c(60, 40, 340, 40, "C_1"), c(340, 40, 340, 200, "C_3", 34, 0), w("60,200 340,200"), c(60, 40, 340, 200, "C_2", -24, -22)),
+        "em-5.23": svg(460, 260, "Pile à gauche ; colonne C1 sur C3 et colonne C2 sur C4 ; interrupteur S entre les deux points milieux",
+          b(50, 220, 50, 40, "ℰ"), w("50,40 370,40"), w("50,220 370,220"), c(200, 40, 200, 130, "C_1", -32, 0), c(200, 130, 200, 220, "C_3", -32, 0), c(370, 40, 370, 130, "C_2", 34, 0), c(370, 130, 370, 220, "C_4", 34, 0), sw(200, 130, 370, 130, "S"), dot(200, 130), dot(370, 130)),
+        "em-5.24": svg(600, 230, "(a) deux diélectriques côte à côte, chacun sur une aire A/2, distance d ; (b) deux diélectriques superposés, chacun d'épaisseur d/2, aire A",
+          `<path d="M170 10V45M170 165V200M450 10V45M450 165V200" stroke="${INK}" stroke-width="3"/>`,
+          `<rect x="70" y="45" width="200" height="10" fill="#b45309"/><rect x="70" y="155" width="200" height="10" fill="#b45309"/><rect x="70" y="55" width="100" height="100" fill="#86efac"/><rect x="170" y="55" width="100" height="100" fill="#d8b4fe"/>`,
+          `<rect x="350" y="45" width="200" height="10" fill="#b45309"/><rect x="350" y="155" width="200" height="10" fill="#b45309"/><rect x="350" y="55" width="200" height="50" fill="#86efac"/><rect x="350" y="105" width="200" height="50" fill="#d8b4fe"/>`,
+          pos(120, 105, "κ_1"), pos(220, 105, "κ_2"), pos(450, 80, "κ_1"), pos(450, 130, "κ_2"), pos(120, 34, "A/2"), pos(220, 34, "A/2"), pos(490, 34, "A"), pos(48, 105, "d"), pos(325, 80, "d/2"), pos(325, 130, "d/2"), tag(170, 218, "(a)"), tag(450, 218, "(b)")),
+        "em-6.26": svg(460, 220, "Conducteurs : i sur la branche du haut à gauche ; 6 mA entre par le bas à gauche ; 3 mA sort en haut à droite ; 2 mA entre par la droite ; 1 mA sort vers le bas",
+          `<path d="M50 40H170V100M170 100L60 170M170 100L225 150H400M305 150L325 60H420M305 150V210" fill="none" stroke="#c9a15a" stroke-width="14"/>`,
+          pos(110, 22, "i"), arr(75, 190, 125, 158, "6 mA", 40, 16), arr(350, 40, 405, 40, "3 mA", 0, -12), arr(400, 130, 345, 130, "2 mA", 0, -12), arr(328, 170, 328, 205, "1 mA", 34, 0)),
+        "em-7.25": svg(420, 170, "Résistance de 5,0 ohms avec 1,5 V, + à gauche ; résistance de 6,0 ohms avec 2,4 V, + à droite ; branche verticale i au milieu",
+          r(40, 110, 200, 110, "5,0 Ω", 0, -24, { up: 1 }), r(200, 110, 380, 110, "6,0 Ω", 0, -24, { up: 1 }), w("200,110 200,30"), pos(214, 40, "i"), tag(80, 135, "+"), tag(160, 135, "−"), tag(120, 150, "1,5 V"), tag(240, 135, "−"), tag(340, 135, "+"), tag(290, 150, "2,4 V")),
+        "em-7.26": svg(460, 290, "Circuit a b c d : E1 à gauche, R1 en haut avec i1, R4 en diagonale de c vers a avec i3, R2 et E2 à droite avec i2, condensateur C et R3 en bas",
+          b(70, 240, 70, 50, "ℰ_1"), r(70, 50, 360, 50, "R_1"), arr(120, 30, 165, 30, "i_1", 0, -10), r(360, 50, 70, 240, "R_4", 30, 22), arr(250, 88, 212, 112, "i_3", 12, -14), r(360, 50, 360, 135, "R_2", 30, 0), b(360, 195, 360, 135, "ℰ_2", 34, 0), arr(338, 150, 338, 190, "i_2", -14, 0), w("360,195 360,240"), c(70, 240, 180, 240, "C", 0, -26), r(180, 240, 360, 240, "R_3", 0, 24), tag(165, 268, "+Q"), tag(95, 268, "−Q"), pos(55, 42, "b"), pos(378, 40, "c"), pos(55, 252, "a"), pos(378, 252, "d"), dot(70, 50), dot(360, 50), dot(70, 240), dot(360, 240)),
+        "em-7.27": svg(420, 200, "Circuit à une maille : E1 à gauche, + en haut ; E2 à droite, + en haut ; R1 en haut ; R2 et R3 en bas",
+          b(60, 160, 60, 40, "ℰ_1"), b(360, 160, 360, 40, "ℰ_2", 30, 0), r(60, 40, 360, 40, "R_1"), r(60, 160, 210, 160, "R_2", 0, 24), r(210, 160, 360, 160, "R_3", 0, 24)),
+        "em-7.29": svg(420, 210, "Pile E, borne moins au point b ; R1 avec i1 vers la droite ; branche descendante notée i3, sans flèche ; R2 avec i2 vers la gauche, jusqu'au point a",
+          b(60, 170, 60, 60, "ℰ"), dot(60, 170), pos(75, 178, "b"), r(60, 60, 210, 60, "R_1"), r(210, 60, 370, 60, "R_2"), dot(370, 60), pos(385, 60, "a"), w("210,60 210,170"), arr(105, 80, 150, 80, "i_1", 0, 14), arr(320, 80, 270, 80, "i_2", 0, 14), pos(226, 130, "i_3")),
+        "em-7.30": svg(600, 250, "Maille de gauche : C1, R1 en haut, R3 en bas et source au centre. Maille de droite : R2 en haut, R4 en diagonale, C2 à droite",
+          c(50, 40, 50, 210, "C_1", -30, 0), r(50, 40, 280, 40, "R_1"), r(50, 210, 280, 210, "R_3", 0, 24), b(280, 210, 280, 40, "ℰ"), r(280, 40, 500, 40, "R_2"), r(280, 210, 500, 40, "R_4", 28, 16), c(500, 40, 500, 210, "C_2", 34, 0), w("280,210 500,210")),
+        "em-7.32": svg(600, 260, "Trois piles réelles entre a (bas) et b (haut) : (i) i nul ; (ii) i descend vers b ; (iii) i remonte en sortant de b",
+          ...[[100, "(i)", "i = 0"], [300, "(ii)", "↓ i"], [500, "(iii)", "↑ i"]].map(([x, n, t]) => `<rect x="${x - 38}" y="60" width="76" height="130" fill="#dbeafe" stroke="#64748b" stroke-dasharray="5 4"/>` + w(`${x},18 ${x},52`) + r(x, 52, x, 125, "r", -24, 0) + b(x, 180, x, 125, "ℰ", -24, 0) + w(`${x},180 ${x},215`) + dot(x, 52) + dot(x, 180) + pos(x - 14, 42, "b") + pos(x - 14, 205, "a") + tag(x + 34, 28, t) + tag(x, 245, n))),
+        "em-7.33": svg(670, 200, "a : source, R1 en haut et R2 en diagonale, entre les mêmes nœuds ; b : R1 et R2 forment une seule boucle avec la source ; c : R1 et R2 de part et d'autre de la source",
+          b(30, 140, 30, 40, "ℰ"), r(30, 40, 180, 40, "R_1"), w("180,40 180,140"), r(30, 40, 180, 140, "R_2", -26, 24), w("30,140 180,140"), tag(105, 178, "a."),
+          b(240, 140, 240, 40, "ℰ"), r(240, 40, 390, 40, "R_1"), r(390, 40, 240, 140, "R_2", 26, 14), tag(310, 178, "b."),
+          r(470, 40, 470, 140, "R_1", -26, 0), b(540, 140, 540, 40, "ℰ", 24, 0), r(610, 40, 610, 140, "R_2", 26, 0), w("470,40 610,40"), w("470,140 610,140"), tag(540, 178, "c.")),
+        "em-7.34": svg(640, 465, "Six circuits : (i) trois R en série ; (ii) trois R en parallèle ; (iii) trois R en parallèle, dont une en diagonale ; (iv) R en série avec deux R en parallèle ; (v) trois R en série avec un interrupteur ouvert ; (vi) deux bornes reliées directement par le fil du haut, aux bornes de deux R en série et d'une R",
+          r(20, 60, 110, 60, "R"), r(110, 60, 200, 60, "R"), r(200, 60, 290, 60, "R"), dot(20, 60), dot(290, 60), tag(155, 118, "(i)"),
+          w("340,65 400,65"), w("400,30 400,100"), w("560,30 560,100"), r(400, 30, 560, 30, "R"), r(400, 65, 560, 65, "R"), r(400, 100, 560, 100, "R", 0, 18), w("560,65 620,65"), dot(340, 65), dot(620, 65), tag(480, 142, "(ii)"),
+          w("20,215 70,215"), w("70,165 70,265"), w("230,165 230,265"), r(70, 165, 230, 165, "R"), r(70, 265, 230, 265, "R", 0, 18), r(70, 265, 230, 165, "R", -14, -18), w("230,215 285,215"), dot(20, 215), dot(285, 215), tag(150, 300, "(iii)"),
+          r(340, 215, 440, 215, "R"), w("440,165 440,265"), w("580,165 580,265"), r(440, 165, 580, 165, "R"), r(440, 265, 580, 265, "R", 0, 18), w("580,215 625,215"), dot(340, 215), dot(625, 215), tag(500, 300, "(iv)"),
+          r(15, 375, 85, 375, "R"), r(85, 375, 155, 375, "R"), r(155, 375, 225, 375, "R"), sw(225, 375, 290, 375), dot(15, 375), dot(290, 375), tag(150, 455, "(v)"),
+          w("340,375 380,375"), w("380,330 380,415"), w("580,330 580,415"), w("380,330 580,330"), r(380, 375, 480, 375, "R"), r(480, 375, 580, 375, "R"), r(380, 415, 580, 415, "R", 0, 18), w("580,375 625,375"), dot(340, 375), dot(625, 375), tag(480, 455, "(vi)")),
+        "em-7.35": svg(460, 220, "Source à gauche, R1 en haut, R2 verticale, puis branche R3 à droite et R4 en bas",
+          b(50, 180, 50, 40, "ℰ"), r(50, 40, 210, 40, "R_1"), r(210, 40, 210, 180, "R_2", 28, 0), w("210,40 390,40"), r(390, 40, 390, 180, "R_3", 28, 0), r(210, 180, 390, 180, "R_4", 0, 24), w("50,180 210,180")),
+        "em-7.37": svg(460, 200, "Point a, R, nœud, R, puis Ro verticale ; une R verticale au nœud ; fil de retour jusqu'au point b",
+          dot(30, 40), pos(18, 40, "a"), r(30, 40, 200, 40, "R"), r(200, 40, 370, 40, "R"), r(200, 40, 200, 160, "R", 22, 0), r(370, 40, 370, 160, "R_o", 28, 0), w("30,160 370,160"), dot(30, 160), pos(18, 160, "b")),
+        "em-7.39": svg(500, 230, "R1 à gauche ; R2 en diagonale vers le point milieu du bas ; R3 en haut ; R4 du point milieu vers le coin en haut à droite ; R5 en bas à droite ; source à droite",
+          r(50, 40, 50, 190, "R_1", -26, 0), w("50,190 240,190"), r(50, 40, 240, 190, "R_2", -28, 16), r(50, 40, 410, 40, "R_3"), r(240, 190, 410, 40, "R_4", 28, 16), r(240, 190, 410, 190, "R_5", 0, 24), b(410, 190, 410, 40, "ℰ", 28, 0), dot(240, 190)),
+        "em-7.40": svg(420, 210, "Source à gauche, R1 en haut, résistance variable R, puis R2 en parallèle",
+          b(50, 170, 50, 40, "ℰ"), r(50, 40, 210, 40, "R_1"), varr(210, 40, 210, 170, "R", -32, 0), r(340, 40, 340, 170, "R_2", 30, 0), w("210,40 340,40"), w("50,170 340,170")),
+        "em-7.41": svg(560, 210, "Source avec le voltmètre V1 à ses bornes ; R1 en haut ; R2 à droite avec le voltmètre V2 à ses bornes ; V3 relié à la borne + de la source par un fil séparé qui passe au-dessus de R1, et au fil du bas",
+          b(120, 170, 120, 50, "ℰ", 26, 0), box(40, 170, 40, 50, "V₁"), w("40,50 120,50"), w("40,170 120,170"), r(120, 50, 330, 50, "R_1"), r(330, 50, 330, 170, "R_2", 26, 0), w("120,170 330,170"), w("330,75 280,75"), box(280, 75, 280, 145, "V₂"), w("280,145 330,145"), w("120,50 120,18 480,18"), box(480, 18, 480, 170, "V₃"), w("330,170 480,170")),
+        "em-7.42": svg(380, 190, "Source à gauche, R1 en haut, R2 à droite",
+          b(50, 150, 50, 40, "ℰ"), r(50, 40, 310, 40, "R_1"), r(310, 40, 310, 150, "R_2", 28, 0), w("50,150 310,150")),
+        "em-7.43": svg(520, 240, "Trois piles verticales, + en haut : E1 à gauche, E2 au centre, E3 à droite ; R1 et R3 en haut ; R2 et R4 en bas",
+          b(50, 200, 50, 40, "ℰ_1"), b(250, 200, 250, 40, "ℰ_2"), b(450, 200, 450, 40, "ℰ_3", 28, 0), r(50, 40, 250, 40, "R_1"), r(250, 40, 450, 40, "R_3"), r(50, 200, 250, 200, "R_2", 0, 24), r(250, 200, 450, 200, "R_4", 0, 24)),
+        "em-7.45": svg(520, 260, "E1 à gauche, + en haut ; R1 jusqu'au nœud a ; R3 vers la droite ; E3 à droite, + en bas ; R2 et E2 sous le nœud a, + en haut ; en bas, ampèremètre à gauche et R4 jusqu'au point b",
+          b(50, 210, 50, 50, "ℰ_1"), r(50, 50, 250, 50, "R_1"), r(250, 50, 450, 50, "R_3"), dot(250, 50), pos(250, 34, "a"), b(450, 50, 450, 210, "ℰ_3", 28, 0), r(250, 50, 250, 130, "R_2", 28, 0), b(250, 210, 250, 130, "ℰ_2", -28, 0), box(50, 210, 250, 210, "A"), r(250, 210, 450, 210, "R_4", 0, 24), dot(450, 210), pos(465, 222, "b"), dot(250, 210)),
+        "em-7.46": svg(560, 280, "Trois branches reliées en bas et à un nœud en haut. Chaque source a une résistance interne r. R relie le nœud à chaque source",
+          r(90, 40, 280, 40, "R"), r(280, 40, 470, 40, "R"), r(280, 40, 280, 110, "R", 24, 0), dot(280, 40),
+          ...[[90, 40, "ℰ_1"], [280, 110, "ℰ_2"], [470, 40, "ℰ_3"]].map(([x, y, n]) => `<rect x="${x - 40}" y="${y + 8}" width="80" height="${215 - y}" fill="#dbeafe" stroke="#64748b" stroke-dasharray="5 4"/>` + r(x, y, x, 130 + (y > 40 ? 40 : 0), "r", -22, 0) + b(x, 240, x, 130 + (y > 40 ? 40 : 0), n, -24, 0) + dot(x, y) + tag(x - 14, y + (y > 40 ? -10 : -14), "+") + tag(x - 14, 256, "−")),
+          w("90,240 470,240")),
+        "em-7.47": svg(460, 240, "E1 à gauche, + en haut ; R1 en haut jusqu'au nœud a ; R2 et E2 sous a, + en haut ; R3 à droite jusqu'au point b ; fil du bas",
+          b(50, 200, 50, 40, "ℰ_1"), r(50, 40, 220, 40, "R_1"), dot(220, 40), pos(220, 24, "a"), r(220, 40, 220, 120, "R_2", 28, 0), b(220, 200, 220, 120, "ℰ_2", -28, 0), w("220,40 390,40"), r(390, 40, 390, 200, "R_3", 28, 0), w("50,200 390,200"), dot(390, 200), pos(405, 212, "b")),
+        "em-7.48": svg(500, 270, "Points c, b, d en haut ; source E1 entre c et b avec i1 vers b ; source E3 entre b et d avec i3 vers d ; source E2 et R2 sous b, jusqu'à a, avec i2 vers le haut ; R3 entre d et a ; R1 entre a et c",
+          box(50, 40, 240, 40, ""), pos(145, 18, "ℰ_1"), box(240, 40, 430, 40, ""), pos(335, 18, "ℰ_3"), box(240, 40, 240, 120, ""), pos(268, 80, "ℰ_2"), r(240, 120, 240, 220, "R_2", -30, 0), r(430, 40, 430, 220, "R_3", 30, 0), r(50, 220, 240, 220, "R_1", 0, 24), w("50,40 50,220"), w("240,220 430,220"),
+          dot(50, 40), dot(240, 40), dot(430, 40), dot(240, 120), dot(240, 220), pos(38, 30, "c"), pos(254, 30, "b"), pos(445, 30, "d"), pos(226, 120, "f"), pos(240, 240, "a"), arr(185, 24, 222, 24, "i_1", 0, -10), arr(262, 24, 300, 24, "i_3", 0, -10), arr(262, 195, 262, 150, "i_2", 16, 0)),
+        "em-7.51": svg(640, 220, "Trois circuits RC avec pile et interrupteur en bas : (i) C et R en série, avec une autre R en parallèle ; (ii) deux R en parallèle, puis C à droite ; (iii) C et R en haut, une autre R à droite",
+          c(30, 40, 95, 40, "C"), r(95, 40, 190, 40, "R"), w("30,40 30,85"), r(30, 85, 190, 85, "R", 0, -16), w("190,40 190,165"), sw(30, 165, 90, 165, "", 0, 0), w("30,85 30,165"), b(90, 165, 190, 165, "ℰ", 0, -22), tag(110, 205, "(i)"),
+          r(240, 40, 350, 40, "R"), r(240, 85, 350, 85, "R", 0, -16), w("240,40 240,165"), w("350,40 350,85"), w("350,85 400,85"), c(400, 85, 400, 165, "C", 26, 0), sw(240, 165, 300, 165), b(300, 165, 400, 165, "ℰ", 0, -22), tag(320, 205, "(ii)"),
+          c(450, 40, 515, 40, "C"), r(515, 40, 610, 40, "R"), r(610, 40, 610, 165, "R", 22, 0), w("450,40 450,165"), sw(450, 165, 510, 165), b(510, 165, 610, 165, "ℰ", 0, -22), tag(530, 205, "(iii)")),
+        "em-7.52": svg(460, 250, "Charge selon le temps. (i) et (ii) partent de la même charge, (iii) et (iv) de la moitié. (i) et (iii) ont la constante de temps la plus longue, (ii) et (iv) la plus courte",
+          `<path d="M60 15V215H430" fill="none" stroke="${INK}" stroke-width="2"/><g stroke="#cbd5e1">${[1, 2, 3, 4].map(k => `<line x1="${60 + k * 88}" y1="30" x2="${60 + k * 88}" y2="215"/>`).join("")}${[1, 2, 3, 4].map(k => `<line x1="60" y1="${215 - k * 44}" x2="412" y2="${215 - k * 44}"/>`).join("")}</g>`,
+          ...[[176, 176, "#dc2626"], [176, 88, "#16a34a"], [88, 176, "#2563eb"], [88, 88, "#9333ea"]].map(([q, tau, col]) => `<polyline fill="none" stroke="${col}" stroke-width="3" points="${Array.from({ length: 36 }, (_, k) => `${60 + k * 10},${(215 - q * Math.exp(-k * 10 / tau)).toFixed(1)}`).join(" ")}"/>`),
+          lab(170, 62, "(i)", { c: "#dc2626", up: 1 }), lab(112, 112, "(ii)", { c: "#16a34a", up: 1 }), lab(240, 128, "(iii)", { c: "#2563eb", up: 1 }), lab(95, 188, "(iv)", { c: "#9333ea", up: 1 }), pos(42, 25, "Q"), pos(442, 215, "t")),
+        "em-7.53": svg(380, 190, "Source à gauche, interrupteur en haut, condensateur C à droite, résistance R en bas",
+          b(50, 150, 50, 40, "ℰ"), sw(50, 40, 310, 40), c(310, 40, 310, 150, "C", 28, 0), r(50, 150, 310, 150, "R", 0, 24)),
+        "em-7.54": svg(420, 200, "Source à gauche, interrupteur en haut, condensateur C et résistance variable R en parallèle",
+          b(50, 160, 50, 40, "ℰ"), sw(50, 40, 220, 40), w("220,40 350,40"), c(220, 40, 220, 160, "C", -28, 0), varr(350, 40, 350, 160, "R", 32, 0), w("50,160 350,160")),
+        "em-7.55": svg(500, 210, "C à gauche, R1 en haut, R2 verticale ; R3 en haut à droite et R4 à droite ; interrupteur en bas à gauche",
+          c(50, 40, 50, 170, "C", -26, 0), r(50, 40, 230, 40, "R_1"), r(230, 40, 230, 170, "R_2", -28, 0), r(230, 40, 410, 40, "R_3"), r(410, 40, 410, 170, "R_4", 28, 0), sw(50, 170, 230, 170), w("230,170 410,170")),
+        "em-7.57": svg(440, 240, "Source à gauche, interrupteur en haut, R2 verticale, R3 et C en série à droite, R1 en bas",
+          b(50, 190, 50, 40, "ℰ"), sw(50, 40, 210, 40), w("210,40 350,40"), r(210, 40, 210, 190, "R_2", -28, 0), r(350, 40, 350, 120, "R_3", 28, 0), c(350, 120, 350, 190, "C", 26, 0), w("210,190 350,190"), r(50, 190, 210, 190, "R_1", 0, 24))
+      };
+    })());
 
     // --- Chargement des exercices
     function parseExercises(src) {
@@ -3901,6 +4288,7 @@ $$i_{1} = i_{2} = \frac{120}{730 + 730} = 82,2\u{mA}$$
         try {
           (await idbPairs("ink", IDBKeyRange.upperBound(DOC_PREFIX, true))).forEach(([k, v]) => inkCache.set(k, v));
           docs = (await idbPairs("docs")).map(p => p[1]);
+          idbDel("files", "em-exercices").catch(() => {});
         } catch (e) {}
       }
       // Aide-mémoire : formules écrites en mini-TeX, affichées en 2D
@@ -4021,7 +4409,6 @@ $$i_{1} = i_{2} = \frac{120}{730 + 730} = 82,2\u{mA}$$
       try {
         const backup = await collectBackup();
         const ids = docs.filter(d => d.kind !== "blank").map(d => d.id);
-        if (await hasCoursePdf()) ids.push(COURSE_PDF_ID);
         const parts = [], files = [];
         for (const id of ids) {
           const b = await idbGet("files", id);
@@ -4047,7 +4434,6 @@ $$i_{1} = i_{2} = \frac{120}{730 + 730} = 82,2\u{mA}$$
           await idbPut("files", f.id, file.slice(at, at + f.size, f.type));
           at += f.size;
         }
-        coursePdf = null; coursePdfKnown = null; cropPages.clear();
         hideBusy();
         await restoreBackup(JSON.stringify(head.backup));
       } catch (e) {
@@ -4218,7 +4604,7 @@ $$i_{1} = i_{2} = \frac{120}{730 + 730} = 82,2\u{mA}$$
         if (stf === "todo" ? exStatusMap[ex.id] : (stf !== "ALL" && exStatusMap[ex.id] !== stf)) return false;
         if (q) {
           const short = ex.type[0].toUpperCase() + ex.title.replace(/\D*(\d+).*/, "$1");
-          if (!(short + " " + ex.title + " " + ex.section + " " + (ex.course === "em" ? ex.hint : ex.statement)).toLowerCase().includes(q)) return false;
+          if (!(short + " " + ex.title + " " + ex.section + " " + ex.statement).toLowerCase().includes(q)) return false;
         }
         return true;
       });
@@ -4271,7 +4657,6 @@ $$i_{1} = i_{2} = \frac{120}{730 + 730} = 82,2\u{mA}$$
       $("exTitle").textContent = ex.title;
       $("exSectionPill").textContent = ex.section;
       $("exStatement").innerHTML = renderBlocks(ex.statement);
-      hydrateCrops();
       $("tbTitle").textContent = ex.title;
       $("tbSub").textContent = `Chap. ${ex.chapter} · ${ex.section}`;
       $("focusTitle").textContent = ex.title;
@@ -4763,7 +5148,7 @@ $$i_{1} = i_{2} = \frac{120}{730 + 730} = 82,2\u{mA}$$
           if (e.shiftKey) redo(); else undo();
         } else if (e.key === "Escape") {
           closeMoreMenu(); closeSheet();
-          ["apiModal", "refModal", "clearModal", "deletePageModal", "backupModal", "docModal", "docDeleteModal", "pptModal"].forEach(closeModal);
+          ["apiModal", "refModal", "refModalEm", "clearModal", "deletePageModal", "backupModal", "docModal", "docDeleteModal", "pptModal"].forEach(closeModal);
         }
       });
     }
@@ -5416,7 +5801,6 @@ Si une étape de l'étudiant est fausse, commence cette étape par ❌ et recopi
 ${ex.course === "chimie" ? "Respecte les notations du Cahier NDC (tableaux I-R-E ou I-R-F, $K_{e}$, critère $\\frac{C_{i}}{K} \\geq 100$). " : ""}Pas de salutation ni de conclusion.`;
       }
 
-      const stmtImage = ex.course === "em" ? statementImage() : null;
       const intro = ex.course === "chimie" ? `Tu es le tuteur personnel de chimie du cours « Chimie des solutions (202-SN2-RE) » au Cégep.
 Voici l'exercice sur lequel travaille l'étudiant :
 Titre : ${ex.title} (Chapitre ${ex.chapter} — ${ex.section})
@@ -5434,7 +5818,9 @@ Conventions importantes du cahier de notes de cours (NDC) à accepter :
         : `Tu es le tuteur personnel du cours « Électricité et magnétisme (203-SN2-RE) » au Cégep.
 Voici l'exercice sur lequel travaille l'étudiant :
 Titre : ${ex.title} (Chapitre ${ex.chapter} — ${ex.section})
-L'énoncé et ses figures sont sur la PREMIÈRE image. La feuille manuscrite de l'étudiant est sur la DEUXIÈME image.
+(Les formules ci-dessous sont écrites en notation LaTeX simplifiée. [[fig:…]] indique une figure de circuit, non transmise : fie-toi au corrigé pour le montage.)
+Énoncé : ${ex.statement}
+La feuille manuscrite de l'étudiant est sur l'image.
 Réponse attendue : ${ex.shortAnswer}
 Corrigé : ${ex.solution}`;
       const systemPrompt = `${intro}
@@ -5454,7 +5840,6 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
       const body = JSON.stringify({
         contents: [{ parts: [
           { text: systemPrompt },
-          ...(stmtImage ? [{ inline_data: { mime_type: "image/jpeg", data: stmtImage } }] : []),
           { inline_data: { mime_type: "image/png", data: base64Data } }
         ] }],
         generationConfig: { temperature: 0.2 }
@@ -5490,7 +5875,7 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
     //  La chimie garde ses clés localStorage. Les nouvelles données (dessins des
     //  nouveaux cours, documents importés) vont dans IndexedDB, sur l'iPad seulement.
     // =========================================================================
-    const IDB_NAME = "sn2_session", DOC_PREFIX = "zd~", COURSE_PDF_ID = "em-exercices";
+    const IDB_NAME = "sn2_session", DOC_PREFIX = "zd~";
     let idb = null, idbPending = Promise.resolve();
     function idbOpen() {
       return new Promise(resolve => {
@@ -5531,7 +5916,7 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
       });
       return idbPending;
     }
-    const docRange = id => IDBKeyRange.bound(DOC_PREFIX + id, DOC_PREFIX + id + "￿");
+    const docRange = id => IDBKeyRange.bound(DOC_PREFIX + id, DOC_PREFIX + id + "\xEF\xBF\xBF");
 
     // Dessins : la chimie lit et écrit dans localStorage, avec IndexedDB en secours si c'est plein
     const inkCache = new Map();
@@ -5621,10 +6006,6 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
       $("tabNotes").classList.toggle("on", tab === "notes");
       if (tab === "exercises") renderCourseExercises(); else renderCourseNotes();
     }
-    function coursePdfPrompt() {
-      return `<div class="notice"><b>Une seule étape :</b> importe le PDF <i>Physique_SN2_Examen2_Exercices_Lafrance</i>. Les énoncés et les figures s'afficheront ensuite dans chaque exercice, même hors ligne. Le PDF reste seulement sur cet iPad.
-        <div><button class="btn primary" onclick="$('emPdfFile').click()">Importer le PDF</button></div></div>`;
-    }
     async function renderCourseExercises() {
       const c = currentCourse, list = courseExercises(c.id);
       if (!list.length) {
@@ -5633,7 +6014,6 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
       }
       const last = list.find(e => e.id === lastExerciseOf(c.id));
       let html = "";
-      if (c.id === "em" && !(await hasCoursePdf())) html += coursePdfPrompt();
       if (last) html += `<div class="cs-actions"><button class="btn primary" onclick="openExercise('${last.id}')">Reprendre : ${last.title}</button></div>`;
       c.chapters.forEach(([n, label]) => {
         const items = list.filter(e => e.chapter === n);
@@ -5675,8 +6055,9 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
       $("searchInput").value = "";
       $("searchInput").placeholder = c.search || "Rechercher";
       const chem = c.id === "chimie";
-      $("refBtn").style.display = chem ? "" : "none";
-      $("focusRefBtn").classList.toggle("chem-only", !chem);
+      const hasRef = chem || c.id === "em";
+      $("refBtn").style.display = hasRef ? "" : "none";
+      $("focusRefBtn").classList.toggle("chem-only", !hasRef);
       $("ireItem").style.display = chem ? "" : "none";
     }
     function setMode(mode) {
@@ -5703,6 +6084,7 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
       selectChapter(ex.chapter);
       selectExercise(id, true);
     }
+    function openRef() { openModal(currentCourse && currentCourse.id === "em" ? "refModalEm" : "refModal"); }
     function leaveToCourse() {
       if (act) cancelStroke();
       saveNow();
@@ -5732,111 +6114,6 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
     }
     function showBusy(text) { $("busyText").textContent = text; $("busy").classList.add("open"); }
     function hideBusy() { $("busy").classList.remove("open"); }
-
-    // ---------- PDF d'exercices du cours : importé une fois, gardé sur l'iPad ----------
-    const COURSE_PDF_PRINT = "ad163f7a1d9f3fb241b1b03fbc83e4c5";
-    let coursePdf = null, coursePdfLoading = null, coursePdfKnown = null;
-    const cropPages = new Map();
-    async function hasCoursePdf() {
-      if (coursePdfKnown !== null) return coursePdfKnown;
-      try { coursePdfKnown = !!(await idbGet("files", COURSE_PDF_ID)); } catch (e) { coursePdfKnown = false; }
-      return coursePdfKnown;
-    }
-    async function getCoursePdf() {
-      if (coursePdf) return coursePdf;
-      if (!coursePdfLoading) coursePdfLoading = (async () => {
-        const blob = await idbGet("files", COURSE_PDF_ID);
-        if (!blob) return null;
-        coursePdf = await openPdfData(await blob.arrayBuffer());
-        return coursePdf;
-      })().finally(() => { coursePdfLoading = null; });
-      return coursePdfLoading;
-    }
-    async function importCoursePdf(input) {
-      const f = input.files && input.files[0];
-      input.value = "";
-      if (!f) return;
-      showBusy("Vérification du PDF…");
-      try {
-        const pdf = await openPdfData(await f.arrayBuffer());
-        const ok = pdf.fingerprints[0] === COURSE_PDF_PRINT;
-        pdf.destroy();
-        if (!ok) { hideBusy(); showToast("Ce n'est pas le bon PDF. Choisis Physique_SN2_Examen2_Exercices_Lafrance."); return; }
-        await idbPut("files", COURSE_PDF_ID, new Blob([f], { type: "application/pdf" }));
-        coursePdf = null; cropPages.clear(); coursePdfKnown = true;
-        hideBusy();
-        showToast("PDF importé : les énoncés sont prêts.");
-        if ($("courseScreen").classList.contains("open")) renderCourseExercises();
-        else if (currentExId) selectExercise(currentExId, true);
-      } catch (e) {
-        hideBusy();
-        showToast("Impossible d'importer ce PDF. Vérifie l'espace libre sur l'iPad.");
-      }
-    }
-    async function cropPageCanvas(pdf, n, targetW) {
-      const key = n + "@" + targetW;
-      if (cropPages.has(key)) return cropPages.get(key);
-      const page = await pdf.getPage(n);
-      const base = page.getViewport({ scale: 1 });
-      const vp = page.getViewport({ scale: targetW / base.width });
-      const c = document.createElement("canvas");
-      c.width = Math.round(vp.width); c.height = Math.round(vp.height);
-      await page.render({ canvasContext: c.getContext("2d"), viewport: vp }).promise;
-      cropPages.set(key, c);
-      if (cropPages.size > 4) cropPages.delete(cropPages.keys().next().value);
-      return c;
-    }
-    let cropToken = 0;
-    async function hydrateCrops() {
-      const root = $("exStatement"), token = ++cropToken;
-      const els = [...root.querySelectorAll(".pdfcrop")];
-      if (!els.length) return;
-      try {
-        const pdf = await getCoursePdf();
-        if (token !== cropToken) return;
-        if (!pdf) { root.innerHTML = coursePdfPrompt(); ensureTile(false); return; }
-        const X0 = 0.07, X1 = 0.93;
-        const cssW = Math.min(780, (root.clientWidth || pageEl.clientWidth) || 780);
-        const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
-        const pageW = Math.round(cssW * dpr / (X1 - X0));
-        for (const el of els) {
-          const src = await cropPageCanvas(pdf, Number(el.dataset.p), pageW);
-          if (token !== cropToken) return;
-          const y0 = Number(el.dataset.a) / 1000 * src.height, y1 = Number(el.dataset.b) / 1000 * src.height;
-          const W = Math.round(src.width * (X1 - X0)), H = Math.max(1, Math.round(y1 - y0));
-          // on retire le blanc du bas de la découpe
-          const px = src.getContext("2d").getImageData(Math.round(src.width * X0), Math.round(y0), W, H).data;
-          let last = H - 1;
-          for (; last > 0; last--) {
-            let ink = false;
-            for (let q = last * W * 4; q < (last + 1) * W * 4; q += 4) if (px[q] < 235 || px[q + 1] < 235 || px[q + 2] < 235) { ink = true; break; }
-            if (ink) break;
-          }
-          const c = document.createElement("canvas");
-          c.width = W; c.height = Math.min(H, last + Math.round(10 * dpr));
-          c.getContext("2d").drawImage(src, -src.width * X0, -y0);
-          el.innerHTML = "";
-          el.appendChild(c);
-        }
-        ensureTile(false);
-      } catch (e) {
-        if (token === cropToken) root.innerHTML = `<div class="notice">L'énoncé n'a pas pu s'afficher. Ferme puis rouvre l'exercice.</div>`;
-      }
-    }
-    // Image de l'énoncé affiché, envoyée à l'IA pour les exercices issus du PDF
-    function statementImage() {
-      const cs = [...$("exStatement").querySelectorAll(".pdfcrop canvas")];
-      if (!cs.length) return null;
-      const W = Math.min(1100, cs[0].width), k = W / cs[0].width;
-      const out = document.createElement("canvas");
-      out.width = W;
-      out.height = Math.round(cs.reduce((h, c) => h + c.height * k, 0));
-      const x = out.getContext("2d");
-      x.fillStyle = "#fff"; x.fillRect(0, 0, out.width, out.height);
-      let y = 0;
-      cs.forEach(c => { x.drawImage(c, 0, y, W, c.height * k); y += c.height * k; });
-      return out.toDataURL("image/jpeg", 0.85).split(",")[1];
-    }
 
     // ---------- Notes de cours : tes documents ----------
     function renderCourseNotes() {
