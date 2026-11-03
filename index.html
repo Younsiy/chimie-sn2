@@ -280,6 +280,8 @@
     #exStatement li, #sheetBody li { margin: .25em 0; }
     .tb-btn.on-almost { background: #854d0e; color: #fef9c3; }
     .tb-btn.on-redo { background: #991b1b; color: #fee2e2; }
+    .tb-btn.on-revisit { background: #6b21a8; color: #f3e8ff; }
+    .mini.purple { background: #7e22ce; color: #fff; }
     .ai-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     .mini.indigo { background: #4f46e5; color: #fff; }
 
@@ -418,6 +420,7 @@
     <button id="markDoneBtn" class="tb-btn ex-only" onclick="setExerciseStatus('done')" title="Réussi du premier coup"><span>✅</span><span class="lbl">Réussi</span></button>
     <button id="markAlmostBtn" class="tb-btn ex-only" onclick="setExerciseStatus('almost')" title="Presque : petit détail manqué ou j'ai hésité"><span>🟡</span><span class="lbl">Presque</span></button>
     <button id="markReviewBtn" class="tb-btn ex-only" onclick="setExerciseStatus('review')" title="Raté : à refaire"><span>❌</span><span class="lbl">À refaire</span></button>
+    <button id="markRevisitBtn" class="tb-btn ex-only" onclick="toggleRevisit()" title="À revoir avant l'examen (exercice spécial, info à retenir)"><span>🟣</span><span class="lbl">À revoir</span></button>
     <button id="refBtn" class="tb-btn ex-only" onclick="openRef()" title="Aide-mémoire (formules, Ka)"><span data-ic="book"></span><span class="lbl">Formules</span></button>
     <button class="tb-btn ex-only" onclick="openModal('apiModal')" title="Réglages de l'IA"><span id="apiDot" class="dot"></span><span>IA</span></button>
     <button class="tb-btn doc-only pdf-zoom" onclick="changeZoom(-1)" aria-label="Réduire"><span style="font-size:22px">−</span></button>
@@ -473,6 +476,7 @@
           <option value="review">❌ À refaire</option>
           <option value="almost">🟡 Presque</option>
           <option value="done">✅ Réussi</option>
+          <option value="revisit">🟣 À revoir</option>
           <option value="todo">Pas encore marqués</option>
         </select>
       </div>
@@ -4843,10 +4847,12 @@ $$i_{1} = i_{2} = \frac{120}{730 + 730} = 82,2\u{mA}$$
     const COLORS = [["#0f172a", "Noir"], ["#2563eb", "Bleu"], ["#dc2626", "Rouge"], ["#16a34a", "Vert"], ["#eab308", "Jaune"], ["#9333ea", "Violet"]];
     const LS = {
       status: "sn2_ex_status", notes: "sn2_ex_notes", key: "sn2_gemini_api_key", model: "sn2_gemini_model",
-      prefs: "sn2v2_prefs", ink: "sn2v2_ink_", migrated: "sn2v2_migrated", pages: "sn2v2_pages"
+      prefs: "sn2v2_prefs", ink: "sn2v2_ink_", migrated: "sn2v2_migrated", pages: "sn2v2_pages", revisit: "sn2v2_revisit"
     };
     // Statuts : done = réussi, almost = presque (détail manqué / hésitation), review = à refaire
     const STATUS_ICON = { done: "✅", almost: "🟡", review: "❌" };
+    // « À revoir » : marque à part, combinable avec le statut (ex. ✅ + 🟣)
+    const REVISIT_ICON = "🟣";
 
     // Pages : la page 1 garde l'ancienne clé, les suivantes ajoutent ~p2, ~p3…
     let currentPage = 1;
@@ -4867,6 +4873,7 @@ $$i_{1} = i_{2} = \frac{120}{730 + 730} = 82,2\u{mA}$$
     let currentChapter = 2;
     let currentExId = null;
     let exStatusMap = {};
+    let revisitMap = {};
     let prefs = {
       tool: "pen", color: "#0f172a", size: 1, paper: "grid", eraserMode: "stroke",
       fingerDraw: false, statementCollapsed: false, lastEx: null, drawerOpen: null,
@@ -4925,6 +4932,7 @@ $$i_{1} = i_{2} = \frac{120}{730 + 730} = 82,2\u{mA}$$
         el.innerHTML = (title ? title.outerHTML : "") + renderBlocks(el.textContent);
       });
       prefs = Object.assign(prefs, safeGet(LS.prefs, {}));
+      revisitMap = safeGet(LS.revisit, {});
       exStatusMap = safeGet(LS.status, {});
       $("apiKeyInput").value = safeGet(LS.key, "");
       $("modelInput").value = safeGet(LS.model, "gemini-flash-latest");
@@ -5159,6 +5167,7 @@ $$i_{1} = i_{2} = \frac{120}{730 + 730} = 82,2\u{mA}$$
       pagesMap = null;
       dirty.clear();
       exStatusMap = safeGet(LS.status, {});
+      revisitMap = safeGet(LS.revisit, {});
       doc = null;
       closeModal("backupModal");
       if (docView) closeDocView();
@@ -5228,7 +5237,7 @@ $$i_{1} = i_{2} = \frac{120}{730 + 730} = 82,2\u{mA}$$
         if (ex.chapter !== currentChapter) return false;
         if (sec && sec !== "ALL" && ex.section !== sec) return false;
         if (typ !== "ALL" && ex.type !== typ) return false;
-        if (stf === "todo" ? exStatusMap[ex.id] : (stf !== "ALL" && exStatusMap[ex.id] !== stf)) return false;
+        if (stf === "revisit" ? !revisitMap[ex.id] : stf === "todo" ? exStatusMap[ex.id] : (stf !== "ALL" && exStatusMap[ex.id] !== stf)) return false;
         if (q) {
           const short = ex.type[0].toUpperCase() + ex.title.replace(/\D*(\d+).*/, "$1");
           if (!(short + " " + ex.title + " " + ex.section + " " + ex.statement).toLowerCase().includes(q)) return false;
@@ -5253,7 +5262,7 @@ $$i_{1} = i_{2} = \frac{120}{730 + 730} = 82,2\u{mA}$$
       const count = st => all.filter(e => exStatusMap[e.id] === st).length;
       const doneCount = count("done");
       $("countText").textContent = `${filtered.length} exos`;
-      $("progressText").textContent = `✅ ${doneCount}  🟡 ${count("almost")}  ❌ ${count("review")}  / ${all.length}`;
+      $("progressText").textContent = `✅ ${doneCount}  🟡 ${count("almost")}  ❌ ${count("review")}  🟣 ${all.filter(e => revisitMap[e.id]).length}  / ${all.length}`;
       $("progressFill").style.width = `${Math.round(doneCount / Math.max(1, all.length) * 100)}%`;
 
       let html = "", lastSection = "";
@@ -5370,11 +5379,21 @@ $$i_{1} = i_{2} = \frac{120}{730 + 730} = 82,2\u{mA}$$
       renderExerciseList();
     }
 
+    function toggleRevisit() {
+      if (revisitMap[currentExId]) delete revisitMap[currentExId];
+      else revisitMap[currentExId] = 1;
+      if (!safeSet(LS.revisit, revisitMap)) showToast("Mémoire pleine : ce marqueur n'a pas pu être enregistré.");
+      showToast(revisitMap[currentExId] ? "🟣 Marqué à revoir avant l'examen." : "Retiré des exercices à revoir.");
+      updateStatusUI();
+      renderExerciseList();
+    }
+
     function updateStatusUI() {
       const st = exStatusMap[currentExId];
       $("markDoneBtn").className = "tb-btn" + (st === "done" ? " on-done" : "");
       $("markAlmostBtn").className = "tb-btn" + (st === "almost" ? " on-almost" : "");
       $("markReviewBtn").className = "tb-btn" + (st === "review" ? " on-redo" : "");
+      $("markRevisitBtn").className = "tb-btn" + (revisitMap[currentExId] ? " on-revisit" : "");
     }
 
     function toggleStatement() {
@@ -6309,6 +6328,7 @@ $$i_{1} = i_{2} = \frac{120}{730 + 730} = 82,2\u{mA}$$
               <button class="mini green" onclick="setExerciseStatus('done'); showToast('Exercice marqué ✅ Réussi.')">✅ Réussi</button>
               <button class="mini amber" onclick="setExerciseStatus('almost'); showToast('Exercice marqué 🟡 Presque.')">🟡 Presque</button>
               <button class="mini white" onclick="setExerciseStatus('review'); runAssistantAction('error')">❌ Je n'ai pas ça</button>
+              <button class="mini purple" onclick="toggleRevisit()">🟣 À revoir</button>
             </div>
           </div>`;
       } else if (mode === "error") {
@@ -6668,7 +6688,7 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
     };
     function exItemHTML(ex, fn) {
       const st = exStatusMap[ex.id];
-      const icon = STATUS_ICON[st] || (hasInk(ex.id) ? "✏️" : "");
+      const icon = (STATUS_ICON[st] || (hasInk(ex.id) ? "✏️" : "")) + (revisitMap[ex.id] ? REVISIT_ICON : "");
       const info = TYPE_INFO[ex.type] || TYPE_INFO.probleme;
       return `<button class="ex-item${fn === "selectExercise" && ex.id === currentExId ? " on" : ""}" onclick="${fn}('${ex.id}')">
           <span class="tag${info[2]}">${info[1]}</span>
