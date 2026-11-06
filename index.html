@@ -693,49 +693,31 @@ $$x = \frac{-b + \sqrt{b^2 - 4ac}}{2a}$$
     <div class="modal-card wide">
       <div class="modal-head"><h3>Formules : Électricité et magnétisme (203-SN2-RE)</h3><button class="tb-btn" onclick="closeModal('refModalEm')" aria-label="Fermer"><span data-ic="x"></span></button></div>
       <div class="modal-body selectable">
-        <div class="ref-grid">
-          <div class="box amber" data-render>
-<div class="box-title">Chapitre 5 : condensateurs</div>
-$C = \frac{Q}{\Delta V}$ $\qquad C = \frac{\kappa\varepsilon_{0}A}{d}$ (plan) $\qquad E = \frac{\Delta V}{d}$
-$U = \frac{1}{2}Q\Delta V = \frac{1}{2}C\Delta V^{2} = \frac{Q^{2}}{2C}$
-**Parallèle :** $C_{\text{éq}} = C_{1} + C_{2} + \dots$ (même $\Delta V$)
-**Série :** $\frac{1}{C_{\text{éq}}} = \frac{1}{C_{1}} + \frac{1}{C_{2}} + \dots$ (même $Q$)
-          </div>
-          <div class="box blue" data-render>
-<div class="box-title">Chapitre 6 : courant électrique</div>
-$i = \frac{dq}{dt}$ $\qquad i = neAv_{d}$ $\qquad J = \frac{i}{A} = nev_{d} = \frac{E}{\rho}$
-$R = \frac{\rho\ell}{A}$ $\qquad \Delta V = Ri$
-$\rho = \rho_{0}[1 + \alpha(T - T_{0})]$ $\qquad R = R_{0}[1 + \alpha(T - T_{0})]$
-$P = \Delta V i = Ri^{2} = \frac{\Delta V^{2}}{R}$
-          </div>
-          <div class="box green" data-render>
-<div class="box-title">Chapitre 7 : circuits</div>
-**Nœud :** $\sum i_{\text{entre}} = \sum i_{\text{sort}}$ $\qquad$ **Maille :** $\sum\Delta V = 0$
-**Série :** $R_{\text{éq}} = R_{1} + R_{2} + \dots$
-**Parallèle :** $\frac{1}{R_{\text{éq}}} = \frac{1}{R_{1}} + \frac{1}{R_{2}} + \dots$
-**Pile réelle :** $\Delta V = ℰ - ir$ $\qquad P_{ℰ} = ℰ i$ $\qquad P_{r} = i^{2}r$
-          </div>
-          <div class="box indigo" data-render>
-<div class="box-title">Chapitre 7 : circuits RC</div>
-$\tau = RC$ $\qquad Q_{m} = Cℰ$ $\qquad i_{m} = \frac{ℰ}{R}$
-**Charge :** $Q = Q_{m}(1 - e^{-t/\tau})$ $\qquad i = i_{m}e^{-t/\tau}$
-**Décharge :** $Q = Q_{0}e^{-t/\tau}$ $\qquad i = \frac{Q_{0}}{\tau}e^{-t/\tau}$
-$t = 0$ : $C$ vide agit comme un fil. $t \to \infty$ : $C$ agit comme un circuit ouvert.
-          </div>
+        <div class="box-title">Aide-mémoire de l'intra 2 (formules_A26_intra2)</div>
+        <div class="box green" data-render>
+<div class="box-title">Circuits</div>
+$C = \frac{Q}{\Delta V_{C}}$ $\qquad C_{vide} = \frac{\varepsilon_{0}A}{d}$ $\qquad C = \kappa C_{vide}$ $\qquad \vec{E} = \frac{\vec{E}_{ext}}{\kappa}$
+$U_{C} = \frac{1}{2}Q\Delta V = \frac{1}{2}C(\Delta V)^{2} = \frac{Q^{2}}{2C}$ $\qquad u = \frac{1}{2}\varepsilon_{0}E^{2}$
+$C_{eq} = \sum_{n=1}^{N}C_{n}$ $\qquad \frac{1}{C_{eq}} = \sum_{n=1}^{N}\frac{1}{C_{n}}$
+$I = \frac{dq}{dt}$ $\qquad J = \frac{I}{A}$ $\qquad I = nev_{d}A$ $\qquad n = \frac{N_{A}\rho_{m}}{M}$
+$\vec{J} = \frac{\vec{E}}{\rho}$ $\qquad \rho = \frac{1}{\sigma} = \frac{m_{e}}{ne^{2}\tau}$ $\qquad R = \frac{\rho\ell}{A}$ $\qquad \Delta V = RI$
+$P = I\Delta V = RI^{2} = \frac{(\Delta V)^{2}}{R}$
+$\sum I_{\text{entrant}} = \sum I_{\text{sortant}}$ $\qquad \sum_{\text{maille}}\Delta V_{i} = 0$
+$R_{eq} = \sum_{n=1}^{N}R_{n}$ $\qquad \frac{1}{R_{eq}} = \sum_{n=1}^{N}\frac{1}{R_{n}}$
+$Q = Q_{m}(1 - \text{e}^{-t/\tau})$ $\qquad Q = Q_{m}\text{e}^{-t/\tau}$ $\qquad I = I_{m}\text{e}^{-t/\tau} = \frac{Q_{m}}{RC}\text{e}^{-t/\tau}$
+$\tau = RC$ $\qquad t_{1/2} = \tau\ln(2)$
         </div>
-        <p style="margin:0 0 12px;color:#64748b;font-size:13px">Ces quatre encadrés sont un résumé des chapitres 5 à 7. Ils ne sont pas sur l'aide-mémoire ci-dessous.</p>
-        <div class="box-title" style="margin-top:6px">Aide-mémoire du cours (formules_A26)</div>
         <div class="box slate" data-render>
 <div class="box-title">Constantes et valeurs utiles</div>
 $g = 9,81\u{N/kg}$ $\qquad N_{A} = 6,022\times10^{-23}$ (écrit ainsi sur la feuille ; la valeur usuelle est $6,022\times10^{23}$) $\qquad c = 3,00\times10^{8}\u{m/s}$
-$\varepsilon_{0} = 8,854\times10^{-12}\u{C^{2}/(N·m^{2})}$ $\qquad e = 1,602\times10^{-19}\u{C}$ $\qquad k = \frac{1}{4\pi\varepsilon_{0}} = 8,9876\times10^{9}\u{N·m^{2}/C^{2}}$
+$\varepsilon_{0} = 8,854\times10^{-12}\u{F/m}$ $\qquad k = \frac{1}{4\pi\epsilon_{0}} = 8,9876\times10^{9}\u{N·m^{2}/C^{2}}$ $\qquad e = 1,602\times10^{-19}\u{C}$
 $m_{e} = 9,1094\times10^{-31}\u{kg}$ $\qquad m_{p} = 1,6726\times10^{-27}\u{kg}$ $\qquad m_{n} = 1,6749\times10^{-27}\u{kg}$ $\qquad \mu_{0} = 4\pi\times10^{-7}\u{T·m/A}$
         </div>
         <div class="box slate" data-render>
 <div class="box-title">Mécanique</div>
-$\sum\vec{F} = m\vec{a}$ $\qquad \vec{v} = \frac{d\vec{r}}{dt}$ $\qquad \vec{a} = \frac{d\vec{v}}{dt} = \frac{d^{2}\vec{r}}{dt^{2}}$ $\qquad a_{c} = \frac{v^{2}}{r}$
-$v_{x} = v_{0x} + a_{x}t$ $\qquad v_{x}^{2} = v_{0x}^{2} + 2a_{x}(x - x_{0})$
-$x = x_{0} + v_{x}t + \frac{1}{2}a_{x}t^{2}$ $\qquad x = x_{0} + \left(\frac{v_{0x} + v_{x}}{2}\right)t$
+$\sum\vec{F} = m\vec{a}$ $\qquad \vec{v} = \frac{d\vec{r}}{dt}$ $\qquad \vec{a} = \frac{d\vec{v}}{dt} = \frac{d^{2}\vec{r}}{dt^{2}}$
+$x = x_{0} + v_{0x}t + \frac{1}{2}a_{x}t^{2}$ $\qquad x = x_{0} + \left(\frac{v_{0x} + v_{x}}{2}\right)t$
+$v_{x} = v_{0x} + a_{x}t$ $\qquad v_{x}^{2} = v_{0x}^{2} + 2a_{x}(x - x_{0})$ $\qquad a_{c} = \frac{v^{2}}{r}$
 $E = K + U$ $\qquad \Delta K + \Delta U = W_{nc} + W_{ext}$ $\qquad K = \frac{1}{2}mv^{2}$ $\qquad W_{c} = -\Delta U$
 $W = \int\vec{F}\cdot d\vec{s}$ $\qquad W = \vec{F}\cdot\Delta\vec{s}$ $\qquad P = \frac{dE}{dt}$ $\qquad P_{\text{moy}} = \frac{\Delta E}{\Delta t}$
         </div>
@@ -747,20 +729,20 @@ $\vec{A}\times\vec{B} = (A_{y}B_{z} - A_{z}B_{y})\vec{i} + (A_{z}B_{x} - A_{x}B_
         </div>
         <div class="box slate" data-render>
 <div class="box-title">Intégrales</div>
-$\int ax^{n}\,dx = a\frac{x^{n+1}}{n+1}$ $(n \neq -1)$ $\qquad \int\frac{dx}{x} = \ln|x|$ $\qquad \int e^{ax}\,dx = \frac{1}{a}e^{ax}$
-$\int\frac{dx}{(a + bx)^{2}} = -\frac{1}{b(a + bx)}$ $\qquad \int\sin(ax)\,dx = -\frac{1}{a}\cos(ax)$ $\qquad \int\cos(ax)\,dx = \frac{1}{a}\sin(ax)$
+$\int ax^{n}\,dx = a\frac{x^{n+1}}{n+1}$ $(n \neq -1)$ $\qquad \int\frac{dx}{x} = \ln|x|$ $\qquad \int\text{e}^{ax}\,dx = \frac{1}{a}\text{e}^{ax}$
+$\int\frac{dx}{(a + bx)^{2}} = -\frac{1}{b(a + bx)}$ $\qquad \int\sin(ax) = -\frac{1}{a}\cos(ax)$ $\qquad \int\cos(ax) = \frac{1}{a}\sin(ax)$
 $\int\frac{dx}{\sqrt{x^{2} + a^{2}}} = \ln\left|x + \sqrt{x^{2} + a^{2}}\right|$
 $\int\frac{dx}{(x^{2} + a^{2})^{3/2}} = \frac{x}{a^{2}\sqrt{x^{2} + a^{2}}}$ $\qquad \int\frac{x\,dx}{(x^{2} + a^{2})^{3/2}} = -\frac{1}{\sqrt{x^{2} + a^{2}}}$
         </div>
         <div class="box slate" data-render>
 <div class="box-title">Électrostatique</div>
-$\lambda = \frac{dq}{dL}$ $\qquad \sigma = \frac{dq}{dA}$ $\qquad \rho = \frac{dq}{dV}$
-$\vec{F}_{12} = k\frac{q_{1}q_{2}}{r_{12}^{2}}\vec{u}_{12}$ $\qquad \vec{u}_{12} = \frac{\vec{r}_{12}}{r_{12}} = \frac{\vec{r}_{1} - \vec{r}_{2}}{r_{12}}$ $\qquad \vec{F}_{e} = q\vec{E}$
-$\vec{E} = \sum_{i=1}^{N}k\frac{q_{i}}{r_{i}^{2}}\vec{u}_{ri}$ $\qquad \vec{E} = \int k\frac{dq}{r^{2}}\vec{u}_{r}$
+$\lambda = \frac{dq}{dL}$ ou $\lambda = \frac{Q}{L}$ $\qquad \sigma = \frac{dq}{dA}$ ou $\sigma = \frac{Q}{A}$ $\qquad \rho = \frac{dq}{dV}$ ou $\rho = \frac{Q}{V}$
+$\vec{F}_{12} = k\frac{q_{1}q_{2}}{r_{12}^{2}}\vec{u}_{12} = k\frac{q_{1}q_{2}}{r_{12}^{3}}\vec{r}_{12}$ $\qquad \vec{u}_{12} = \frac{\vec{r}_{12}}{r_{12}} = \frac{\vec{r}_{1} - \vec{r}_{2}}{r_{12}}$
+$\vec{E} = \sum_{i=1}^{N}k\frac{q_{i}}{r_{i}^{2}}\vec{u}_{ri}$ $\qquad \vec{E} = \int k\frac{dq}{r^{2}}\vec{u}_{r}$ $\qquad \vec{F}_{e} = q\vec{E}$
 $\vec{E} = \frac{\sigma}{2\varepsilon_{0}}\vec{u}_{n}$ $\qquad \vec{E} = \frac{|\sigma|}{\varepsilon_{0}}\vec{u}_{-+}$
 $U_{e} = \sum_{i&lt;j}^{N}k\frac{q_{i}q_{j}}{r_{ij}}$ $\qquad \Delta U_{e} = q\Delta V$
 $\Delta V = V_{b} - V_{a} = -\int_{a}^{b}\vec{E}\cdot d\vec{s}$ $\qquad V = \sum_{i=1}^{N}\frac{kq_{i}}{r_{i}}$ $\qquad V = k\int\frac{dq}{r}$
-$\vec{E} = -\left(\frac{\partial V}{\partial x}\vec{i} + \frac{\partial V}{\partial y}\vec{j} + \frac{\partial V}{\partial z}\vec{k}\right)$
+$\vec{E} = -\left(\frac{\partial V}{\partial x}\vec{i} + \frac{\partial V}{\partial y}\vec{j} + \frac{\partial V}{\partial z}\vec{k}\right)$ $\qquad ℰ = \frac{W_{pile}}{q}$
         </div>
       </div>
     </div>
