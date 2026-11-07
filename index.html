@@ -376,6 +376,10 @@
       .tool { width: 40px; } .sw, .sz { width: 30px; } .sep { margin: 0 2px; }
       .pager .tool { width: 32px; } .pager span { min-width: 50px; font-size: 12px; }
     }
+    .ai-chapters { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 10px 0 4px; }
+    .ai-chapters .ai-course { flex-basis: 100%; font-weight: 700; font-size: 13px; color: #475569; margin-top: 4px; }
+    .ai-ch { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; margin: 0; }
+    .ai-ch input { width: 20px; height: 20px; }
     .zoom-txt { font-size: 13px; font-weight: 700; min-width: 48px; text-align: center; color: #e5e7eb; }
   </style>
 </head>
@@ -679,12 +683,38 @@ $$x = \frac{-b + \sqrt{b^2 - 4ac}}{2a}$$
           <button class="btn primary" onclick="exportArchive()">Tout, avec mes documents</button>
           <button class="btn plain" onclick="copyBackup()">Copier le texte</button>
         </div>
+        <div class="btn-row" style="margin-top:8px"><button class="btn plain" onclick="openAiExport()">🤖 Exporter pour l'IA</button></div>
         <label for="backupFile">Restaurer une sauvegarde</label>
         <input id="backupFile" class="field" type="file" onchange="importBackupFile(this)" style="padding-top:8px">
         <label for="backupText">… ou coller le texte copié</label>
         <textarea id="backupText" class="field selectable" style="height:80px;padding:8px;font-size:13px;resize:vertical"></textarea>
         <div class="modal-actions">
           <button class="btn plain" onclick="importBackupText()">Restaurer le texte collé</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== MODALE : EXPORTER POUR L'IA ===================== -->
+  <div id="aiModal" class="modal" onclick="if(event.target===this) closeModal('aiModal')">
+    <div class="modal-card" style="max-width:480px">
+      <div class="modal-head"><h3>🤖 Exporter pour l'IA</h3><button class="tb-btn" onclick="closeModal('aiModal')" aria-label="Fermer"><span data-ic="x"></span></button></div>
+      <div class="modal-body">
+        <p style="margin-top:0">Crée des fichiers à donner à une IA (Claude, ChatGPT, Gemini…) : un texte avec tes énoncés, corrigés, statuts et notes, et des PDF avec tes démarches et les figures. Dépose-les dans un projet de ton IA, puis pose tes questions. Rien n'est envoyé : les fichiers restent sur cet appareil.</p>
+        <label for="aiCourse">Cours</label>
+        <select id="aiCourse" class="field" onchange="aiBuildChapters()"></select>
+        <div id="aiChapters" class="ai-chapters"></div>
+        <label for="aiInk">Mes démarches manuscrites (en images)</label>
+        <select id="aiInk" class="field" onchange="aiUpdateInfo()">
+          <option value="all">Toutes</option>
+          <option value="todo">Seulement ❌ À refaire, 🟡 Presque et 🟣 À revoir</option>
+          <option value="none">Aucune (texte et figures seulement)</option>
+        </select>
+        <p id="aiInfo" style="color:#64748b;font-size:13px"></p>
+        <div class="modal-actions"><button id="aiGo" class="btn primary" onclick="aiPrepare()">Préparer les fichiers</button></div>
+        <div id="aiReady" style="display:none">
+          <p id="aiReadyText" style="font-size:14px"></p>
+          <div class="modal-actions"><button class="btn primary" onclick="aiSave()">Enregistrer les fichiers</button></div>
         </div>
       </div>
     </div>
@@ -7177,6 +7207,288 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
         idbPending.finally(() => location.reload());
       }
     }
+    // =========================================================================
+    // EXPORTER POUR L'IA
+    //  Des fichiers lisibles par n'importe quelle IA (Claude, ChatGPT, Gemini…) :
+    //   - un texte Markdown : énoncés, corrigés, statuts, notes (formules en LaTeX) ;
+    //   - des PDF d'images : mes démarches (une page = une image titrée), par paquets de 80 pages ;
+    //   - un PDF des figures des énoncés.
+    //  Rien n'est envoyé nulle part : les fichiers sont seulement créés sur l'appareil.
+    // =========================================================================
+    const AI_STATUS = { done: "✅ Réussi", almost: "🟡 Presque", review: "❌ À refaire" };
+    const AI_PDF_PAGES = 80;
+    let aiFiles = [];
+    function figDesc(id) {
+      const m = /aria-label="([^"]*)"/.exec(FIGURES[id] || "");
+      return m ? m[1] : "figure du manuel";
+    }
+    function aiText(t) {
+      return String(t || "")
+        .replace(/\{\{([^}]+)\}\}/g, (m, f) => "$\\ce{" + f + "}$")
+        .replace(/\\u\{([^}]*)\}/g, (m, u) => "\\,\\mathrm{" + u + "}")
+        .replace(/^\[\[fig:([\w.-]+)\]\]$/gm, (m, id) => `[Figure ${id} : ${figDesc(id)}. L'image est dans le PDF des figures.]`);
+    }
+    function aiInkPages(id) {
+      const out = [];
+      for (let n = 1; n <= pageCount(id); n++) if (pageHasInk(id, n)) out.push(n);
+      return out;
+    }
+    function aiStatusText(e) {
+      const tags = [AI_STATUS[exStatusMap[e.id]] || (hasInk(e.id) ? "✏️ Commencé, sans statut" : "Pas commencé")];
+      if (revisitMap[e.id]) tags.push("🟣 À revoir");
+      if (repassMap[e.id]) tags.push("🔵 Repassé");
+      if (isLegacy(e)) tags.push("retiré de la liste du cours");
+      return tags.join(" · ");
+    }
+    // Chapitres cochés dans la fenêtre (valeur "cours:chapitre")
+    function aiChosen() { return new Set([...document.querySelectorAll("#aiChapters input:checked")].map(i => i.value)); }
+    const aiEx = c => { const ch = aiChosen(); return courseExercises(c.id).filter(e => ch.has(c.id + ":" + e.chapter)); };
+    const aiCourses = sel => COURSES.filter(c => (sel === "all" || sel === c.id) && aiEx(c).length);
+    // Exercices dont on met la démarche en images
+    function aiInkExercises(courses, mode) {
+      if (mode === "none") return [];
+      return courses.flatMap(aiEx).filter(e =>
+        aiInkPages(e.id).length && (mode === "all" || exStatusMap[e.id] === "review" || exStatusMap[e.id] === "almost" || revisitMap[e.id]));
+    }
+
+    function aiMarkdown(courses, inkSet) {
+      saveNow();
+      const notes = safeGet(LS.notes, {});
+      let md = `# SN-Pro : mes exercices et ma progression\n\n`;
+      md += `Exporté le ${new Date().toLocaleDateString("fr-CA")} depuis SN-Pro, mon app d'exercices (cégep, session automne 2026).\n\n`;
+      md += `**Comment lire ce fichier.** Chaque exercice a un identifiant (ex. \`ch3-p47\` = chapitre 3, problème 47). `;
+      md += `Statuts : ✅ Réussi, 🟡 Presque, ❌ À refaire ; marqueurs 🟣 À revoir et 🔵 Repassé. Les formules sont en LaTeX. `;
+      md += `Mes démarches manuscrites sont dans les PDF « démarches » : une image par page, avec l'identifiant de l'exercice et le numéro de page en haut. `;
+      md += `Les figures des énoncés sont dans le PDF « figures ». La « réponse attendue » et la « solution » viennent du corrigé du cours.\n\n`;
+      md += `## Résumé\n\n`;
+      courses.forEach(c => {
+        const list = aiEx(c).filter(e => !isLegacy(e)), n = { done: 0, almost: 0, review: 0, none: 0 };
+        list.forEach(e => { n[exStatusMap[e.id]] !== undefined ? n[exStatusMap[e.id]]++ : n.none++; });
+        md += `- **${c.name}** (${aiChapterNames(c)}) : ${list.length} exercices au programme. ✅ ${n.done} · 🟡 ${n.almost} · ❌ ${n.review} · sans statut ${n.none}\n`;
+        const todo = aiEx(c).filter(e => exStatusMap[e.id] === "review" || exStatusMap[e.id] === "almost" || revisitMap[e.id]);
+        if (todo.length) md += `  - À retravailler : ${todo.map(e => `${e.title} (\`${e.id}\`, ${aiStatusText(e)})`).join(" ; ")}\n`;
+      });
+      courses.forEach(c => {
+        md += `\n## ${c.name}\n`;
+        const list = aiEx(c);
+        (c.chapters.length ? c.chapters : [[null, ""]]).forEach(([num, label]) => {
+          const items = list.filter(e => num === null || e.chapter === num);
+          if (!items.length) return;
+          if (num !== null) md += `\n### Chapitre ${num} · ${label}\n`;
+          items.forEach(e => {
+            const pages = aiInkPages(e.id);
+            md += `\n#### ${e.title} · \`${e.id}\`\n\n`;
+            md += `Section : ${e.section}. Statut : ${aiStatusText(e)}.`;
+            if (pages.length) md += inkSet.has(e.id) ? ` Ma démarche : ${pages.length} page(s), dans le PDF « démarches ».` : ` Ma démarche : ${pages.length} page(s), non incluse(s) dans cet export.`;
+            md += `\n\n**Énoncé**\n\n${aiText(e.statement)}\n\n`;
+            if (e.shortAnswer) md += `**Réponse attendue**\n\n${aiText(e.shortAnswer)}\n\n`;
+            if (e.hint) md += `**Rappel de cours**\n\n${aiText(e.hint)}\n\n`;
+            if (e.solution) md += `**Solution détaillée**\n\n${aiText(e.solution)}\n\n`;
+            if (notes[e.id] && notes[e.id].trim()) md += `**Ma note**\n\n${notes[e.id].trim()}\n\n`;
+          });
+        });
+      });
+      return md;
+    }
+
+    // ---------- Images ----------
+    const AI_W = 1000, AI_HEAD = 56, AI_SLICE = 1400;
+    function aiFrame(h, caption) {
+      const c = document.createElement("canvas");
+      c.width = AI_W; c.height = Math.ceil(h) + AI_HEAD;
+      const x = c.getContext("2d");
+      x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height);
+      x.fillStyle = "#e2e8f0"; x.fillRect(0, 0, AI_W, AI_HEAD);
+      x.fillStyle = "#0f172a"; x.font = '600 24px -apple-system, "Segoe UI", Roboto, sans-serif'; x.textBaseline = "middle";
+      x.fillText(caption, 16, AI_HEAD / 2, AI_W - 32);
+      return c;
+    }
+    function aiJpeg(canvas) {
+      return new Promise((resolve, reject) => canvas.toBlob(async b => {
+        if (!b) { reject(new Error("image")); return; }
+        resolve({ bytes: new Uint8Array(await b.arrayBuffer()), w: canvas.width, h: canvas.height });
+        canvas.width = canvas.height = 0;   // libère la mémoire tout de suite (iPad)
+      }, "image/jpeg", 0.75));
+    }
+    // Une page de démarche → une ou plusieurs images (les longues feuilles sont coupées)
+    async function aiInkImages(e, n, total) {
+      const d = loadDoc(pageKey(e.id, n));
+      if (!d.strokes.length) return [];
+      let maxY = 0;
+      d.strokes.forEach(s => { const b = bbox(s); if (b[3] > maxY) maxY = b[3]; });
+      maxY = Math.max(300, maxY + 30);
+      const parts = Math.ceil(maxY / AI_SLICE), out = [];
+      for (let i = 0; i < parts; i++) {
+        const y0 = i * AI_SLICE, h = Math.min(AI_SLICE, maxY - y0);
+        const ink = document.createElement("canvas");
+        ink.width = AI_W; ink.height = Math.ceil(h);
+        const x = ink.getContext("2d");
+        x.setTransform(1, 0, 0, 1, 0, -y0);
+        d.strokes.forEach(s => { const b = bbox(s); if (b[3] >= y0 && b[1] <= y0 + h) drawStroke(x, s, false); });
+        const st = AI_STATUS[exStatusMap[e.id]] || "sans statut";
+        const frame = aiFrame(h, `${e.id} · ${e.title} · page ${n}/${total}${parts > 1 ? ` (partie ${i + 1}/${parts})` : ""} · ${st}`);
+        frame.getContext("2d").drawImage(ink, 0, AI_HEAD);
+        ink.width = ink.height = 0;
+        out.push(await aiJpeg(frame));
+      }
+      return out;
+    }
+    async function aiFigureImage(id, owners) {
+      let svg = FIGURES[id];
+      if (!svg) return null;
+      if (!/xmlns=/.test(svg)) svg = svg.replace("<svg", '<svg xmlns="http://www.w3.org/2000/svg"');
+      const vb = /viewBox="([^"]+)"/.exec(svg), dims = vb ? vb[1].trim().split(/[\s,]+/).map(Number) : [0, 0, 560, 300];
+      const H = Math.round(AI_W * dims[3] / dims[2]);
+      const img = await new Promise((resolve, reject) => {
+        const im = new Image();
+        im.onload = () => resolve(im); im.onerror = reject;
+        im.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+      });
+      const frame = aiFrame(H, `Figure ${id} · ${owners.join(", ")}`);
+      frame.getContext("2d").drawImage(img, 0, AI_HEAD, AI_W, H);
+      return aiJpeg(frame);
+    }
+    // PDF minimal : une image JPEG par page, sans texte (lu par toutes les IA)
+    function aiPdf(images) {
+      const enc = new TextEncoder(), parts = [], offs = [];
+      let pos = 0;
+      const add = v => { const b = typeof v === "string" ? enc.encode(v) : v; parts.push(b); pos += b.length; };
+      const obj = (num, body) => { offs[num] = pos; add(`${num} 0 obj\n`); body(); add("\nendobj\n"); };
+      add("%PDF-1.4\n"); add(new Uint8Array([0x25, 0xE2, 0xE3, 0xCF, 0xD3, 0x0A]));
+      obj(1, () => add("<< /Type /Catalog /Pages 2 0 R >>"));
+      obj(2, () => add(`<< /Type /Pages /Count ${images.length} /Kids [${images.map((_, i) => `${3 + 3 * i} 0 R`).join(" ")}] >>`));
+      images.forEach((im, i) => {
+        const p = 3 + 3 * i, pw = 595, ph = (595 * im.h / im.w).toFixed(2);
+        obj(p, () => add(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pw} ${ph}] /Resources << /XObject << /Im${i} ${p + 2} 0 R >> >> /Contents ${p + 1} 0 R >>`));
+        const cs = `q ${pw} 0 0 ${ph} 0 0 cm /Im${i} Do Q`;
+        obj(p + 1, () => add(`<< /Length ${cs.length} >>\nstream\n${cs}\nendstream`));
+        obj(p + 2, () => {
+          add(`<< /Type /XObject /Subtype /Image /Width ${im.w} /Height ${im.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${im.bytes.length} >>\nstream\n`);
+          add(im.bytes); add("\nendstream");
+        });
+      });
+      const total = 3 + 3 * images.length, xref = pos;
+      let t = `xref\n0 ${total}\n0000000000 65535 f \n`;
+      for (let k = 1; k < total; k++) t += String(offs[k]).padStart(10, "0") + " 00000 n \n";
+      add(t + `trailer\n<< /Size ${total} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
+      return new Blob(parts, { type: "application/pdf" });
+    }
+
+    // ---------- Fenêtre ----------
+    function openAiExport() {
+      closeModal("backupModal");
+      $("aiCourse").innerHTML = `<option value="all">Tous les cours</option>` +
+        COURSES.filter(c => courseExercises(c.id).length).map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
+      $("aiReady").style.display = "none";
+      $("aiGo").style.display = "";
+      aiFiles = [];
+      aiBuildChapters();
+      openModal("aiModal");
+    }
+    // Une case par chapitre du ou des cours choisis, toutes cochées au départ
+    function aiBuildChapters() {
+      const sel = $("aiCourse").value;
+      const courses = COURSES.filter(c => courseExercises(c.id).length && (sel === "all" || sel === c.id));
+      $("aiChapters").innerHTML = courses.map(c => {
+        const chs = [...new Set(courseExercises(c.id).map(e => e.chapter))].sort((a, b) => a - b);
+        const label = n => { const f = c.chapters.find(x => x[0] === n); return `Chapitre ${n}${f ? " · " + escapeHtml(f[1]) : ""}`; };
+        return (sel === "all" ? `<div class="ai-course">${escapeHtml(c.name)}</div>` : "") +
+          chs.map(n => `<label class="ai-ch"><input type="checkbox" value="${c.id}:${n}" checked onchange="aiUpdateInfo()"> ${label(n)}</label>`).join("");
+      }).join("");
+      aiUpdateInfo();
+    }
+    function aiChapterNames(c) {
+      const ch = aiChosen(), all = [...new Set(courseExercises(c.id).map(e => e.chapter))];
+      const picked = all.filter(n => ch.has(c.id + ":" + n)).sort((a, b) => a - b);
+      return picked.length === all.length ? "tous les chapitres" : (picked.length > 1 ? "chapitres " : "chapitre ") + picked.join(", ");
+    }
+    function aiUpdateInfo() {
+      $("aiReady").style.display = "none"; $("aiGo").style.display = "";
+      const courses = aiCourses($("aiCourse").value), list = aiInkExercises(courses, $("aiInk").value);
+      if (!courses.length) { $("aiInfo").textContent = "Coche au moins un chapitre."; $("aiGo").style.display = "none"; return; }
+      const pages = list.reduce((n, e) => n + aiInkPages(e.id).length, 0);
+      const pdfs = Math.ceil(pages / AI_PDF_PAGES);
+      $("aiInfo").textContent = `${courses.reduce((n, c) => n + aiEx(c).length, 0)} exercices dans le texte` +
+        (pages ? ` · ${pages} page(s) de démarche en images (${pdfs} PDF)` : " · aucune démarche en images");
+    }
+    async function aiPrepare() {
+      const courses = aiCourses($("aiCourse").value), inkList = aiInkExercises(courses, $("aiInk").value);
+      const inkSet = new Set(inkList.map(e => e.id)), date = new Date().toISOString().slice(0, 10);
+      if (!courses.length) return;
+      const chosen = aiChosen(), allCh = COURSES.flatMap(c => [...new Set(courseExercises(c.id).map(e => c.id + ":" + e.chapter))]);
+      const partial = allCh.some(k => ($("aiCourse").value === "all" || k.startsWith($("aiCourse").value + ":")) && !chosen.has(k));
+      const tag = ($("aiCourse").value === "all" ? "" : "_" + $("aiCourse").value) +
+        (partial ? "_ch" + [...new Set([...chosen].map(k => k.split(":")[1]))].sort((a, b) => a - b).join("-") : "");
+      aiFiles = [];
+      showBusy("Préparation du texte…");
+      try {
+        aiFiles.push(new File([aiMarkdown(courses, inkSet)], `SN-Pro${tag}_exercices_${date}.md`, { type: "text/markdown" }));
+        // Figures des énoncés
+        const figOwners = new Map();
+        courses.flatMap(aiEx).forEach(e => {
+          [e.statement, e.hint, e.solution].join("\n").replace(/\[\[fig:([\w.-]+)\]\]/g, (m, id) => {
+            if (!figOwners.has(id)) figOwners.set(id, []);
+            if (!figOwners.get(id).includes(e.id)) figOwners.get(id).push(e.id);
+            return m;
+          });
+        });
+        const figs = [];
+        for (const [id, owners] of figOwners) {
+          $("busyText").textContent = `Figures : ${figs.length + 1} sur ${figOwners.size}…`;
+          try { const im = await aiFigureImage(id, owners); if (im) figs.push(im); } catch (e) {}
+        }
+        if (figs.length) aiFiles.push(new File([aiPdf(figs)], `SN-Pro${tag}_figures_${date}.pdf`, { type: "application/pdf" }));
+        // Démarches
+        let imgs = [], part = 1, done = 0;
+        const total = inkList.reduce((n, e) => n + aiInkPages(e.id).length, 0);
+        const flush = () => {
+          if (!imgs.length) return;
+          aiFiles.push(new File([aiPdf(imgs)], `SN-Pro${tag}_demarches_${part}_${date}.pdf`, { type: "application/pdf" }));
+          imgs = []; part++;
+        };
+        for (const e of inkList) {
+          const pages = aiInkPages(e.id), last = pageCount(e.id);
+          for (const n of pages) {
+            $("busyText").textContent = `Démarches : page ${++done} sur ${total}…`;
+            await sleep0();
+            const shots = await aiInkImages(e, n, last);
+            if (imgs.length + shots.length > AI_PDF_PAGES) flush();
+            imgs.push(...shots);
+          }
+        }
+        flush();
+        hideBusy();
+        const size = aiFiles.reduce((n, f) => n + f.size, 0);
+        $("aiReadyText").textContent = `${aiFiles.length} fichier(s) prêt(s), ${fmtSize(size)} : ${aiFiles.map(f => f.name).join(", ")}.`;
+        $("aiGo").style.display = "none";
+        $("aiReady").style.display = "";
+      } catch (e) {
+        hideBusy();
+        aiFiles = [];
+        showToast("L'export n'a pas pu être préparé.");
+      }
+    }
+    async function aiSave() {
+      if (!aiFiles.length) return;
+      try {
+        if (navigator.canShare && navigator.canShare({ files: aiFiles })) {
+          await navigator.share({ files: aiFiles, title: "SN-Pro pour l'IA" });
+          showToast("Choisis « Enregistrer dans Fichiers », puis dépose les fichiers dans ton IA.");
+          return;
+        }
+      } catch (e) {
+        if (e && e.name === "AbortError") return;
+      }
+      for (const f of aiFiles) {   // ordinateur : un téléchargement par fichier
+        const url = URL.createObjectURL(f), a = document.createElement("a");
+        a.href = url; a.download = f.name;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 8000);
+        await new Promise(r => setTimeout(r, 400));
+      }
+      showToast("Fichiers enregistrés dans Téléchargements.");
+    }
+
     // =========================================================================
     // SAUVEGARDE EN LIGNE (Firebase Authentication + Firestore, par l'API REST)
     //  Local d'abord : l'app enregistre sur l'appareil comme avant. Ce module copie
