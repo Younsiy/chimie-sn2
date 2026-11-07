@@ -230,7 +230,7 @@
     .modal-body label { display: block; font-weight: 700; font-size: 13px; margin: 12px 0 6px; }
     .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
     .btn { height: 44px; padding: 0 16px; border-radius: 12px; font-weight: 700; font-size: 14px; }
-    .btn.primary { background: #4f46e5; color: #fff; } .btn.danger { background: #dc2626; color: #fff; }
+    .btn.primary { background: #4f46e5; color: #fff; } #cloudBtn.warn { background: #b45309; } .btn.danger { background: #dc2626; color: #fff; }
     .btn.plain { background: #f1f5f9; color: #334155; } .btn.link { color: #dc2626; }
     .ref-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     @media (max-width: 700px) { .ref-grid { grid-template-columns: 1fr; } }
@@ -384,6 +384,7 @@
   <div id="home" class="screen open">
     <header class="scr-head">
       <div class="scr-title"><h1>Ma session</h1><span>Automne 2026</span></div>
+      <button id="cloudBtn" class="tb-btn" onclick="openCloud()"><span>☁️</span><span id="cloudLabel">En ligne</span></button>
       <button class="tb-btn" onclick="openBackup()"><span data-ic="save"></span><span>Sauvegarde</span></button>
     </header>
     <div class="scr-body"><div class="scr-inner">
@@ -683,6 +684,70 @@ $$x = \frac{-b + \sqrt{b^2 - 4ac}}{2a}$$
         <textarea id="backupText" class="field selectable" style="height:80px;padding:8px;font-size:13px;resize:vertical"></textarea>
         <div class="modal-actions">
           <button class="btn plain" onclick="importBackupText()">Restaurer le texte collé</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== MODALE : SAUVEGARDE EN LIGNE ===================== -->
+  <div id="cloudModal" class="modal" onclick="if(event.target===this) closeModal('cloudModal')">
+    <div class="modal-card" style="max-width:460px">
+      <div class="modal-head"><h3>☁️ Sauvegarde en ligne</h3><button class="tb-btn" onclick="closeModal('cloudModal')" aria-label="Fermer"><span data-ic="x"></span></button></div>
+      <div class="modal-body">
+        <div id="cloudOut">
+          <p style="margin-top:0">Connecte-toi pour copier ta progression en ligne et la retrouver sur ton PC et ton iPhone. Tout continue de s'enregistrer d'abord sur cet appareil, même sans Internet.</p>
+          <form onsubmit="event.preventDefault(); cloudLogin(false)">
+            <label for="cloudEmail">Courriel</label>
+            <input id="cloudEmail" class="field selectable" type="email" autocomplete="username" autocapitalize="off" spellcheck="false">
+            <label for="cloudPass">Mot de passe</label>
+            <input id="cloudPass" class="field selectable" type="password" autocomplete="current-password">
+            <div class="modal-actions" style="flex-wrap:wrap">
+              <button type="button" class="btn plain" onclick="cloudReset()">Mot de passe oublié</button>
+              <button type="button" class="btn plain" onclick="cloudLogin(true)">Créer mon compte</button>
+              <button type="submit" class="btn primary">Me connecter</button>
+            </div>
+          </form>
+          <p style="color:#64748b;font-size:13px">Les PDF importés restent sur chaque appareil (pas encore en ligne). Leurs annotations, elles, sont copiées.</p>
+        </div>
+        <div id="cloudIn" style="display:none">
+          <p style="margin-top:0">Connecté : <b id="cloudWho"></b></p>
+          <p id="cloudState"></p>
+          <form id="cloudRelog" style="display:none" onsubmit="event.preventDefault(); cloudLogin(false, true)">
+            <span id="cloudEmail2" style="display:none"></span>
+            <label for="cloudPass2">Mot de passe</label>
+            <input id="cloudPass2" class="field selectable" type="password" autocomplete="current-password">
+            <div class="modal-actions"><button type="submit" class="btn primary">Me reconnecter</button></div>
+          </form>
+          <p style="color:#64748b;font-size:13px">Tes PDF importés restent sur chaque appareil : sur un autre appareil, importe le même PDF quand l'app le demande et tes annotations s'y afficheront.</p>
+          <div class="modal-actions" style="flex-wrap:wrap">
+            <button class="btn plain" onclick="openModal('cloudLogoutModal')">Me déconnecter</button>
+            <button class="btn primary" onclick="cloudSync(true)">Synchroniser maintenant</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="cloudLogoutModal" class="modal" onclick="if(event.target===this) closeModal('cloudLogoutModal')">
+    <div class="modal-card" style="max-width:380px">
+      <div class="modal-body">
+        <h3 style="margin:0 0 6px;font-size:17px">Te déconnecter ?</h3>
+        <p style="margin:0;color:#64748b">Rien n'est effacé : tout reste sur cet appareil et en ligne. Seuls les nouveaux changements ne seront plus envoyés tant que tu ne te reconnectes pas.</p>
+        <div class="modal-actions">
+          <button class="btn plain" onclick="closeModal('cloudLogoutModal')">Rester connecté</button>
+          <button class="btn primary" onclick="cloudLogout()">Me déconnecter</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="relinkModal" class="modal" onclick="if(event.target===this) closeModal('relinkModal')">
+    <div class="modal-card" style="max-width:420px">
+      <div class="modal-body">
+        <h3 style="margin:0 0 6px;font-size:17px">Ce document n'est pas sur cet appareil</h3>
+        <p style="margin:0;color:#64748b">Tes annotations sont là, mais le fichier lui-même (<b id="relinkName"></b>) n'a été importé que sur un autre appareil. Choisis le même fichier ici : tes annotations s'afficheront dessus.</p>
+        <input id="relinkFile" type="file" accept="application/pdf,image/*" style="display:none" onchange="relinkDoc(this)">
+        <div class="modal-actions">
+          <button class="btn plain" onclick="closeModal('relinkModal')">Plus tard</button>
+          <button class="btn primary" onclick="$('relinkFile').click()">Choisir le fichier</button>
         </div>
       </div>
     </div>
@@ -4900,7 +4965,7 @@ $$i_{1} = i_{2} = \frac{120}{730 + 730} = 82,2\u{mA}$$
       try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch (e) { return fallback; }
     }
     function safeSet(key, val) {
-      try { localStorage.setItem(key, JSON.stringify(val)); return true; } catch (e) { return false; }
+      try { localStorage.setItem(key, JSON.stringify(val)); try { if (SYNC_MAPS.includes(key)) cloudDirty("ls:" + key); } catch (err) {} return true; } catch (e) { return false; }
     }
     function savePrefs() { safeSet(LS.prefs, prefs); }
 
@@ -4962,6 +5027,7 @@ $$i_{1} = i_{2} = \frac{120}{730 + 730} = 82,2\u{mA}$$
       });
 
       renderHome();
+      cloudInit();
 
       // Rappel doux : une copie dans Fichiers au moins une fois par semaine
       const lastBackup = safeGet("sn2v2_last_backup", 0);
@@ -5180,6 +5246,7 @@ $$i_{1} = i_{2} = \frac{120}{730 + 730} = 82,2\u{mA}$$
       setScreen("home");
       renderHome();
       showToast(`Sauvegarde du ${new Date(data.date).toLocaleDateString("fr-CA")} restaurée.`);
+      cloudSync(true);
     }
     function importBackupFile(input) {
       const f = input.files && input.files[0];
@@ -6604,6 +6671,7 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
         try {
           localStorage.setItem(LS.ink + k, str);
           if (inkCache.delete(k)) queueIdb(() => idbDel("ink", k));
+          cloudDirty("ink:" + k);
           return;
         } catch (e) {
           try { localStorage.removeItem(LS.ink + k); } catch (err) {}
@@ -6611,10 +6679,12 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
       }
       inkCache.set(k, str);
       queueIdb(() => idbPut("ink", k, str));
+      cloudDirty("ink:" + k);
     }
     function inkRemove(k) {
       try { localStorage.removeItem(LS.ink + k); } catch (e) {}
       if (inkCache.delete(k)) queueIdb(() => idbDel("ink", k));
+      cloudDirty("ink:" + k);
     }
 
     // ---------- Les cours ----------
@@ -6816,7 +6886,7 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
       injectIcons($("courseBody"));
     }
     function newDocId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
-    async function saveDocMeta(m) { await idbPut("docs", m.id, m); }
+    async function saveDocMeta(m) { await idbPut("docs", m.id, m); cloudDirty("doc:" + m.id); }
     async function newNotebook() {
       if (!idb) { showToast("Le stockage n'est pas disponible."); return; }
       const n = docs.filter(d => d.course === currentCourse.id && d.kind === "blank").length + 1;
@@ -6895,6 +6965,7 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
       } catch (e) { showToast("Suppression incomplète."); }
       [...inkCache.keys()].forEach(k => { if (k.startsWith(DOC_PREFIX + m.id)) inkCache.delete(k); });
       docs = docs.filter(d => d !== m);
+      cloudDirty("doc:" + m.id);
       setPageCount(DOC_PREFIX + m.id, 1);
       if (prefs.docPos) delete prefs.docPos[m.id];
       savePrefs();
@@ -6918,7 +6989,7 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
         let file = null, pdf = null;
         if (m.kind !== "blank") {
           file = await idbGet("files", id);
-          if (!file) { hideBusy(); showToast("Fichier absent de cet iPad : importe-le de nouveau."); return; }
+          if (!file) { hideBusy(); relinkId = id; $("relinkName").textContent = m.name; openModal("relinkModal"); return; }
           if (m.kind === "pdf") pdf = await openPdfData(await file.arrayBuffer());
         }
         currentCourse = courseById(m.course);
@@ -6947,6 +7018,19 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
         hideBusy();
         showToast("Impossible d'ouvrir ce document.");
       }
+    }
+    // Un document venu d'un autre appareil : on y rattache le même fichier (la fiche et les annotations ne changent pas)
+    let relinkId = null;
+    async function relinkDoc(input) {
+      const f = input.files && input.files[0];
+      input.value = "";
+      const m = docs.find(d => d.id === relinkId);
+      if (!f || !m) return;
+      closeModal("relinkModal");
+      try {
+        await idbPut("files", m.id, new Blob([f], { type: m.type || f.type || "application/pdf" }));
+        openDoc(m.id);
+      } catch (e) { showToast("Le fichier n'a pas pu être enregistré sur cet appareil."); }
     }
     function buildDocLayout() {
       const v = docView;
@@ -7092,6 +7176,610 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
         idbPending.finally(() => location.reload());
       }
     }
+    // =========================================================================
+    // SAUVEGARDE EN LIGNE (Firebase Authentication + Firestore, par l'API REST)
+    //  Local d'abord : l'app enregistre sur l'appareil comme avant. Ce module copie
+    //  en arrière-plan vers users/{uid}/items et ramène les changements des autres
+    //  appareils. Règles de fusion (jamais d'écrasement aveugle) :
+    //   - dessins : les traits des deux appareils sont gardés (un trait effacé d'un
+    //     côté disparaît seulement s'il existait déjà à la dernière synchro) ;
+    //   - statuts, marqueurs, notes, nombre de pages : fusion exercice par exercice
+    //     (notes modifiées des deux côtés : les deux textes sont gardés) ;
+    //   - documents : la fiche (nom, dossier, pages) ; le PDF lui-même reste sur l'appareil.
+    //  L'état de la synchro est dans une base à part (IndexedDB "sn2_sync"), hors sauvegarde.
+    // =========================================================================
+    const CLOUD_CFG = { apiKey: "AIzaSyBZyjgpHLg83hsRFwGUnRl-IQCrOIiAkI4", projectId: "session-a2026" };   // configuration publique (pas un secret)
+    const SYNC_MAPS = [LS.status, LS.notes, LS.pages, LS.revisit, LS.repass];
+    const SYNC_CHUNK = 300000;   // caractères par morceau (un document Firestore ≤ 1 Mo)
+    const cloud = {
+      db: null, auth: null, state: new Map(), gen: new Map(), deferred: new Map(),
+      running: false, again: false, againFull: false, scanned: false, timer: null, retry: 0,
+      status: "off", msg: "", applying: false, dev: "", lastOk: 0, cursor: null
+    };
+    const cloudOn = () => !!(CLOUD_CFG.apiKey && CLOUD_CFG.projectId);
+    const sleep0 = () => new Promise(r => setTimeout(r, 0));
+
+    function strHash(s) {
+      let h = 0x811c9dc5, g = 0x2b1f3a5d;
+      for (let i = 0; i < s.length; i++) {
+        const c = s.charCodeAt(i);
+        h = Math.imul(h ^ c, 16777619);
+        g = Math.imul(g ^ c, 2246822519) + i | 0;
+      }
+      return (h >>> 0).toString(36) + "." + (g >>> 0).toString(36) + "." + s.length.toString(36);
+    }
+
+    // ---------- Base locale de la synchro ----------
+    function syncDbOpen() {
+      return new Promise(resolve => {
+        const giveUp = setTimeout(() => resolve(null), 4000);
+        try {
+          const r = indexedDB.open("sn2_sync", 1);
+          r.onupgradeneeded = () => { r.result.createObjectStore("kv"); r.result.createObjectStore("keys"); };
+          r.onsuccess = () => { clearTimeout(giveUp); resolve(r.result); };
+          r.onerror = () => { clearTimeout(giveUp); resolve(null); };
+        } catch (e) { clearTimeout(giveUp); resolve(null); }
+      });
+    }
+    function sdb(store, mode, fn) {
+      return new Promise((resolve, reject) => {
+        if (!cloud.db) { reject(new Error("sync db")); return; }
+        const tx = cloud.db.transaction(store, mode);
+        const req = fn(tx.objectStore(store));
+        tx.oncomplete = () => resolve(req ? req.result : undefined);
+        tx.onerror = tx.onabort = () => reject(tx.error || new Error("sync db"));
+      });
+    }
+    const kvGet = k => sdb("kv", "readonly", o => o.get(k));
+    const kvSet = (k, v) => sdb("kv", "readwrite", o => o.put(v, k));
+    function stateSet(key, st) { cloud.state.set(key, st); return sdb("keys", "readwrite", o => o.put(st, key)).catch(() => {}); }
+
+    // ---------- Lire et écrire une donnée locale (mêmes clés qu'avant) ----------
+    //  "ls:<clé localStorage>" (statuts, notes…), "ink:<page>" (dessins), "doc:<id>" (fiche d'un document)
+    function splitKey(key) { const i = key.indexOf(":"); return [key.slice(0, i), key.slice(i + 1)]; }
+    async function localRead(key) {
+      // Une erreur de lecture arrête la synchro : elle ne doit jamais passer pour « effacé »
+      const [kind, k] = splitKey(key);
+      if (kind === "ls") return localStorage.getItem(k);
+      if (kind === "ink") {
+        if (inkCache.has(k)) return inkCache.get(k);
+        if (k.startsWith(DOC_PREFIX)) { const v = await idbGet("ink", k); return v == null ? null : v; }
+        const v = localStorage.getItem(LS.ink + k);
+        if (v !== null) return v;
+        const w = await idbGet("ink", k);   // chimie rangée dans IndexedDB quand localStorage était plein
+        return w == null ? null : w;
+      }
+      if (kind === "doc") { const m = docs.find(d => d.id === k); return m ? JSON.stringify(m) : null; }
+      return null;
+    }
+    async function localWrite(key, str) {
+      const [kind, k] = splitKey(key);
+      cloud.applying = true;
+      try {
+        if (kind === "ls") {
+          localStorage.setItem(k, str || "{}");   // lance une erreur si la mémoire est pleine : on réessaiera
+          if (k === LS.status) exStatusMap = safeGet(LS.status, {});
+          if (k === LS.revisit) revisitMap = safeGet(LS.revisit, {});
+          if (k === LS.repass) repassMap = safeGet(LS.repass, {});
+          if (k === LS.pages) pagesMap = null;
+          if (k === LS.notes && currentExId && document.activeElement !== $("noteInput")) $("noteInput").value = safeGet(LS.notes, {})[currentExId] || "";
+        } else if (kind === "ink") {
+          if (str) inkWrite(k, str); else inkRemove(k);
+          await idbPending;
+          // une page reçue au-delà du nombre de pages connu : on l'affiche quand même
+          const m = /^(.*)~p(\d+)$/.exec(k);
+          if (str && m && pageCount(m[1]) < Number(m[2])) { setPageCount(m[1], Number(m[2])); cloudDirty("ls:" + LS.pages, true); }
+          if (sessions[k]) {
+            if (doc && sessions[k].doc === doc && currentExId && curKey() === k) {
+              const s = sessions[k];
+              s.doc = loadDoc(k); s.undo = []; s.redo = [];
+              doc = s.doc;
+              layoutPaper(); ensureTile(true); updateUndoUI();
+            } else delete sessions[k];
+          }
+        } else if (kind === "doc") {
+          if (!str) {
+            docs = docs.filter(d => d.id !== k);
+            if (idb) await idbDel("docs", k);
+          } else {
+            const m = JSON.parse(str), old = docs.find(d => d.id === m.id);
+            if (idb) await idbPut("docs", m.id, m);
+            if (old) { Object.keys(old).forEach(f => delete old[f]); Object.assign(old, m); }   // même ordre des champs que reçu
+            else docs.push(m);
+          }
+        }
+      } finally { cloud.applying = false; }
+    }
+    async function localKeys() {
+      const keys = new Set(SYNC_MAPS.map(k => "ls:" + k));
+      try {
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && k.startsWith(LS.ink)) keys.add("ink:" + k.slice(LS.ink.length));
+        }
+      } catch (e) {}
+      if (idb) { try { (await idbPairs("ink")).forEach(([k]) => keys.add("ink:" + k)); } catch (e) {} }
+      docs.forEach(d => keys.add("doc:" + d.id));
+      cloud.state.forEach((v, k) => keys.add(k));
+      return [...keys];
+    }
+
+    // ---------- Fusion ----------
+    function inkParse(str) {
+      try { const o = JSON.parse(str); if (o && Array.isArray(o.s)) return o; } catch (e) {}
+      return { v: 2, h: 0, s: [] };
+    }
+    function strokeIds(arr) {
+      const seen = {};
+      return arr.map(st => { const h = strHash(JSON.stringify(st)); seen[h] = (seen[h] || 0) + 1; return h + "#" + seen[h]; });
+    }
+    // base = traits présents à la dernière synchro (null la première fois : on garde tout)
+    function mergeInk(localStr, remoteStr, base) {
+      const L = inkParse(localStr), R = inkParse(remoteStr);
+      const li = strokeIds(L.s), ri = strokeIds(R.s);
+      const bs = new Set(base || []), rs = new Set(ri), ls = new Set(li);
+      const keep = [];
+      L.s.forEach((st, i) => { if (!(base && bs.has(li[i]) && !rs.has(li[i]))) keep.push({ id: li[i], st }); });
+      const kept = new Set(keep.map(x => x.id)), head = [], after = new Map();
+      let anchor = null;
+      R.s.forEach((st, i) => {
+        const id = ri[i];
+        if (kept.has(id)) { anchor = id; return; }
+        if (ls.has(id) || (base && bs.has(id))) return;   // effacé sur cet appareil
+        if (anchor) { if (!after.has(anchor)) after.set(anchor, []); after.get(anchor).push(st); } else head.push(st);
+      });
+      const out = head.slice();
+      keep.forEach(x => { out.push(x.st); (after.get(x.id) || []).forEach(s => out.push(s)); });
+      if (!out.length) return "";
+      return JSON.stringify({ v: 2, h: Math.max(L.h || 0, R.h || 0), s: out });
+    }
+    function parseObj(s) { try { const o = JSON.parse(s || "{}"); return o && typeof o === "object" && !Array.isArray(o) ? o : {}; } catch (e) { return {}; } }
+    function plainFromEntries(E) { const o = {}; Object.keys(E).sort().forEach(k => { if (!E[k].d) o[k] = E[k].v; }); return o; }
+    const sameEntry = (x, y) => !!x.d === !!y.d && JSON.stringify(x.v) === JSON.stringify(y.v);
+    function entriesFromLocal(plain, base, now) {
+      const E = Object.assign({}, base);
+      Object.keys(plain).forEach(k => { const b = base[k]; if (!b || b.d || JSON.stringify(b.v) !== JSON.stringify(plain[k])) E[k] = { v: plain[k], t: now }; });
+      Object.keys(base).forEach(k => { if (!base[k].d && !(k in plain)) E[k] = { d: 1, t: now }; });
+      return E;
+    }
+    function mergeEntries(LE, RE, base, lsKey, now) {
+      const out = {};
+      new Set([...Object.keys(LE), ...Object.keys(RE)]).forEach(k => {
+        const l = LE[k], r = RE[k], b = base[k];
+        if (!l) { out[k] = r; return; }
+        if (!r) { out[k] = l; return; }
+        if (sameEntry(l, r)) { out[k] = l.t >= r.t ? l : r; return; }
+        const lc = !b || !sameEntry(l, b), rc = !b || !sameEntry(r, b);
+        if (lc && !rc) { out[k] = l; return; }
+        if (rc && !lc) { out[k] = r; return; }
+        // modifié sur les deux appareils
+        if (l.d !== r.d) { out[k] = l.d ? r : l; return; }   // une valeur bat un effacement
+        if (lsKey === LS.notes && typeof l.v === "string" && typeof r.v === "string") {
+          out[k] = { v: l.v.includes(r.v) ? l.v : r.v.includes(l.v) ? r.v : l.v + "\n\n(autre appareil) " + r.v, t: now };
+          return;
+        }
+        if (lsKey === LS.pages) { out[k] = { v: Math.max(Number(l.v) || 1, Number(r.v) || 1), t: now }; return; }
+        out[k] = l.t >= r.t ? l : r;
+      });
+      return out;
+    }
+
+    // Une donnée arrive d'un autre appareil
+    async function applyRemote(key, R, ut) {
+      const st = cloud.state.get(key);
+      if (st && st.ut === ut) return false;
+      const [kind, k] = splitKey(key);
+      if (kind === "ink" && act && currentExId && curKey() === k) { cloud.deferred.set(key, { R, ut }); return false; }  // trait en cours : plus tard
+      saveNow();
+      await idbPending;
+      const Ls = (await localRead(key)) || "";
+      const changed = !st || strHash(Ls) !== st.h;
+      let merged, h, base = null;
+      if (kind === "ink") {
+        merged = !changed ? R : mergeInk(Ls, R, st ? st.base : null);
+        h = strHash(R); base = strokeIds(inkParse(R).s);
+      } else if (kind === "ls") {
+        const RE = parseObj(R), B = st ? st.base : {};
+        const LE = entriesFromLocal(parseObj(Ls), B, Date.now());
+        merged = JSON.stringify(plainFromEntries(mergeEntries(LE, RE, B, k, Date.now())));
+        h = strHash(JSON.stringify(plainFromEntries(RE))); base = RE;
+        if (!Ls && merged === "{}") merged = "";
+      } else {
+        merged = !changed ? R : (st ? Ls : (Ls || R));
+        h = strHash(R);
+      }
+      if (merged !== Ls) await localWrite(key, merged);
+      const now = (await localRead(key)) || "";
+      await stateSet(key, { h: kind === "ls" ? strHash(JSON.stringify(plainFromEntries(base))) : h, ut, base, raw: kind === "ls" ? strHash(now) : undefined });
+      if (kind === "ls" ? JSON.stringify(parseObj(now)) !== JSON.stringify(plainFromEntries(base)) : strHash(now) !== h) cloudDirty(key, true);
+      return merged !== Ls;
+    }
+
+    // ---------- Réseau ----------
+    function cloudFetch(url, opts) { return fetch(url, opts); }
+    function cloudErr(code, msg) { const e = new Error(msg || code); e.code = code; return e; }
+    const AUTH_URL = "https://identitytoolkit.googleapis.com/v1/accounts:";
+    async function authCall(action, body) {
+      let r;
+      try {
+        r = await cloudFetch(AUTH_URL + action + "?key=" + CLOUD_CFG.apiKey, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      } catch (e) { throw cloudErr("net", "Pas de connexion Internet."); }
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw cloudErr((j.error && j.error.message) || "HTTP" + r.status);
+      return j;
+    }
+    async function cloudToken(force) {
+      const a = cloud.auth;
+      if (!a) throw cloudErr("auth");
+      if (!force && a.token && a.exp - 60000 > Date.now()) return a.token;
+      let r;
+      try {
+        r = await cloudFetch("https://securetoken.googleapis.com/v1/token?key=" + CLOUD_CFG.apiKey, {
+          method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: "grant_type=refresh_token&refresh_token=" + encodeURIComponent(a.refresh)
+        });
+      } catch (e) { throw cloudErr("net", "Pas de connexion Internet."); }
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        if (r.status >= 400 && r.status < 500) throw cloudErr("auth", "Reconnecte-toi.");
+        throw cloudErr("HTTP" + r.status);
+      }
+      a.token = j.id_token; a.refresh = j.refresh_token || a.refresh; a.exp = Date.now() + Number(j.expires_in || 3600) * 1000;
+      await kvSet("auth", a).catch(() => {});
+      return a.token;
+    }
+    const fsRoot = () => `projects/${CLOUD_CFG.projectId}/databases/(default)/documents`;
+    const fsName = docId => `${fsRoot()}/users/${cloud.auth.uid}/items/${docId}`;
+    async function fsCall(path, body) {
+      for (let i = 0; i < 2; i++) {
+        const tok = await cloudToken(i > 0);
+        let r;
+        try {
+          r = await cloudFetch("https://firestore.googleapis.com/v1/" + path, {
+            method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + tok }, body: JSON.stringify(body)
+          });
+        } catch (e) { throw cloudErr("net", "Pas de connexion Internet."); }
+        if (r.status === 401 && i === 0) continue;
+        const j = await r.json().catch(() => null);
+        if (r.ok) return j;
+        const err = j && (Array.isArray(j) ? j[0] && j[0].error : j.error);
+        throw cloudErr((err && err.status) || "HTTP" + r.status, (err && err.message) || "Erreur " + r.status);
+      }
+      throw cloudErr("auth", "Reconnecte-toi.");
+    }
+    const tsMs = s => Date.parse(String(s).replace(/(\.\d{3})\d*Z$/, "$1Z"));
+    const fStr = (f, n) => f && f[n] ? (f[n].stringValue != null ? f[n].stringValue : "") : "";
+
+    // Ramène ce qui a changé ailleurs depuis la dernière fois (avec une minute de marge)
+    async function cloudPull() {
+      let changed = false;
+      for (const [key, d] of [...cloud.deferred]) { cloud.deferred.delete(key); if (await applyRemote(key, d.R, d.ut)) changed = true; }
+      const since = cloud.cursor ? new Date(tsMs(cloud.cursor) - 60000).toISOString() : null;
+      let maxSt = cloud.cursor, start = null;
+      for (let page = 0; page < 200; page++) {
+        const q = {
+          from: [{ collectionId: "items" }],
+          orderBy: [{ field: { fieldPath: "st" }, direction: "ASCENDING" }, { field: { fieldPath: "__name__" }, direction: "ASCENDING" }],
+          limit: 40
+        };
+        if (since) q.where = { fieldFilter: { field: { fieldPath: "st" }, op: "GREATER_THAN_OR_EQUAL", value: { timestampValue: since } } };
+        if (start) q.startAt = { values: [{ timestampValue: start[0] }, { referenceValue: start[1] }], before: false };
+        const res = await fsCall(`${fsRoot()}/users/${cloud.auth.uid}:runQuery`, { structuredQuery: q });
+        const found = (res || []).map(x => x.document).filter(Boolean);
+        for (const d of found) {
+          const f = d.fields || {}, key = fStr(f, "k"), st = f.st && f.st.timestampValue;
+          if (st && (!maxSt || tsMs(st) > tsMs(maxSt))) maxSt = st;
+          if (!key) continue;
+          const prev = cloud.state.get(key);
+          if (prev && prev.ut === d.updateTime) continue;
+          let v = fStr(f, "v");
+          const n = Number(f.n && f.n.integerValue) || 1;
+          if (n > 1) {
+            const id = d.name.slice(d.name.lastIndexOf("/") + 1);
+            const names = []; for (let i = 1; i < n; i++) names.push(fsName(`p_${i}_${id}`));
+            const parts = await fsCall(`${fsRoot()}:batchGet`, { documents: names });
+            const got = {};
+            (parts || []).forEach(p => { if (p.found) got[p.found.name] = p.found; });
+            if (names.some(nm => !got[nm] || got[nm].updateTime !== d.updateTime)) continue;   // réécrit entre-temps : au prochain tour
+            v += names.map(nm => fStr(got[nm].fields, "v")).join("");
+          }
+          if (await applyRemote(key, v, d.updateTime)) changed = true;
+          await sleep0();
+        }
+        if (found.length < 40) break;
+        const last = found[found.length - 1];
+        start = [last.fields.st.timestampValue, last.name];
+      }
+      if (maxSt && maxSt !== cloud.cursor) { cloud.cursor = maxSt; await kvSet("cursor", maxSt).catch(() => {}); }
+      if (changed) cloudRefreshUI();
+    }
+
+    // Repère tout ce qui a changé sur cet appareil (au démarrage, au retour dans l'app…)
+    async function cloudScan() {
+      saveNow();
+      await idbPending;
+      for (const key of await localKeys()) {
+        const st = cloud.state.get(key), L = (await localRead(key)) || "";
+        if (!st) { if (L && L !== "{}") cloudDirty(key, true); }
+        else if (strHash(L) !== (st.raw || st.h)) cloudDirty(key, true);
+        await sleep0();
+      }
+    }
+
+    // Envoie les changements de cet appareil. Retourne true si un autre appareil a écrit entre-temps.
+    async function cloudPush() {
+      saveNow();
+      await idbPending;
+      const items = [];
+      for (const key of [...cloud.gen.keys()]) {
+        const gen = cloud.gen.get(key), st = cloud.state.get(key), [kind, k] = splitKey(key);
+        const L = (await localRead(key)) || "";
+        let v, h, base = null, raw;
+        if (kind === "ls") {
+          const B = st ? st.base : {}, plain = parseObj(L);
+          const E = entriesFromLocal(plain, B, Date.now());
+          raw = strHash(L);
+          if (JSON.stringify(E) === JSON.stringify(B)) {
+            if (st) await stateSet(key, Object.assign({}, st, { raw }));
+            if (cloud.gen.get(key) === gen) cloud.gen.delete(key);
+            continue;
+          }
+          v = JSON.stringify(E); base = E; h = strHash(JSON.stringify(plainFromEntries(E)));
+        } else {
+          if ((st && strHash(L) === st.h) || (!st && !L)) { if (cloud.gen.get(key) === gen) cloud.gen.delete(key); continue; }
+          v = L; h = strHash(L);
+          if (kind === "ink") base = strokeIds(inkParse(L).s);
+        }
+        items.push({ key, gen, st, v, h, base, raw, lost: kind === "ls" ? Object.keys(st ? st.base : {}).filter(x => !st.base[x].d && !(x in parseObj(L))).length : (st && !L ? 1 : 0) });
+      }
+      // Garde-fou : si beaucoup de choses semblent avoir disparu d'un coup (mémoire effacée par l'appareil…),
+      // on n'efface rien en ligne : on repart d'une synchro complète qui ramène tout depuis le cloud.
+      const known = [...cloud.state.keys()].filter(k => !k.startsWith("ls:")).length;
+      const lostInk = items.filter(it => !it.key.startsWith("ls:")).reduce((n, it) => n + it.lost, 0);
+      const lostMap = items.some(it => it.key.startsWith("ls:") && it.lost > 5 && it.lost > 0.3 * Object.keys(it.st.base).length);
+      if ((lostInk > 5 && lostInk > 0.2 * known) || lostMap) {
+        await sdb("keys", "readwrite", o => o.clear());
+        cloud.state.clear(); cloud.gen.clear(); cloud.cursor = null; cloud.scanned = false;
+        await kvSet("cursor", null).catch(() => {});
+        throw cloudErr("reset", "Beaucoup de données manquaient ici : récupération depuis le cloud.");
+      }
+      // paquets d'au plus ~1,2 million de caractères
+      const batches = [];
+      let cur = [], size = 0;
+      items.forEach(it => {
+        if (cur.length && (size + it.v.length > 1200000 || cur.length >= 20)) { batches.push(cur); cur = []; size = 0; }
+        cur.push(it); size += it.v.length;
+      });
+      if (cur.length) batches.push(cur);
+      let conflict = false;
+      for (const b of batches) {
+        try { await cloudCommit(b); }
+        catch (e) {
+          if (e.code === "net" || e.code === "auth") throw e;
+          if (/FAILED_PRECONDITION|ABORTED|ALREADY_EXISTS|NOT_FOUND/.test(e.code)) { conflict = true; continue; }
+          if (b.length === 1) { cloud.msg = e.message; continue; }
+          for (const it of b) {   // un élément refusé ne doit pas bloquer les autres
+            try { await cloudCommit([it]); }
+            catch (e2) {
+              if (e2.code === "net" || e2.code === "auth") throw e2;
+              if (/FAILED_PRECONDITION|ABORTED|ALREADY_EXISTS|NOT_FOUND/.test(e2.code)) conflict = true; else cloud.msg = e2.message;
+            }
+          }
+        }
+        await sleep0();
+      }
+      return conflict;
+    }
+    async function cloudCommit(batch) {
+      const writes = [], owners = [];
+      batch.forEach(it => {
+        const id = encodeURIComponent(it.key), parts = [];
+        for (let i = 0; i < it.v.length || i === 0; ) {
+          let j = Math.min(it.v.length, i + SYNC_CHUNK);
+          if (j < it.v.length && /[\uD800-\uDBFF]/.test(it.v[j - 1])) j--;
+          parts.push(it.v.slice(i, j));
+          i = j;
+          if (!it.v.length) break;
+        }
+        writes.push({
+          update: { name: fsName(id), fields: { k: { stringValue: it.key }, v: { stringValue: parts[0] }, n: { integerValue: String(parts.length) }, dev: { stringValue: cloud.dev } } },
+          updateTransforms: [{ fieldPath: "st", setToServerValue: "REQUEST_TIME" }],
+          currentDocument: it.st && it.st.ut ? { updateTime: it.st.ut } : { exists: false }
+        });
+        owners.push(it);
+        for (let p = 1; p < parts.length; p++) {
+          writes.push({ update: { name: fsName(`p_${p}_${id}`), fields: { of: { stringValue: id }, i: { integerValue: String(p) }, v: { stringValue: parts[p] } } } });
+          owners.push(null);
+        }
+      });
+      const res = await fsCall(`${fsRoot()}:commit`, { writes });
+      const results = (res && res.writeResults) || [];
+      for (let i = 0; i < owners.length; i++) {
+        const it = owners[i];
+        if (!it) continue;
+        const ut = results[i] && results[i].updateTime;
+        await stateSet(it.key, { h: it.h, ut, base: it.base, raw: it.raw });
+        if (cloud.gen.get(it.key) === it.gen) cloud.gen.delete(it.key);
+      }
+    }
+
+    // ---------- Chef d'orchestre ----------
+    function cloudDirty(key, now) {
+      try {
+        if (cloud.applying && !now) return;
+        cloud.gen.set(key, (cloud.gen.get(key) || 0) + 1);
+        if (!cloud.auth || now) return;
+        if (cloud.status === "ok") setCloudStatus("pending");
+        cloudSchedule(4000);
+      } catch (e) {}   // appelé avant que le module soit prêt : le prochain tour complet le rattrapera
+    }
+    function cloudSchedule(ms) {
+      if (!cloud.auth) return;
+      const at = Date.now() + ms;
+      if (cloud.timer && cloud.timerAt <= at) return;
+      clearTimeout(cloud.timer);
+      cloud.timerAt = at;
+      cloud.timer = setTimeout(() => { cloud.timer = null; cloudSync(false); }, ms);
+    }
+    async function cloudSync(full) {
+      if (!cloud.auth || !cloudOn() || !cloud.db || !idb) return;
+      if (cloud.running) { cloud.again = true; if (full) cloud.againFull = true; return; }
+      if (navigator.onLine === false) { setCloudStatus("offline"); return; }
+      cloud.running = true;
+      cloud.msg = "";
+      setCloudStatus("busy");
+      try {
+        for (let round = 0; round < 4; round++) {
+          await cloudPull();
+          if (full || !cloud.scanned) { await cloudScan(); cloud.scanned = true; full = false; }
+          if (!(await cloudPush())) break;
+        }
+        cloud.retry = 0;
+        cloud.lastOk = Date.now();
+        kvSet("lastOk", cloud.lastOk).catch(() => {});
+        setCloudStatus(cloud.gen.size ? "pending" : "ok");
+      } catch (e) {
+        if (e.code === "auth") setCloudStatus("auth");
+        else if (e.code === "reset") { cloud.msg = e.message; setCloudStatus("pending"); cloud.again = cloud.againFull = true; }
+        else {
+          cloud.retry++;
+          if (e.code !== "net") cloud.msg = e.message;
+          setCloudStatus(e.code === "net" || navigator.onLine === false ? "offline" : "error");
+          cloudSchedule(Math.min(300000, 15000 * Math.pow(2, cloud.retry - 1)));
+        }
+      } finally {
+        cloud.running = false;
+        if (cloud.again) { const f = cloud.againFull; cloud.again = cloud.againFull = false; setTimeout(() => cloudSync(f), 500); }
+      }
+    }
+    function cloudRefreshUI() {
+      try {
+        exStatusMap = safeGet(LS.status, {}); revisitMap = safeGet(LS.revisit, {}); repassMap = safeGet(LS.repass, {}); pagesMap = null;
+        if ($("home").classList.contains("open")) renderHome();
+        else if ($("courseScreen").classList.contains("open")) setCourseTab(courseTab);
+        else if (currentExId && !docView) {
+          updateStatusUI(); renderExerciseList();
+          const n = pageCount(currentExId);
+          $("pager").hidden = n < 2;
+          $("pagerText").textContent = `Page ${currentPage}/${n}`;
+          $("deletePageItem").style.display = n > 1 ? "" : "none";
+        }
+      } catch (e) {}
+    }
+
+    // ---------- Écran « Sauvegarde en ligne » ----------
+    function setCloudStatus(s) {
+      cloud.status = s;
+      const labels = { off: "En ligne", ok: "À jour", busy: "Envoi…", pending: "En attente", offline: "Hors ligne", error: "Réessai bientôt", auth: "Reconnecte-toi" };
+      const el = $("cloudLabel");
+      if (el) el.textContent = cloud.auth ? labels[s] || "" : "En ligne";
+      const btn = $("cloudBtn");
+      if (btn) btn.classList.toggle("warn", s === "auth" || s === "error");
+      if ($("cloudModal").classList.contains("open")) renderCloud();
+    }
+    function renderCloud() {
+      const a = cloud.auth;
+      $("cloudOut").style.display = a ? "none" : "";
+      $("cloudIn").style.display = a ? "" : "none";
+      if (!cloudOn()) { $("cloudOut").innerHTML = "<p>La sauvegarde en ligne n'est pas encore configurée.</p>"; return; }
+      if (!a) return;
+      $("cloudWho").textContent = a.email;
+      const texts = {
+        ok: "✅ Tout est copié en ligne.", busy: "⏳ Synchronisation en cours…", pending: "⏳ Des changements attendent d'être envoyés.",
+        offline: "📴 Pas d'Internet : tout reste enregistré sur cet appareil, l'envoi se fera tout seul plus tard.",
+        error: "⚠️ Le service n'a pas répondu : nouvel essai automatique bientôt. Rien n'est perdu sur cet appareil.",
+        auth: "🔑 Ta connexion a expiré : reconnecte-toi ci-dessous. Rien n'est perdu sur cet appareil.", off: ""
+      };
+      let t = texts[cloud.status] || "";
+      if (cloud.lastOk) t += ` Dernière synchro : ${new Date(cloud.lastOk).toLocaleString("fr-CA", { dateStyle: "short", timeStyle: "short" })}.`;
+      if (cloud.msg && cloud.status !== "ok") t += ` (${cloud.msg})`;
+      $("cloudState").textContent = t;
+      $("cloudRelog").style.display = cloud.status === "auth" ? "" : "none";
+    }
+    function openCloud() {
+      $("cloudPass").value = "";
+      if (cloud.auth) $("cloudEmail2").textContent = cloud.auth.email;
+      renderCloud();
+      openModal("cloudModal");
+    }
+    const AUTH_MSG = {
+      EMAIL_EXISTS: "Ce courriel a déjà un compte : utilise « Me connecter ».",
+      EMAIL_NOT_FOUND: "Courriel ou mot de passe incorrect.", INVALID_PASSWORD: "Courriel ou mot de passe incorrect.",
+      INVALID_LOGIN_CREDENTIALS: "Courriel ou mot de passe incorrect.", INVALID_EMAIL: "Ce courriel n'est pas valide.",
+      MISSING_PASSWORD: "Écris ton mot de passe.", WEAK_PASSWORD: "Mot de passe trop court : au moins 6 caractères.",
+      TOO_MANY_ATTEMPTS_TRY_LATER: "Trop d'essais : attends quelques minutes.", USER_DISABLED: "Ce compte est désactivé.",
+      OPERATION_NOT_ALLOWED: "La création de compte est fermée.", ADMIN_ONLY_OPERATION: "La création de compte est fermée : utilise « Me connecter ».",
+      net: "Pas de connexion Internet."
+    };
+    async function cloudLogin(create, relog) {
+      const email = relog ? cloud.auth.email : $("cloudEmail").value.trim();
+      const password = (relog ? $("cloudPass2") : $("cloudPass")).value;
+      if (!email || !password) { showToast("Écris ton courriel et ton mot de passe."); return; }
+      try {
+        const j = await authCall(create ? "signUp" : "signInWithPassword", { email, password, returnSecureToken: true });
+        (relog ? $("cloudPass2") : $("cloudPass")).value = "";
+        const uid = await kvGet("uid").catch(() => null);
+        if (uid && uid !== j.localId) {   // autre compte : on repart de zéro côté synchro (les données locales restent)
+          await sdb("keys", "readwrite", o => o.clear());
+          cloud.state.clear(); cloud.cursor = null;
+          await kvSet("cursor", null);
+        }
+        cloud.auth = { uid: j.localId, email: j.email || email, token: j.idToken, refresh: j.refreshToken, exp: Date.now() + Number(j.expiresIn || 3600) * 1000 };
+        await kvSet("auth", cloud.auth);
+        await kvSet("uid", j.localId);
+        cloud.scanned = false;
+        showToast(create ? "Compte créé : ta progression est copiée en ligne." : "Connecté : synchronisation en cours.");
+        renderCloud();
+        cloudSync(true);
+      } catch (e) {
+        const code = String(e.code || "").split(" ")[0].split(":")[0];
+        showToast(AUTH_MSG[code] || "Connexion impossible : " + (e.code || e.message));
+      }
+    }
+    async function cloudReset() {
+      const email = $("cloudEmail").value.trim();
+      if (!email) { showToast("Écris d'abord ton courriel."); return; }
+      try { await authCall("sendOobCode", { requestType: "PASSWORD_RESET", email }); showToast("Courriel envoyé : suis le lien pour choisir un nouveau mot de passe."); }
+      catch (e) { showToast(AUTH_MSG[e.code] || "Envoi impossible."); }
+    }
+    async function cloudLogout() {
+      closeModal("cloudLogoutModal");
+      cloud.auth = null;
+      clearTimeout(cloud.timer); cloud.timer = null;
+      await kvSet("auth", null).catch(() => {});
+      setCloudStatus("off");
+      renderCloud();
+      showToast("Déconnecté. Tes données restent sur cet appareil.");
+    }
+
+    async function cloudInit() {
+      try {
+        cloud.db = await syncDbOpen();
+        if (!cloud.db || !cloudOn()) return;
+        cloud.dev = (await kvGet("dev")) || (Date.now().toString(36) + Math.random().toString(36).slice(2, 8));
+        await kvSet("dev", cloud.dev);
+        cloud.auth = (await kvGet("auth")) || null;
+        cloud.cursor = (await kvGet("cursor")) || null;
+        cloud.lastOk = (await kvGet("lastOk")) || 0;
+        const pairs = await new Promise((resolve, reject) => {
+          const tx = cloud.db.transaction("keys"), o = tx.objectStore("keys");
+          const k = o.getAllKeys(), v = o.getAll();
+          tx.oncomplete = () => resolve(k.result.map((key, i) => [key, v.result[i]]));
+          tx.onerror = () => reject(tx.error);
+        });
+        pairs.forEach(([k, v]) => cloud.state.set(k, v));
+        setCloudStatus(cloud.auth ? "pending" : "off");
+        window.addEventListener("online", () => cloudSync(false));
+        window.addEventListener("offline", () => setCloudStatus("offline"));
+        document.addEventListener("visibilitychange", () => {
+          if (!cloud.auth) return;
+          if (document.hidden) cloudSync(false); else cloudSync(true);
+        });
+        setInterval(() => { if (cloud.auth && !document.hidden) cloudSync(false); }, 90000);
+        if (cloud.auth) setTimeout(() => cloudSync(true), 1500);
+      } catch (e) {}
+    }
+
     initApp();
   </script>
 </body>
