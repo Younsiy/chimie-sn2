@@ -11,6 +11,7 @@
   <title>SN-Pro</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icon-180.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <style>
     :root {
       --bg: #e9edf2;
@@ -6731,7 +6732,7 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
       if (!idb) { el.textContent = "Le stockage des documents n'est pas disponible dans ce navigateur."; return; }
       try {
         const e = await navigator.storage.estimate();
-        el.textContent = `Espace utilisé sur cet iPad : ${fmtSize(e.usage)} sur ${fmtSize(e.quota)}.`;
+        el.textContent = `Espace utilisé sur cet appareil : ${fmtSize(e.usage)} sur ${fmtSize(e.quota)}.`;
       } catch (err) { el.textContent = ""; }
     }
     function fmtSize(b) {
