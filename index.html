@@ -619,12 +619,21 @@ Unité entre parenthèses (NDC p. 140) : $K_p = 10,6$ (en kPa).
           </div>
         </div>
         <div class="box amber" data-render>
-<div class="box-title">Chapitre 4 (4.1 à 4.3.1) — Acides et bases</div>
+<div class="box-title">Chapitre 4 — Acides et bases</div>
 **Les 6 acides forts :** HCl, HBr, HI, {{HNO3}}, {{HClO4}}, {{H2SO4}} (tableau I – R – F, dissociation à 100 %).
 $K_e = [\ce{OH-}][\ce{H3O+}] = 1,0\times10^{-14}$ à 25 °C $\qquad \text{pH} = -\log[\ce{H3O+}] \qquad \text{pH} + \text{pOH} = 14,00$
 **Acides faibles (I – R – E) :** $C_i - x \approx C_i$ si $\frac{C_i}{K_a} \geq 100$ (Cahier NDC, p. 189). Sinon : formule quadratique.
 $$x = \frac{-b + \sqrt{b^2 - 4ac}}{2a}$$
-**Bases faibles :** $K_b(\ce{NH3}) = 1,8\times10^{-5}$ ; $K_b(\ce{C5H5N}) = 1,7\times10^{-9}$
+**Bases faibles :** $K_b(\ce{NH3}) = 1,8\times10^{-5}$ ; $K_b(\ce{C5H5N}) = 1,7\times10^{-9}$ ; $K_b(\ce{CH3NH2}) = 4,4\times10^{-4}$ ; $x = [\ce{OH-}]$, puis pH = 14,00 − pOH.
+**Couple conjugué :** $K_a \cdot K_b = K_e$ $\qquad K_b = \frac{K_e}{K_a}$
+**Sels :** dissociation complète, puis on regarde chaque ion. Ions d'acides forts ou de bases fortes ({{Na+}}, {{K+}}, {{Ba^{2+}}}, {{Cl-}}, {{Br-}}, {{NO3-}}) : neutres. Base conjuguée d'un acide faible ({{CH3COO-}}, {{F-}}…) : pH &gt; 7. Acide conjugué d'une base faible ({{NH4+}}…) ou petit cation très chargé ({{Al^{3+}}}) : pH &lt; 7.
+        </div>
+        <div class="box green" data-render>
+<div class="box-title">Chapitre 5 — Solutions tampon</div>
+**Tampon :** acide faible + sa base conjuguée (ou base faible + son acide conjugué), en quantités comparables.
+**Henderson-Hasselbalch :** $\text{pH} = \text{p}K_a + \log\frac{[\text{base conj.}]}{[\text{acide}]} = \text{p}K_a + \log\frac{n_{\text{base}}}{n_{\text{acide}}}$
+**Ajout d'acide fort ou de base forte :** réaction complète d'abord (tableau I – R – F en moles), puis Henderson-Hasselbalch.
+**Choix d'un tampon :** p$K_a$ le plus proche du pH voulu.
         </div>
         <div class="box-title" style="margin-top:6px">Tableau 4.2 (p. 167, Chang 6<sup>e</sup> éd.) — K<sub>a</sub> à 25 &deg;C</div>
         <table class="data-table">
@@ -3047,6 +3056,436 @@ $$\ce{HCl(aq) + NaOH(aq) -> NaCl(aq) + H2O(l)}$$
 $$M(\ce{MCO3}) = \frac{1,294\u{g}}{0,0154\u{mol}} = 84,3\u{g/mol}$$
 $$M(\ce{M}) = 84,3 - 60,01 = 24,3\u{g/mol}$$
 M est le magnésium (Mg).
+
+=== ch4-ex4.13 | 4 | Calcul du pH des bases faibles | interne | Exercice 4.13 (p. 177)
+Q:
+Calculez le pH d'une solution de méthylamine ({{CH3NH2}}) à 0,26 mol/L (voir le tableau 4.2, p. 166–167).
+A:
+pH = 12,03
+H:
+Base faible : tableau I-R-E avec $K_b(\ce{CH3NH2}) = 4,4\times10^{-4}$ ; on trouve $[\ce{OH-}]$, puis pOH, puis pH = 14,00 − pOH. Approximation permise si $\frac{C_i}{K_b} \geq 100$.
+S:
+Tableau I-R-E pour $\ce{CH3NH2(aq) + H2O(l) <=> CH3NH3+(aq) + OH-(aq)}$ :
+| | [{{CH3NH2}}] | [{{CH3NH3+}}] | [{{OH-}}] |
+| I | 0,26 | 0 | 0 |
+| R | −x | +x | +x |
+| E | 0,26 − x | x | x |
+Test d'approximation : $\frac{C_i}{K_b} = \frac{0,26}{4,4\times10^{-4}} = 591 \geq 100$, donc $0,26 - x \approx 0,26$.
+$$K_b = \frac{x^2}{0,26 - x} \approx \frac{x^2}{0,26} = 4,4\times10^{-4}$$
+$$x = [\ce{OH-}] = \sqrt{(4,4\times10^{-4})(0,26)} = 1,07\times10^{-2}\u{mol/L}$$
+$$\text{pOH} = -\log(1,07\times10^{-2}) = 1,97 \;\Rightarrow\; \text{pH} = 14,00 - 1,97 = 12,03$$
+
+=== ch4-p32 | 4 | Calcul du pH des bases faibles | probleme | Problème 32 (p. 189)
+Q:
+Calculez le pH de chacune des solutions suivantes.
+a) {{NH3}} à 0,10 mol/L
+b) Pyridine ({{C5H5N}}) à 0,050 mol/L
+A:
+a) pH = 11,13 ; b) pH = 8,96
+H:
+Bases faibles : $K_b(\ce{NH3}) = 1,8\times10^{-5}$ et $K_b(\ce{C5H5N}) = 1,7\times10^{-9}$ (Tableau 4.2). Tableau I-R-E, $x = [\ce{OH-}]$, puis pOH et pH.
+S:
+a) $\ce{NH3(aq) + H2O(l) <=> NH4+(aq) + OH-(aq)}$ ; I : 0,10 | 0 | 0 ; E : 0,10 − x | x | x.
+Test : $\frac{0,10}{1,8\times10^{-5}} = 5556 \geq 100$ (approximation valide).
+$$x = [\ce{OH-}] = \sqrt{(1,8\times10^{-5})(0,10)} = 1,34\times10^{-3}\u{mol/L}$$
+$$\text{pOH} = -\log(1,34\times10^{-3}) = 2,87 \;\Rightarrow\; \text{pH} = 14,00 - 2,87 = 11,13$$
+b) $\ce{C5H5N(aq) + H2O(l) <=> C5H5NH+(aq) + OH-(aq)}$ ; I : 0,050 | 0 | 0 ; E : 0,050 − x | x | x.
+Test : $\frac{0,050}{1,7\times10^{-9}} = 2,9\times10^{7} \geq 100$ (approximation valide).
+$$x = [\ce{OH-}] = \sqrt{(1,7\times10^{-9})(0,050)} = 9,22\times10^{-6}\u{mol/L}$$
+$$\text{pOH} = -\log(9,22\times10^{-6}) = 5,04 \;\Rightarrow\; \text{pH} = 14,00 - 5,04 = 8,96$$
+
+=== ch4-p33 | 4 | Calcul du pH des bases faibles | probleme | Problème 33 (p. 189)
+Q:
+Le pH d'une solution d'une base faible à 0,30 mol/L est 10,66. Quelle est la valeur de $K_b$ pour cette base?
+A:
+$K_b = 7,0\times10^{-7}$ (7,1 × 10^{−7} si on arrondit [{{OH-}}] à 4,6 × 10^{−4})
+H:
+Du pH on tire le pOH, puis $x = [\ce{OH-}] = [\ce{BH+}] = 10^{-\text{pOH}}$. On remplace dans $K_b = \frac{x^2}{C_i - x}$.
+S:
+Soit B la base : $\ce{B(aq) + H2O(l) <=> BH+(aq) + OH-(aq)}$ ; E : 0,30 − x | x | x.
+$$\text{pOH} = 14,00 - 10,66 = 3,34 \;\Rightarrow\; x = [\ce{OH-}] = [\ce{BH+}] = 10^{-3,34} = 4,57\times10^{-4}\u{mol/L}$$
+$$K_b = \frac{x^2}{0,30 - x} = \frac{(4,57\times10^{-4})^2}{0,30 - 4,57\times10^{-4}} = \frac{2,09\times10^{-7}}{0,2995} = 7,0\times10^{-7}$$
+
+=== ch4-p34 | 4 | Calcul du pH des bases faibles | probleme | Problème 34 (p. 189)
+Q:
+Quelle est la concentration molaire initiale d'une solution d'ammoniac dont le pH est 11,22?
+A:
+$C_i = 0,15\u{mol/L}$
+H:
+$K_b(\ce{NH3}) = 1,8\times10^{-5}$. Le pH donne $x = [\ce{OH-}]$ ; l'inconnue est $C_i$ dans $K_b = \frac{x^2}{C_i - x}$.
+S:
+$$\text{pOH} = 14,00 - 11,22 = 2,78 \;\Rightarrow\; x = [\ce{OH-}] = [\ce{NH4+}] = 10^{-2,78} = 1,66\times10^{-3}\u{mol/L}$$
+$$K_b = \frac{x^2}{C_i - x} \;\Rightarrow\; 1,8\times10^{-5} = \frac{(1,66\times10^{-3})^2}{C_i - 1,66\times10^{-3}}$$
+$$C_i - 1,66\times10^{-3} = \frac{2,75\times10^{-6}}{1,8\times10^{-5}} = 0,153 \;\Rightarrow\; C_i = 0,153 + 0,0017 = 0,15\u{mol/L}$$
+
+=== ch4-p35 | 4 | Calcul du pH des bases faibles | probleme | Problème 35 (p. 189)
+Q:
+Dans une solution de {{NH3}} à 0,080 mol/L, quel pourcentage de {{NH3}} est présent sous forme de {{NH4+}}?
+A:
+1,5 %
+H:
+Le pourcentage sous forme de {{NH4+}} est $\frac{x}{C_i}\times100\,\%$, avec $x = [\ce{NH4+}] = [\ce{OH-}]$ trouvé par le tableau I-R-E ($K_b = 1,8\times10^{-5}$).
+S:
+$\ce{NH3(aq) + H2O(l) <=> NH4+(aq) + OH-(aq)}$ ; E : 0,080 − x | x | x.
+Test : $\frac{0,080}{1,8\times10^{-5}} = 4444 \geq 100$ (approximation valide).
+$$x = [\ce{NH4+}] = \sqrt{(1,8\times10^{-5})(0,080)} = 1,20\times10^{-3}\u{mol/L}$$
+$$\%\;\ce{NH4+} = \frac{1,20\times10^{-3}}{0,080}\times100\,\% = 1,5\,\%$$
+
+=== ch4-ex4.14 | 4 | Sels acides et basiques | interne | Exercice 4.14 (p. 181)
+Q:
+Calculez le pH d'une solution de formiate de sodium, HCOONa, à 0,24 mol/L.
+A:
+pH = 8,58
+H:
+Le sel se dissocie complètement ; {{Na+}} est neutre, {{HCOO-}} est une base faible : $K_b = \frac{K_e}{K_a(\ce{HCOOH})}$.
+S:
+Dissociation complète : $\ce{HCOONa(s) -> Na+(aq) + HCOO-(aq)}$, donc $[\ce{HCOO-}]_0 = 0,24$ mol/L ({{Na+}} vient de la base forte NaOH : il ne réagit pas avec l'eau).
+{{HCOO-}} est la base conjuguée de HCOOH ($K_a = 1,7\times10^{-4}$) :
+$$K_b = \frac{K_e}{K_a} = \frac{1,0\times10^{-14}}{1,7\times10^{-4}} = 5,9\times10^{-11}$$
+$\ce{HCOO-(aq) + H2O(l) <=> HCOOH(aq) + OH-(aq)}$ ; E : 0,24 − x | x | x (approximation valide, $C_i/K_b$ très grand).
+$$x = [\ce{OH-}] = \sqrt{(5,9\times10^{-11})(0,24)} = 3,76\times10^{-6}\u{mol/L}$$
+$$\text{pOH} = -\log(3,76\times10^{-6}) = 5,42 \;\Rightarrow\; \text{pH} = 14,00 - 5,42 = 8,58$$
+
+=== ch4-p40 | 4 | Sels acides et basiques | probleme | Problème 40 (p. 189)
+Q:
+Calculez le pH d'une solution de {{C5H5NHCl}} à 2,00 mol/L.
+A:
+pH = 2,46
+H:
+{{Cl-}} est neutre ; {{C5H5NH+}} est l'acide conjugué de la pyridine : $K_a = \frac{K_e}{K_b(\ce{C5H5N})}$.
+S:
+Dissociation complète : $\ce{C5H5NHCl(s) -> C5H5NH+(aq) + Cl-(aq)}$, donc $[\ce{C5H5NH+}]_0 = 2,00$ mol/L ({{Cl-}} vient de l'acide fort HCl : il est neutre).
+$$K_a = \frac{K_e}{K_b} = \frac{1,0\times10^{-14}}{1,7\times10^{-9}} = 5,9\times10^{-6}$$
+$\ce{C5H5NH+(aq) + H2O(l) <=> C5H5N(aq) + H3O+(aq)}$ ; E : 2,00 − x | x | x (approximation valide).
+$$x = [\ce{H3O+}] = \sqrt{(5,9\times10^{-6})(2,00)} = 3,44\times10^{-3}\u{mol/L}$$
+$$\text{pH} = -\log(3,44\times10^{-3}) = 2,46$$
+
+=== ch4-p41 | 4 | Sels acides et basiques | probleme | Problème 41 (p. 189)
+Q:
+Calculez le pH d'une solution de {{NaIO3}} à 0,20 mol/L.
+A:
+pH = 7,05 (le corrigé du PDF écrit 7,04 ; avec pOH = 6,95, on obtient bien 7,05). En pratique, pH ≈ 7.
+H:
+{{IO3-}} est la base conjuguée de l'acide {{HIO3}}, presque fort ($K_a = 1,6\times10^{-1}$) : $K_b = \frac{K_e}{K_a}$ est minuscule.
+S:
+Dissociation complète : $\ce{NaIO3(s) -> Na+(aq) + IO3-(aq)}$, donc $[\ce{IO3-}]_0 = 0,20$ mol/L.
+$$K_b = \frac{K_e}{K_a} = \frac{1,0\times10^{-14}}{1,6\times10^{-1}} = 6,3\times10^{-14}$$
+$$x = [\ce{OH-}] = \sqrt{(6,3\times10^{-14})(0,20)} = 1,12\times10^{-7}\u{mol/L}$$
+$$\text{pOH} = -\log(1,12\times10^{-7}) = 6,95 \;\Rightarrow\; \text{pH} = 14,00 - 6,95 = 7,05$$
+Remarque : un $K_b$ aussi petit donne autant d'{{OH-}} que l'eau elle-même ; la solution est pratiquement neutre.
+
+=== ch4-p42 | 4 | Sels acides et basiques | probleme | Problème 42 (p. 189)
+Q:
+Prédisez le pH (> 7, < 7 ou ≈ 7) des solutions aqueuses contenant les sels suivants.
+a) KBr      b) {{Al(NO3)3}}      c) {{BaCl2}}      d) {{Bi(NO3)3}}
+A:
+a) ≈ 7 ; b) < 7 ; c) ≈ 7 ; d) < 7
+H:
+Regarder chaque ion : vient-il d'un acide fort ou d'une base forte (neutre)? Les petits cations métalliques très chargés ({{Al^{3+}}}, {{Bi^{3+}}}) sont acides.
+S:
+a) KBr : {{K+}} vient de la base forte KOH, {{Br-}} de l'acide fort HBr ; aucun ion ne réagit avec l'eau : pH ≈ 7.
+b) {{Al(NO3)3}} : {{NO3-}} (de l'acide fort {{HNO3}}) est neutre, mais {{Al^{3+}}}, petit et très chargé, forme {{Al(H2O)6^{3+}}} qui agit comme acide faible : pH < 7.
+c) {{BaCl2}} : {{Ba^{2+}}} vient de la base forte {{Ba(OH)2}}, {{Cl-}} de l'acide fort HCl : pH ≈ 7.
+d) {{Bi(NO3)3}} : {{NO3-}} est neutre, mais le cation très chargé {{Bi^{3+}}} est acide dans l'eau : pH < 7.
+
+=== ch4-p43 | 4 | Sels acides et basiques | probleme | Problème 43 (p. 189)
+Q:
+Calculez le pH d'une solution de {{CH3COONa}} à 0,36 mol/L.
+A:
+pH = 9,15
+H:
+{{CH3COO-}} est la base conjuguée de l'acide acétique ($K_a = 1,8\times10^{-5}$) : $K_b = \frac{K_e}{K_a}$.
+S:
+Dissociation complète : $[\ce{CH3COO-}]_0 = 0,36$ mol/L ({{Na+}} est neutre).
+$$K_b = \frac{K_e}{K_a} = \frac{1,0\times10^{-14}}{1,8\times10^{-5}} = 5,6\times10^{-10}$$
+$\ce{CH3COO-(aq) + H2O(l) <=> CH3COOH(aq) + OH-(aq)}$ ; E : 0,36 − x | x | x.
+$$x = [\ce{OH-}] = \sqrt{(5,6\times10^{-10})(0,36)} = 1,42\times10^{-5}\u{mol/L}$$
+$$\text{pOH} = -\log(1,42\times10^{-5}) = 4,85 \;\Rightarrow\; \text{pH} = 14,00 - 4,85 = 9,15$$
+
+=== ch4-p44 | 4 | Sels acides et basiques | probleme | Problème 44 (p. 189)
+Q:
+Calculez le pH d'une solution de {{NH4Cl}} à 0,42 mol/L.
+A:
+pH = 4,82
+H:
+{{NH4+}} est l'acide conjugué de {{NH3}} ($K_b = 1,8\times10^{-5}$) : $K_a = \frac{K_e}{K_b}$. {{Cl-}} est neutre.
+S:
+Dissociation complète : $[\ce{NH4+}]_0 = 0,42$ mol/L.
+$$K_a = \frac{K_e}{K_b} = \frac{1,0\times10^{-14}}{1,8\times10^{-5}} = 5,6\times10^{-10}$$
+$\ce{NH4+(aq) + H2O(l) <=> NH3(aq) + H3O+(aq)}$ ; E : 0,42 − x | x | x.
+$$x = [\ce{H3O+}] = \sqrt{(5,6\times10^{-10})(0,42)} = 1,53\times10^{-5}\u{mol/L}$$
+$$\text{pH} = -\log(1,53\times10^{-5}) = 4,82$$
+
+=== ch4-p46 | 4 | Sels acides et basiques | probleme | Problème 46 (p. 189)
+Q:
+Quelle masse de NaBrO faut-il dissoudre dans 1,00 L d'eau pour obtenir une solution de pH 11,00?
+A:
+30 g de NaBrO
+H:
+{{BrO-}} est la base conjuguée de HBrO ($K_a = 2,5\times10^{-9}$). Le pH donne $x = [\ce{OH-}]$ ; on cherche $C_i$, puis la masse (M(NaBrO) = 118,89 g/mol).
+S:
+$$\text{pOH} = 14,00 - 11,00 = 3,00 \;\Rightarrow\; x = [\ce{OH-}] = [\ce{HBrO}] = 1,0\times10^{-3}\u{mol/L}$$
+$$K_b(\ce{BrO-}) = \frac{K_e}{K_a} = \frac{1,0\times10^{-14}}{2,5\times10^{-9}} = 4,0\times10^{-6}$$
+$\ce{BrO-(aq) + H2O(l) <=> HBrO(aq) + OH-(aq)}$ ; E : $C_i$ − x | x | x.
+$$4,0\times10^{-6} = \frac{(1,0\times10^{-3})^2}{C_i - 1,0\times10^{-3}} \;\Rightarrow\; C_i - 0,0010 = 0,25 \;\Rightarrow\; C_i = 0,251\u{mol/L}$$
+Dans 1,00 L : $n = 0,251$ mol.
+$$m = (0,251\u{mol})(118,89\u{g/mol}) = 29,8\u{g} \approx 30\u{g}$$
+
+=== ch4-p48 | 4 | Sels acides et basiques | probleme | Problème 48 (p. 190)
+Q:
+Dans laquelle des solutions suivantes l'addition d'un volume égal de NaOH à 0,60 mol/L augmenterait-elle le pH?
+a) Eau      b) HCl à 0,30 mol/L      c) KOH à 0,70 mol/L      d) {{NaNO3}} à 0,40 mol/L
+A:
+a), b) et d) : le pH augmente. Pour c), le pH diminue (le pH de KOH à 0,70 mol/L est plus élevé que celui de NaOH à 0,60 mol/L).
+H:
+Comparer $[\ce{OH-}]$ (ou le pH) de chaque solution avant et après le mélange à volumes égaux (les concentrations sont divisées par 2).
+S:
+NaOH à 0,60 mol/L : $[\ce{OH-}] = 0,60$ mol/L, pH = 14,00 − (−log 0,60) = 14,00 − 0,22 = 13,78.
+- a) Eau (pH = 7,00) : après mélange, $[\ce{OH-}] = 0,30$ mol/L : le pH augmente.
+- b) HCl 0,30 mol/L (pH acide) : le NaOH neutralise tout le HCl et il reste un excès d'{{OH-}} : le pH augmente.
+- d) {{NaNO3}} 0,40 mol/L (sel neutre, pH = 7,00) : le pH augmente.
+- c) KOH 0,70 mol/L ($[\ce{OH-}] = 0,70$, pH = 13,85). Après mélange : $[\ce{OH-}] = \frac{0,70 + 0,60}{2} = 0,65$ mol/L, pH = 14,00 − 0,19 = 13,81 : le pH diminue.
+
+=== ch4-p62 | 4 | Sels acides et basiques | probleme | Problème 62 (p. 191)
+Q:
+Quel sera le pH d'une solution obtenue après la dissolution de 421 g de {{Mg(ClO)2}} dans 4,00 L d'eau? (La valeur de $K_b$ pour le {{ClO-}} est de 2,5 × 10^{−7}.)
+A:
+pH = 10,81
+H:
+Chaque {{Mg(ClO)2}} libère 2 ions {{ClO-}} (base faible). {{Mg^{2+}}} est considéré neutre ici.
+S:
+$$M(\ce{Mg(ClO)2}) = 24,31 + 2(35,45 + 16,00) = 127,21\u{g/mol}$$
+$$n = \frac{421\u{g}}{127,21\u{g/mol}} = 3,31\u{mol} \;\Rightarrow\; C(\ce{Mg(ClO)2}) = \frac{3,31\u{mol}}{4,00\u{L}} = 0,827\u{mol/L}$$
+$\ce{Mg(ClO)2(s) -> Mg^{2+}(aq) + 2 ClO-(aq)}$, donc $[\ce{ClO-}]_0 = 2\times0,827 = 1,65$ mol/L.
+$\ce{ClO-(aq) + H2O(l) <=> HClO(aq) + OH-(aq)}$ ; E : 1,65 − x | x | x.
+$$x = [\ce{OH-}] = \sqrt{(2,5\times10^{-7})(1,65)} = 6,43\times10^{-4}\u{mol/L}$$
+$$\text{pOH} = -\log(6,43\times10^{-4}) = 3,19 \;\Rightarrow\; \text{pH} = 14,00 - 3,19 = 10,81$$
+
+=== ch5-p1 | 5 | Solutions tampon | probleme | Problème 1 (p. 243)
+Q:
+Calculez le pH des solutions suivantes.
+a) Solution de {{CH3COOH}} 0,40 mol/L
+b) Solution contenant à la fois {{CH3COOH}} 0,40 mol/L et {{CH3COONa}} 0,20 mol/L
+A:
+a) pH = 2,57 ; b) pH = 4,44
+H:
+a) Acide faible seul : tableau I-R-E. b) Acide faible + sa base conjuguée = tampon : Henderson-Hasselbalch $\text{pH} = \text{p}K_a + \log\frac{[\text{base}]}{[\text{acide}]}$.
+S:
+a) $\ce{CH3COOH(aq) + H2O(l) <=> H3O+(aq) + CH3COO-(aq)}$, $K_a = 1,8\times10^{-5}$ ; E : 0,40 − x | x | x.
+$$x = [\ce{H3O+}] = \sqrt{(1,8\times10^{-5})(0,40)} = 2,68\times10^{-3}\u{mol/L} \;\Rightarrow\; \text{pH} = -\log(2,68\times10^{-3}) = 2,57$$
+b) Tampon $\ce{CH3COOH}/\ce{CH3COO-}$ : $\text{p}K_a = -\log(1,8\times10^{-5}) = 4,74$.
+$$\text{pH} = 4,74 + \log\frac{[\ce{CH3COO-}]}{[\ce{CH3COOH}]} = 4,74 + \log\frac{0,20}{0,40} = 4,74 - 0,30 = 4,44$$
+
+=== ch5-p2 | 5 | Solutions tampon | probleme | Problème 2 (p. 243)
+Q:
+Calculez le pH des solutions suivantes.
+a) Solution de {{NH3}} 0,20 mol/L
+b) Solution contenant à la fois {{NH3}} 0,20 mol/L et {{NH4Cl}} 0,30 mol/L
+A:
+a) pH = 11,28 ; b) pH = 9,08 (9,07 si on arrondit d'abord p$K_a$ à 9,25)
+H:
+a) Base faible seule ($K_b = 1,8\times10^{-5}$). b) Tampon {{NH4+}}/{{NH3}} : Henderson-Hasselbalch avec $K_a(\ce{NH4+}) = 5,6\times10^{-10}$.
+S:
+a) $\ce{NH3(aq) + H2O(l) <=> NH4+(aq) + OH-(aq)}$ ; E : 0,20 − x | x | x.
+$$x = [\ce{OH-}] = \sqrt{(1,8\times10^{-5})(0,20)} = 1,90\times10^{-3}\u{mol/L}$$
+$$\text{pOH} = -\log(1,90\times10^{-3}) = 2,72 \;\Rightarrow\; \text{pH} = 14,00 - 2,72 = 11,28$$
+b) L'acide du tampon est {{NH4+}} : $\text{p}K_a = -\log(5,6\times10^{-10}) = 9,252$.
+$$\text{pH} = 9,252 + \log\frac{[\ce{NH3}]}{[\ce{NH4+}]} = 9,252 + \log\frac{0,20}{0,30} = 9,252 - 0,176 = 9,08$$
+
+=== ch5-p4 | 5 | Solutions tampon | probleme | Problème 4 (p. 243)
+Q:
+Lesquels des systèmes suivants peuvent être qualifiés de tampons?
+a) KCl/HCl      b) {{KHSO4}}/{{H2SO4}}
+c) {{Na2HPO4}}/{{NaH2PO4}}      d) {{KNO2}}/{{HNO2}}
+e) KCN/HCN      f) {{Na2SO4}}/{{NaHSO4}}
+g) {{NH3}}/{{NH4NO3}}      h) NaI/HI
+A:
+c), d), e), f) et g)
+H:
+Un tampon = un acide FAIBLE et sa base conjuguée (ou une base faible et son acide conjugué) en quantités comparables. Un acide fort ne fait pas de tampon.
+S:
+- a) KCl/HCl, b) {{KHSO4}}/{{H2SO4}} et h) NaI/HI : HCl, {{H2SO4}} et HI sont des acides forts (ionisation complète) : ce ne sont pas des tampons.
+- c) couple {{H2PO4-}}/{{HPO4^{2-}}} : tampon.
+- d) couple {{HNO2}}/{{NO2-}} : tampon.
+- e) couple HCN/{{CN-}} : tampon.
+- f) couple {{HSO4-}}/{{SO4^{2-}}} ({{HSO4-}} est un acide faible, $K_a = 1,3\times10^{-2}$) : tampon.
+- g) couple {{NH4+}}/{{NH3}} : tampon.
+
+=== ch5-p7 | 5 | Solutions tampon | probleme | Problème 7 (p. 243)
+Q:
+Calculez le pH des systèmes tampons suivants.
+a) {{Na2HPO4}} 0,10 mol/L / {{KH2PO4}} 0,15 mol/L
+b) {{NH3}} 0,15 mol/L / {{NH4Cl}} 0,35 mol/L
+A:
+a) pH = 7,03 ; b) pH = 8,88
+H:
+Henderson-Hasselbalch. Repérer l'acide du couple : a) {{H2PO4-}} ($K_a = 6,2\times10^{-8}$) ; b) {{NH4+}} ($K_a = 5,6\times10^{-10}$).
+S:
+a) Acide : {{H2PO4-}} (de {{KH2PO4}}) ; base : {{HPO4^{2-}}} (de {{Na2HPO4}}).
+$$\text{p}K_a = -\log(6,2\times10^{-8}) = 7,21$$
+$$\text{pH} = 7,21 + \log\frac{0,10}{0,15} = 7,21 - 0,18 = 7,03$$
+b) Acide : {{NH4+}} ; base : {{NH3}}.
+$$\text{p}K_a = -\log(5,6\times10^{-10}) = 9,25$$
+$$\text{pH} = 9,25 + \log\frac{0,15}{0,35} = 9,25 - 0,37 = 8,88$$
+
+=== ch5-ex5.3 | 5 | Effet tampon | interne | Exercice 5.3 (p. 201)
+Q:
+Calculez le pH du système tampon suivant : {{NH3}} 0,30 mol/L / {{NH4Cl}} 0,36 mol/L. Que devient le pH après l'addition de 20,0 mL de NaOH à 0,050 mol/L dans 80,0 mL de la solution tampon?
+A:
+Avant : pH = 9,17 ; après l'ajout de NaOH : pH = 9,20
+H:
+Base forte ajoutée à un tampon : d'abord la réaction complète en moles (I-R-F) $\ce{NH4+ + OH- -> NH3 + H2O}$, puis Henderson-Hasselbalch avec les moles (même volume pour les deux).
+S:
+1) pH initial : $\text{p}K_a(\ce{NH4+}) = -\log(5,6\times10^{-10}) = 9,25$.
+$$\text{pH} = 9,25 + \log\frac{0,30}{0,36} = 9,25 - 0,079 = 9,17$$
+2) Moles avant la réaction :
+- $n(\ce{NH4+}) = (0,36\u{mol/L})(0,0800\u{L}) = 0,0288\u{mol}$
+- $n(\ce{NH3}) = (0,30\u{mol/L})(0,0800\u{L}) = 0,0240\u{mol}$
+- $n(\ce{OH-}) = (0,050\u{mol/L})(0,0200\u{L}) = 0,0010\u{mol}$
+Réaction complète (tableau I-R-F, en moles) :
+| | {{NH4+}} | {{OH-}} | {{NH3}} |
+| I | 0,0288 | 0,0010 | 0,0240 |
+| R | −0,0010 | −0,0010 | +0,0010 |
+| F | 0,0278 | 0 | 0,0250 |
+Les deux espèces sont dans le même volume (100,0 mL), donc on peut utiliser le rapport des moles :
+$$\text{pH} = 9,25 + \log\frac{0,0250}{0,0278} = 9,25 - 0,046 = 9,20$$
+
+=== ch5-p8 | 5 | Effet tampon | probleme | Problème 8 (p. 243)
+Q:
+Le pH d'un système tampon acétate de sodium/acide acétique est 4,50. Calculez le rapport [{{CH3COO-}}]/[{{CH3COOH}}].
+A:
+0,58
+H:
+Henderson-Hasselbalch à l'envers : $\log\frac{[\ce{CH3COO-}]}{[\ce{CH3COOH}]} = \text{pH} - \text{p}K_a$, avec p$K_a$ = 4,74.
+S:
+$$4,50 = 4,74 + \log\frac{[\ce{CH3COO-}]}{[\ce{CH3COOH}]}$$
+$$\log\frac{[\ce{CH3COO-}]}{[\ce{CH3COOH}]} = 4,50 - 4,74 = -0,24$$
+$$\frac{[\ce{CH3COO-}]}{[\ce{CH3COOH}]} = 10^{-0,24} = 0,58$$
+
+=== ch5-p11 | 5 | Effet tampon | probleme | Problème 11 (p. 243)
+Q:
+Calculez le pH de 1,00 L du système tampon {{CH3COONa}} 1,00 mol/L / {{CH3COOH}} 1,00 mol/L avant et après addition :
+a) de 0,080 mol de NaOH ;
+b) de 0,12 mol de HCl.
+Considérez qu'il n'y a aucune variation de volume.
+A:
+Avant : pH = 4,74 ; a) pH = 4,81 ; b) pH = 4,64
+H:
+Réaction complète d'abord (I-R-F en moles) : NaOH réagit avec {{CH3COOH}}, HCl réagit avec {{CH3COO-}}. Puis Henderson-Hasselbalch.
+S:
+Avant : 1,00 mol de chaque espèce.
+$$\text{pH} = 4,74 + \log\frac{1,00}{1,00} = 4,74$$
+a) $\ce{CH3COOH(aq) + OH-(aq) -> CH3COO-(aq) + H2O(l)}$
+| | {{CH3COOH}} | {{OH-}} | {{CH3COO-}} |
+| I | 1,00 | 0,080 | 1,00 |
+| R | −0,080 | −0,080 | +0,080 |
+| F | 0,92 | 0 | 1,08 |
+$$\text{pH} = 4,74 + \log\frac{1,08}{0,92} = 4,74 + 0,07 = 4,81$$
+b) $\ce{CH3COO-(aq) + H3O+(aq) -> CH3COOH(aq) + H2O(l)}$
+| | {{CH3COO-}} | {{H3O+}} | {{CH3COOH}} |
+| I | 1,00 | 0,12 | 1,00 |
+| R | −0,12 | −0,12 | +0,12 |
+| F | 0,88 | 0 | 1,12 |
+$$\text{pH} = 4,74 + \log\frac{0,88}{1,12} = 4,74 - 0,10 = 4,64$$
+
+=== ch5-p64 | 5 | Effet tampon | probleme | Problème 64 (p. 246–247)
+Q:
+a) Calculez le pH de la solution tampon obtenue par le mélange de volumes égaux d'une solution de {{NH3}} 0,20 mol/L à une solution de {{NH4Cl}} 0,20 mol/L.
+b) Calculez ensuite le pH après l'ajout de 10,0 mL de HCl 0,10 mol/L à 65,0 mL de la solution.
+A:
+a) pH = 9,25 ; b) pH = 9,12 (le corrigé du manuel donne 9,18 parce qu'il oublie la dilution du mélange en a)
+H:
+a) Mélange à volumes égaux : chaque concentration est divisée par 2. b) HCl réagit complètement avec {{NH3}} (I-R-F en moles), puis Henderson-Hasselbalch.
+S:
+a) Après le mélange : $[\ce{NH3}] = [\ce{NH4+}] = \frac{0,20}{2} = 0,10$ mol/L.
+$$\text{pH} = 9,25 + \log\frac{0,10}{0,10} = 9,25$$
+b) Moles dans 65,0 mL de tampon :
+$$n(\ce{NH3}) = n(\ce{NH4+}) = (0,10\u{mol/L})(0,0650\u{L}) = 6,5\times10^{-3}\u{mol}$$
+$$n(\ce{H3O+}) = (0,10\u{mol/L})(0,0100\u{L}) = 1,0\times10^{-3}\u{mol}$$
+$\ce{NH3(aq) + H3O+(aq) -> NH4+(aq) + H2O(l)}$
+| | {{NH3}} | {{H3O+}} | {{NH4+}} |
+| I | 6,5 × 10^{−3} | 1,0 × 10^{−3} | 6,5 × 10^{−3} |
+| R | −1,0 × 10^{−3} | −1,0 × 10^{−3} | +1,0 × 10^{−3} |
+| F | 5,5 × 10^{−3} | 0 | 7,5 × 10^{−3} |
+$$\text{pH} = 9,25 + \log\frac{5,5\times10^{-3}}{7,5\times10^{-3}} = 9,25 - 0,13 = 9,12$$
+Remarque : le corrigé (p. 319) garde 0,20 mol/L (0,0130 mol de chaque) et obtient $9,25 + \log\frac{0,0120}{0,0140} = 9,18$.
+
+=== ch5-p12 | 5 | Préparation d'une solution tampon | probleme | Problème 12 (p. 243)
+Q:
+Les constantes d'ionisation d'un diacide ({{H2A}}) sont les suivantes : $K_{a1}$ = 1,1 × 10^{−3} et $K_{a2}$ = 2,5 × 10^{−6}. Pour former une solution tampon dont le pH est 5,80, quelle combinaison choisiriez-vous : NaHA/{{H2A}} ou {{Na2A}}/NaHA?
+A:
+{{Na2A}}/NaHA, car son p$K_a$ (5,60) est le plus proche du pH voulu (5,80).
+H:
+Un tampon est efficace quand p$K_a$ ≈ pH voulu. Calculer p$K_{a1}$ (couple {{H2A}}/{{HA-}}) et p$K_{a2}$ (couple {{HA-}}/{{A^{2-}}}).
+S:
+$$\text{p}K_{a1} = -\log(1,1\times10^{-3}) = 2,96 \qquad \text{p}K_{a2} = -\log(2,5\times10^{-6}) = 5,60$$
+Le p$K_a$ le plus proche de 5,80 est p$K_{a2}$ = 5,60, celui du couple {{HA-}}/{{A^{2-}}}, c'est-à-dire la combinaison {{Na2A}}/NaHA.
+
+=== ch5-p13 | 5 | Préparation d'une solution tampon | probleme | Problème 13 (p. 243)
+Q:
+Une étudiante veut préparer une solution tampon à pH 8,60. Lequel des acides faibles suivants devrait-elle choisir et pourquoi : HA ($K_a$ = 2,7 × 10^{−3}), HB ($K_a$ = 4,4 × 10^{−6}) ou HC ($K_a$ = 2,6 × 10^{−9})?
+A:
+HC, car son p$K_a$ (8,59) est le plus proche du pH voulu (8,60).
+H:
+Choisir l'acide dont le p$K_a$ est le plus proche du pH voulu.
+S:
+$$\text{p}K_a(\ce{HA}) = -\log(2,7\times10^{-3}) = 2,57$$
+$$\text{p}K_a(\ce{HB}) = -\log(4,4\times10^{-6}) = 5,36$$
+$$\text{p}K_a(\ce{HC}) = -\log(2,6\times10^{-9}) = 8,59$$
+HC : son p$K_a$ (8,59) est pratiquement égal au pH désiré (8,60), donc le tampon HC/{{C-}} sera le plus efficace.
+
+=== ch5-p65 | 5 | Préparation d'une solution tampon | probleme | Problème 65 (p. 247)
+Q:
+Combien de moles de NaOH doivent être ajoutées à un litre de solution tampon constituée d'acide acétique 1,8 mol/L et d'acétate de sodium 1,2 mol/L pour produire un tampon de pH 5,22? Supposez que le volume demeure constant.
+A:
+≈ 1,0 mol de NaOH (le calcul donne 1,05 mol)
+H:
+Soit x les moles de NaOH : elles transforment x mol de {{CH3COOH}} en {{CH3COO-}}. Écrire Henderson-Hasselbalch avec (1,2 + x) et (1,8 − x), puis isoler x.
+S:
+$\ce{CH3COOH(aq) + OH-(aq) -> CH3COO-(aq) + H2O(l)}$
+| | {{CH3COOH}} | {{OH-}} | {{CH3COO-}} |
+| I | 1,8 | x | 1,2 |
+| R | −x | −x | +x |
+| F | 1,8 − x | 0 | 1,2 + x |
+$$5,22 = 4,74 + \log\frac{1,2 + x}{1,8 - x} \;\Rightarrow\; \log\frac{1,2 + x}{1,8 - x} = 0,48$$
+$$\frac{1,2 + x}{1,8 - x} = 10^{0,48} = 3,02$$
+$$1,2 + x = 3,02(1,8 - x) = 5,44 - 3,02x$$
+$$4,02x = 4,24 \;\Rightarrow\; x = 1,05\u{mol} \approx 1,0\u{mol de NaOH}$$
+
+=== ch5-p69 | 5 | Préparation d'une solution tampon | probleme | Problème 69 (p. 247)
+Q:
+Une méthode pour distinguer une solution tampon d'une solution acide est la dilution.
+a) Supposez une solution tampon faite de {{CH3COOH}} à 0,500 mol/L et de {{CH3COONa}} à 0,500 mol/L. Calculez son pH ainsi que son pH après une dilution par un facteur 10.
+b) Comparez le résultat en a) avec les pH d'une solution de {{CH3COOH}} à 0,500 mol/L avant et après l'avoir diluée par un facteur 10.
+A:
+a) 4,74 et 4,74 ; b) 2,52 et 3,02
+H:
+Dans un tampon, la dilution ne change pas le rapport [base]/[acide]. Pour l'acide seul, refaire le tableau I-R-E avec la nouvelle concentration.
+S:
+a) Avant : $\text{pH} = 4,74 + \log\frac{0,500}{0,500} = 4,74$.
+Après dilution par 10 (0,0500 mol/L chacun) : $\text{pH} = 4,74 + \log\frac{0,0500}{0,0500} = 4,74$. Le rapport reste 1 : le pH ne change pas.
+b) Acide acétique seul ($K_a = 1,8\times10^{-5}$) :
+$$\text{Avant : } x = \sqrt{(1,8\times10^{-5})(0,500)} = 3,00\times10^{-3}\u{mol/L} \;\Rightarrow\; \text{pH} = 2,52$$
+$$\text{Après : } x = \sqrt{(1,8\times10^{-5})(0,0500)} = 9,49\times10^{-4}\u{mol/L} \;\Rightarrow\; \text{pH} = 3,02$$
+Le pH de l'acide seul augmente de 0,50 unité, celui du tampon ne bouge pas.
+
+=== ch5-p71 | 5 | Préparation d'une solution tampon | probleme | Problème 71 (p. 247)
+Q:
+Décrivez comment vous procéderiez pour préparer 1,0 L d'une solution tampon : {{CH3COONa}} 0,20 mol/L / {{CH3COOH}} 0,20 mol/L
+a) en mélangeant une solution de {{CH3COOH}} avec une solution de {{CH3COONa}} ;
+b) en faisant réagir une solution de {{CH3COOH}} avec une solution de NaOH ;
+c) en faisant réagir une solution de {{CH3COONa}} avec une solution de HCl.
+A:
+a) 500 mL de {{CH3COOH}} 0,40 mol/L + 500 mL de {{CH3COONa}} 0,40 mol/L
+b) 500 mL de {{CH3COOH}} 0,80 mol/L + 500 mL de NaOH 0,40 mol/L
+c) 500 mL de {{CH3COONa}} 0,80 mol/L + 500 mL de HCl 0,40 mol/L
+H:
+Dans 1,0 L final, il faut 0,20 mol de {{CH3COOH}} et 0,20 mol de {{CH3COO-}}. En b) et c), la réaction complète crée une des deux espèces à partir de l'autre.
+S:
+But : $n(\ce{CH3COOH}) = 0,20$ mol et $n(\ce{CH3COO-}) = 0,20$ mol dans 1,0 L.
+a) Mélange direct : 500 mL de {{CH3COOH}} 0,40 mol/L (0,20 mol) + 500 mL de {{CH3COONa}} 0,40 mol/L (0,20 mol).
+b) $\ce{CH3COOH + NaOH -> CH3COONa + H2O}$ : 0,20 mol de NaOH transforme 0,20 mol de {{CH3COOH}} en 0,20 mol de {{CH3COONa}}. Il faut donc partir de 0,40 mol de {{CH3COOH}} : 500 mL de {{CH3COOH}} 0,80 mol/L + 500 mL de NaOH 0,40 mol/L.
+c) $\ce{CH3COONa + HCl -> CH3COOH + NaCl}$ : 0,20 mol de HCl transforme 0,20 mol de {{CH3COONa}} en 0,20 mol de {{CH3COOH}}. Il faut donc partir de 0,40 mol de {{CH3COONa}} : 500 mL de {{CH3COONa}} 0,80 mol/L + 500 mL de HCl 0,40 mol/L.
 
 === ch4-ex4.3 | 4 | Pas dans la liste | interne | Exercice 4.3 (ancienne liste)
 Q:
@@ -8217,7 +8656,7 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
     const COURSES = [
       { id: "anat", name: "Anatomie et physiologie humaines", icon: "🫀", color: "#be123c", chapters: [] },
       { id: "em", name: "Électricité et magnétisme", icon: "⚡", color: "#b45309", chapters: [[5, "Condensateurs"], [6, "Courant"], [7, "Circuits"]], search: "Rechercher (E13, P7, RC…)" },
-      { id: "chimie", name: "Chimie des solutions", icon: "🧪", color: "#0f766e", chapters: [[2, "Cinétique"], [3, "Équilibre"], [4, "Acides/bases"]], search: "Rechercher (2.4, pH, Kp…)" },
+      { id: "chimie", name: "Chimie des solutions", icon: "🧪", color: "#0f766e", chapters: [[2, "Cinétique"], [3, "Équilibre"], [4, "Acides/bases"], [5, "Solutions tampon"]], search: "Rechercher (2.4, pH, Kp…)" },
       { id: "proba", name: "Probabilité et statistique", icon: "📊", color: "#4338ca", chapters: [[3, "Lois discrètes"], [4, "Lois continues"], [5, "Estimation"]], search: "Rechercher (E28, binomiale…)" }
     ];
     const courseById = id => COURSES.find(c => c.id === id);
