@@ -604,7 +604,7 @@
         <p>Avec une clé, les 3 boutons du bas lisent ce que tu as écrit au crayon et te répondent.</p>
         <p style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px 12px;font-size:13px">
           1. Va sur <b>aistudio.google.com</b> → <i>Get API key</i> (gratuit).<br>
-          2. Colle la clé ici. Elle reste seulement sur cet appareil.<br>
+          2. Colle la clé ici. Si tu es connecté à la sauvegarde en ligne (☁️), elle arrive toute seule sur tes autres appareils.<br>
           3. Sans clé, tu as quand même la réponse finale, les points de contrôle et le corrigé complet.
         </p>
         <label for="apiKeyInput">Clé API Gemini</label>
@@ -6842,7 +6842,8 @@ $$n = \frac{1\,229,3}{0,7996 + 0,6147} = \frac{1\,229,3}{1,4143} \approx 869,2 \
     const COLORS = [["#0f172a", "Noir"], ["#2563eb", "Bleu"], ["#dc2626", "Rouge"], ["#16a34a", "Vert"], ["#eab308", "Jaune"], ["#9333ea", "Violet"]];
     const LS = {
       status: "sn2_ex_status", notes: "sn2_ex_notes", key: "sn2_gemini_api_key", model: "sn2_gemini_model",
-      prefs: "sn2v2_prefs", ink: "sn2v2_ink_", migrated: "sn2v2_migrated", pages: "sn2v2_pages", revisit: "sn2v2_revisit", repass: "sn2v2_repasse"
+      prefs: "sn2v2_prefs", ink: "sn2v2_ink_", migrated: "sn2v2_migrated", pages: "sn2v2_pages", revisit: "sn2v2_revisit", repass: "sn2v2_repasse",
+      aiSync: "sn2v2_ai"   // copie {key, model} de la clé IA, envoyée sur les autres appareils par la sauvegarde en ligne
     };
     // Statuts : done = réussi, almost = presque (détail manqué / hésitation), review = à refaire
     const STATUS_ICON = { done: "✅", almost: "🟡", review: "❌" };
@@ -6990,6 +6991,8 @@ $$n = \frac{1\,229,3}{0,7996 + 0,6147} = \frac{1\,229,3}{1,4143} \approx 869,2 \
       $("apiKeyInput").value = safeGet(LS.key, "");
       $("modelInput").value = aiWantedModel();
       updateApiBadge();
+      // une clé enregistrée avant la version 27 : on en fait la copie qui part sur les autres appareils
+      try { if (localStorage.getItem(LS.aiSync) === null && safeGet(LS.key, "")) aiSyncSave(); } catch (e) {}
 
       buildToolbar();
       setTool(prefs.tool, true);
@@ -7080,7 +7083,7 @@ $$n = \frac{1\,229,3}{0,7996 + 0,6147} = \frac{1\,229,3}{1,4143} \approx 869,2 \
       try {
         for (let i = 0; i < localStorage.length; i++) {
           const k = localStorage.key(i);
-          if (/^sn2/.test(k) && k !== LS.key) items[k] = localStorage.getItem(k);  // jamais la clé API
+          if (/^sn2/.test(k) && k !== LS.key && k !== LS.aiSync) items[k] = localStorage.getItem(k);  // jamais la clé API
         }
       } catch (e) {}
       const data = { app: "cahier-chimie-sn2", v: 3, date: new Date().toISOString(), items, ink: {}, docs };
@@ -7204,7 +7207,7 @@ $$n = \frac{1\,229,3}{0,7996 + 0,6147} = \frac{1\,229,3}{1,4143} \approx 869,2 \
       let n = 0;
       try {
         Object.entries(data.items).forEach(([k, v]) => {
-          if (/^sn2/.test(k) && k !== LS.key && typeof v === "string") { localStorage.setItem(k, v); n++; }
+          if (/^sn2/.test(k) && k !== LS.key && k !== LS.aiSync && typeof v === "string") { localStorage.setItem(k, v); n++; }
         });
       } catch (e) { showToast("Mémoire pleine : restauration incomplète."); }
       try {
@@ -8532,16 +8535,37 @@ $$n = \frac{1\,229,3}{0,7996 + 0,6147} = \frac{1\,229,3}{1,4143} \approx 869,2 \
       const model = $("modelInput").value.trim() || "auto";
       safeSet(LS.key, key);
       safeSet(LS.model, model);
+      aiSyncSave();
       aiModelCache = null; aiNoQuota.clear();
       updateApiBadge();
       closeModal("apiModal");
-      showToast(key ? "Clé enregistrée : l'IA lira ton écriture." : "Réglages enregistrés.");
+      const everywhere = typeof cloud !== "undefined" && cloud.auth ? " Elle arrive aussi sur tes autres appareils connectés." : "";
+      showToast(key ? "Clé enregistrée : l'IA lira ton écriture." + everywhere : "Réglages enregistrés.");
     }
     function clearApiKey() {
       $("apiKeyInput").value = "";
       safeSet(LS.key, "");
+      aiSyncSave();
       updateApiBadge();
       showToast("Clé effacée.");
+    }
+    // Copie synchronisée de la clé (la sauvegarde en ligne la fusionne comme les statuts : le plus récent gagne)
+    function aiSyncSave() {
+      const key = safeGet(LS.key, ""), model = safeGet(LS.model, "");
+      const o = {};
+      if (key) o.key = key;
+      if (model) o.model = model;
+      safeSet(LS.aiSync, o);
+    }
+    // La clé arrive d'un autre appareil
+    function aiSyncApply(str) {
+      const o = parseObj(str);
+      if (o.key) localStorage.setItem(LS.key, JSON.stringify(o.key)); else localStorage.removeItem(LS.key);
+      if (o.model) localStorage.setItem(LS.model, JSON.stringify(o.model));
+      aiModelCache = null; aiNoQuota.clear();
+      $("apiKeyInput").value = safeGet(LS.key, "");
+      $("modelInput").value = aiWantedModel();
+      updateApiBadge();
     }
     function updateApiBadge() {
       $("apiDot").className = "dot" + (safeGet(LS.key, "") ? " ok" : "");
@@ -9810,7 +9834,7 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
     //  L'état de la synchro est dans une base à part (IndexedDB "sn2_sync"), hors sauvegarde.
     // =========================================================================
     const CLOUD_CFG = { apiKey: "AIzaSyBZyjgpHLg83hsRFwGUnRl-IQCrOIiAkI4", projectId: "session-a2026" };   // configuration publique (pas un secret)
-    const SYNC_MAPS = [LS.status, LS.notes, LS.pages, LS.revisit, LS.repass];
+    const SYNC_MAPS = [LS.status, LS.notes, LS.pages, LS.revisit, LS.repass, LS.aiSync];
     const SYNC_CHUNK = 300000;   // caractères par morceau (un document Firestore ≤ 1 Mo)
     const cloud = {
       db: null, auth: null, state: new Map(), gen: new Map(), deferred: new Map(),
@@ -9883,6 +9907,7 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
           if (k === LS.revisit) revisitMap = safeGet(LS.revisit, {});
           if (k === LS.repass) repassMap = safeGet(LS.repass, {});
           if (k === LS.pages) pagesMap = null;
+          if (k === LS.aiSync) aiSyncApply(str);
           if (k === LS.notes && currentExId && document.activeElement !== $("noteInput")) $("noteInput").value = safeGet(LS.notes, {})[currentExId] || "";
         } else if (kind === "ink") {
           if (str) inkWrite(k, str); else inkRemove(k);
