@@ -612,10 +612,9 @@
         <label for="modelInput">Modèle</label>
         <input id="modelInput" class="field selectable" list="modelList" autocomplete="off" autocorrect="off" spellcheck="false" autocapitalize="off">
         <datalist id="modelList">
-          <option value="gemini-flash-latest">
-          <option value="gemini-2.5-flash">
-          <option value="gemini-2.5-pro">
+          <option value="auto">
         </datalist>
+        <p style="font-size:13px;color:#64748b;margin-top:6px">Laisse « auto » : l'app prend le meilleur modèle Gemini que ta clé permet (Pro si possible, sinon le meilleur Flash), jamais les versions « Lite ».</p>
         <div class="modal-actions">
           <button class="btn link" onclick="clearApiKey()">Effacer la clé</button>
           <button class="btn primary" onclick="saveApiKey()">Enregistrer</button>
@@ -6989,7 +6988,7 @@ $$n = \frac{1\,229,3}{0,7996 + 0,6147} = \frac{1\,229,3}{1,4143} \approx 869,2 \
       repassMap = safeGet(LS.repass, {});
       exStatusMap = safeGet(LS.status, {});
       $("apiKeyInput").value = safeGet(LS.key, "");
-      $("modelInput").value = safeGet(LS.model, "gemini-flash-latest");
+      $("modelInput").value = aiWantedModel();
       updateApiBadge();
 
       buildToolbar();
@@ -8530,9 +8529,10 @@ $$n = \frac{1\,229,3}{0,7996 + 0,6147} = \frac{1\,229,3}{1,4143} \approx 869,2 \
     // =========================================================================
     function saveApiKey() {
       const key = $("apiKeyInput").value.trim();
-      const model = $("modelInput").value.trim() || "gemini-flash-latest";
+      const model = $("modelInput").value.trim() || "auto";
       safeSet(LS.key, key);
       safeSet(LS.model, model);
+      aiModelCache = null; aiNoQuota.clear();
       updateApiBadge();
       closeModal("apiModal");
       showToast(key ? "Clé enregistrée : l'IA lira ton écriture." : "Réglages enregistrés.");
@@ -8593,7 +8593,6 @@ $$n = \frac{1\,229,3}{0,7996 + 0,6147} = \frac{1\,229,3}{1,4143} \approx 869,2 \
       if (!ex) return;
       const body = $("sheetBody");
       const apiKey = safeGet(LS.key, "");
-      const model = safeGet(LS.model, "gemini-flash-latest");
       const hasDrawing = inkStrokes().length > 0;
       const textNote = $("noteInput").value.trim();
       const titles = { verify: "Réponse", error: "Où est mon erreur ?", explain: "Solution détaillée" };
@@ -8643,21 +8642,24 @@ $$n = \frac{1\,229,3}{0,7996 + 0,6147} = \frac{1\,229,3}{1,4143} \approx 869,2 \
       const box = $("aiBox");
       if (!ex || !box) return;
       const apiKey = safeGet(LS.key, "");
-      const model = safeGet(LS.model, "gemini-flash-latest");
+      const model = aiWantedModel();
       const textNote = $("noteInput").value.trim();
       if (!inkStrokes().length && !textNote) {
         box.innerHTML = `<span>Écris d'abord ta démarche sur la feuille (ou ta réponse finale en bas), puis réessaie.</span>`;
         return;
       }
       box.className = "box slate ai-row";
-      box.innerHTML = `<div class="spinner"></div><div>L'IA lit ta feuille (${escapeHtml(model)})…</div>`;
+      box.innerHTML = `<div class="spinner"></div><div>L'IA prépare ta feuille…</div>`;
       try {
         const res = await callGeminiVision(mode, ex, apiKey, model, textNote, (m, attempt) => {
-          box.innerHTML = `<div class="spinner"></div><div>L'IA lit ta feuille (${escapeHtml(m)}${attempt ? ", nouvel essai" : ""})…</div>`;
+          box.innerHTML = `<div class="spinner"></div><div>L'IA lit ta feuille (${escapeHtml(m)}${attempt ? ", nouvel essai" : ""})… Elle réfléchit : ça peut prendre jusqu'à une minute.</div>`;
         });
         if (currentExId !== ex.id || !$("aiBox")) return;
         box.className = "box indigo";
-        box.innerHTML = `<div class="box-title">🤖 Analyse de l'IA${res.model !== model ? ` <span style="font-weight:500;color:#64748b">(${escapeHtml(res.model)}, ${escapeHtml(model)} était surchargé)</span>` : ""}</div>${res.html}`;
+        const weak = !/-pro\b/.test(res.model)
+          ? ` <span style="font-weight:500;color:#64748b">(${escapeHtml(res.model)} : la version Pro n'était pas disponible avec ta clé, réponse moins fiable)</span>`
+          : ` <span style="font-weight:500;color:#64748b">(${escapeHtml(res.model)})</span>`;
+        box.innerHTML = `<div class="box-title">🤖 Analyse de l'IA${weak}</div>${res.html}`;
       } catch (err) {
         const msg = err instanceof TypeError
           ? "connexion à Gemini impossible : pas d'Internet, ou version en lien Claude, qui bloque les appels extérieurs"
@@ -8701,8 +8703,88 @@ $$n = \frac{1\,229,3}{0,7996 + 0,6147} = \frac{1\,229,3}{1,4143} \approx 869,2 \
       return wrap.innerHTML;
     }
 
+    // ---- Choix du modèle : le meilleur que la clé permet, jamais « Lite » ----
+    let aiModelCache = null;            // liste classée des modèles (une fois par ouverture de l'app)
+    const aiNoQuota = new Set();        // modèles refusés par la clé (Pro payant, par exemple)
+    function aiWantedModel() {
+      const m = String(safeGet(LS.model, "") || "").trim();
+      // l'ancien réglage par défaut (Flash) et les versions Lite passent en automatique
+      return (!m || m === "gemini-flash-latest" || /lite/i.test(m)) ? "auto" : m;
+    }
+    async function aiModelList(apiKey) {
+      if (aiModelCache) return aiModelCache;
+      let names = [];
+      try {
+        const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000&key=${encodeURIComponent(apiKey)}`);
+        if (r.ok) {
+          const d = await r.json();
+          names = (d.models || []).filter(m => (m.supportedGenerationMethods || []).includes("generateContent"))
+            .map(m => String(m.name || "").replace(/^models\//, ""));
+        }
+      } catch (e) {}
+      const found = [];
+      names.forEach(n => {
+        if (/lite|tts|image|audio|live|embed|thinking|computer|robotics|native|exp|learnlm|nano|banana|omni/i.test(n)) return;
+        const m = /^gemini-(\d+(?:\.\d+)?)-(pro|flash)(-latest|-\d{3}|-preview(?:-[\w-]+)?)?$/.exec(n);
+        if (m) found.push({ n, v: parseFloat(m[1]), pro: m[2] === "pro", pre: /preview/.test(m[3] || "") });
+      });
+      found.sort((a, b) => (b.pro - a.pro) || (b.v - a.v) || (a.pre - b.pre));
+      const pros = found.filter(x => x.pro).slice(0, 2).map(x => x.n);
+      const flashes = found.filter(x => !x.pro).slice(0, 2).map(x => x.n);
+      const list = [...new Set([...pros, "gemini-pro-latest", ...flashes, "gemini-flash-latest", "gemini-2.5-flash"])];
+      if (names.length) aiModelCache = list;
+      return list;
+    }
+    // ---- Images envoyées : la feuille en morceaux nets, puis les figures de l'exercice ----
+    async function aiSheetParts() {
+      let b = [Infinity, Infinity, -Infinity, -Infinity];
+      inkStrokes().forEach(s => {
+        const q = bbox(s);
+        b = [Math.min(b[0], q[0]), Math.min(b[1], q[1]), Math.max(b[2], q[2]), Math.max(b[3], q[3])];
+      });
+      if (!isFinite(b[1])) b = [0, 0, PAGE_W, 400];
+      const y0 = Math.max(0, b[1] - 30), y1 = b[3] + 30, SC = 1.5;
+      const n = Math.max(1, Math.min(8, Math.ceil((y1 - y0) / 1200)));
+      const sl = (y1 - y0) / n;
+      await figsReady(doc.strokes);
+      const out = [];
+      for (let i = 0; i < n; i++) {
+        const top = y0 + i * sl, h = sl + (i < n - 1 ? 60 : 0);   // léger chevauchement : aucune ligne coupée en deux
+        const W = Math.round(PAGE_W * SC), H = Math.max(1, Math.round(h * SC));
+        const layer = document.createElement("canvas");
+        layer.width = W; layer.height = H;
+        const lx = layer.getContext("2d");
+        lx.setTransform(SC, 0, 0, SC, 0, -top * SC);
+        doc.strokes.forEach(s => { const q = bbox(s); if (q[3] >= top && q[1] <= top + h) drawStroke(lx, s, false); });
+        drawFigsUnder(lx, doc.strokes);
+        const c = document.createElement("canvas");
+        c.width = W; c.height = H;
+        const cx = c.getContext("2d");
+        cx.fillStyle = "#fff"; cx.fillRect(0, 0, W, H);
+        cx.drawImage(layer, 0, 0);
+        layer.width = layer.height = 0;
+        out.push(c.toDataURL("image/png").split(",")[1]);
+        c.width = c.height = 0;
+      }
+      return out;
+    }
+    function aiBase64(bytes) {
+      let s = "";
+      for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+      return btoa(s);
+    }
+    async function aiFigureParts(ex) {
+      const ids = [...new Set([...String(ex.statement || "").matchAll(/\[\[fig:([\w.-]+)\]\]/g)].map(m => m[1]))];
+      const out = [];
+      for (const id of ids.slice(0, 4)) {
+        try { const im = await aiFigureImage(id, [ex.id]); if (im) out.push({ id, data: aiBase64(im.bytes) }); } catch (e) {}
+      }
+      return out;
+    }
+
     async function callGeminiVision(mode, ex, apiKey, model, textNote, onProgress) {
-      const base64Data = renderExport().toDataURL("image/png").split(",")[1];
+      const sheet = await aiSheetParts();
+      const figs = await aiFigureParts(ex);
 
       let modeInstruction = "";
       const note = textNote ? ` (réponse finale tapée par l'étudiant : "${textNote}")` : "";
@@ -8749,7 +8831,7 @@ Conventions importantes du cahier de notes de cours (NDC) à accepter :
         : ex.course === "proba" ? `Tu es le tuteur personnel du cours « Probabilités et statistiques (201-SN1-RE) » au Cégep.
 Voici l'exercice sur lequel travaille l'étudiant :
 Titre : ${ex.title} (Chapitre ${ex.chapter} — ${ex.section})
-(Les formules ci-dessous sont écrites en notation LaTeX simplifiée ; \\$ = signe dollar. [[fig:…]] indique une courbe normale, non transmise : fie-toi à l'énoncé et au corrigé.)
+(Les formules ci-dessous sont écrites en notation LaTeX simplifiée ; \\$ = signe dollar. [[fig:…]] indique une figure, jointe en image après la feuille quand elle existe.)
 Notations du cours : X ~ B(n ; p), X ~ N(μ ; σ²) (le 2e paramètre est la variance), C(n, k), table de la loi normale donnant P(0 < Z < z), z_α tel que P(Z > z_α) = α.
 Énoncé : ${ex.statement}
 La feuille manuscrite de l'étudiant est sur l'image.
@@ -8758,12 +8840,15 @@ Corrigé : ${ex.solution}`
         : `Tu es le tuteur personnel du cours « Électricité et magnétisme (203-SN2-RE) » au Cégep.
 Voici l'exercice sur lequel travaille l'étudiant :
 Titre : ${ex.title} (Chapitre ${ex.chapter} — ${ex.section})
-(Les formules ci-dessous sont écrites en notation LaTeX simplifiée. [[fig:…]] indique une figure de circuit, non transmise : fie-toi au corrigé pour le montage.)
+(Les formules ci-dessous sont écrites en notation LaTeX simplifiée. [[fig:…]] indique une figure de circuit, jointe en image après la feuille ; le corrigé confirme le montage.)
 Énoncé : ${ex.statement.replace(/\[\[fig:(em-tab-[\w.-]+)\]\]/g, (m, id) => FIG_TEXT[id] || m)}
 La feuille manuscrite de l'étudiant est sur l'image.
 Réponse attendue : ${ex.shortAnswer}
 Corrigé : ${ex.solution}`;
       const systemPrompt = `${intro}
+
+IMAGES : d'abord la feuille manuscrite de l'étudiant (${sheet.length > 1 ? `${sheet.length} morceaux de la même feuille, de haut en bas, qui se chevauchent un peu` : "une image"}), puis ${figs.length ? `les figures de l'énoncé (${figs.map(f => f.id).join(", ")})` : "aucune figure"}.
+MÉTHODE : lis l'écriture avec soin, symbole par symbole (exposants, signes, virgules, unités). Refais toi-même chaque calcul avant de juger : ne dis jamais qu'une ligne est fausse sans l'avoir vérifiée. Compare au corrigé, mais accepte une autre démarche juste ou un arrondi raisonnable. Si un passage est illisible, écris « (illisible) » au lieu de deviner.
 
 ${modeInstruction}
 Réponds en français, de façon très brève et précise : uniquement le format demandé, aucune phrase de remplissage.
@@ -8777,15 +8862,23 @@ FORMAT OBLIGATOIRE (ta réponse est affichée par un moteur qui dessine les form
 - Nombres avec la virgule décimale : 0,25 et $3,0\\times10^{-4}$.
 Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_{t}} = \\frac{1}{0,028\\text{ s}^{-1}}\\ln\\frac{0,88}{0,14} \\approx 66\\text{ s}$$ »`;
 
+      // Pas de « temperature » : les modèles Gemini récents raisonnent mieux avec leur réglage par défaut
       const body = JSON.stringify({
         contents: [{ parts: [
           { text: systemPrompt },
-          { inline_data: { mime_type: "image/png", data: base64Data } }
-        ] }],
-        generationConfig: { temperature: 0.2 }
+          ...sheet.map((d, i) => [
+            { text: sheet.length > 1 ? `Feuille de l'étudiant, morceau ${i + 1}/${sheet.length} :` : "Feuille de l'étudiant :" },
+            { inline_data: { mime_type: "image/png", data: d } }
+          ]).flat(),
+          ...figs.map(f => [
+            { text: `Figure de l'énoncé ${f.id} :` },
+            { inline_data: { mime_type: "image/jpeg", data: f.data } }
+          ]).flat()
+        ] }]
       });
-      // Si le modèle choisi est surchargé (503) ou limité (429), on réessaie puis on passe à un modèle de secours
-      const models = [...new Set([model, "gemini-2.5-flash", "gemini-flash-lite-latest", "gemini-2.5-flash-lite"])];
+      // Ordre : le modèle choisi, puis le meilleur Pro, puis le meilleur Flash. Jamais « Lite ».
+      const auto = await aiModelList(apiKey);
+      const models = [...new Set([...(model && model !== "auto" ? [model] : []), ...auto])].filter(m => !aiNoQuota.has(m));
       let lastErr = "";
       for (const m of models) {
         for (let attempt = 0; attempt < 2; attempt++) {
@@ -8796,18 +8889,20 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
           if (resp.ok) {
             const data = await resp.json();
             const parts = data?.candidates?.[0]?.content?.parts || [];
-            const text = parts.map(p => p.text || "").join("").trim();
+            const text = parts.filter(p => !p.thought).map(p => p.text || "").join("").trim();
+            if (!text && attempt === 0) continue;                       // réponse vide : un nouvel essai
             return { html: formatAiText(text || "Aucune réponse reçue."), model: m };
           }
           let msg = "";
           try { msg = (await resp.json())?.error?.message || ""; } catch (e) {}
           lastErr = "erreur " + resp.status + (msg ? " : " + msg.slice(0, 160) : "");
-          if (resp.status === 400 || resp.status === 401 || resp.status === 403) throw new Error(lastErr);   // clé invalide : inutile d'insister
-          if (resp.status === 404) break;                                                                   // modèle inconnu : modèle suivant
+          if (resp.status === 401 || resp.status === 403 || /api key/i.test(msg)) throw new Error(lastErr);   // clé invalide : inutile d'insister
+          if (resp.status === 429) { if (/limit: ?0\b/i.test(msg)) aiNoQuota.add(m); break; }   // pas permis ou limite atteinte : modèle suivant
+          if (resp.status === 400 || resp.status === 404) break;          // modèle inconnu ou refusé : modèle suivant
           if (attempt === 0) await new Promise(r => setTimeout(r, 1500));
         }
       }
-      throw new Error("tous les modèles Gemini sont surchargés pour le moment, réessaie dans quelques minutes (" + lastErr + ")");
+      throw new Error("aucun modèle Gemini n'a pu répondre pour le moment, réessaie dans quelques minutes (" + lastErr + ")");
     }
 
     // =========================================================================
