@@ -388,6 +388,31 @@
     .ai-ch { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; margin: 0; }
     .ai-ch input { width: 20px; height: 20px; }
     .zoom-txt { font-size: 13px; font-weight: 700; min-width: 48px; text-align: center; color: #e5e7eb; }
+
+    /* ---------- Version 25 : énoncé épinglé, filtres de révision, réponses par sous-question ---------- */
+    @media (max-width: 1150px) { .tb-btn .lbl-x { display: none; } }
+    .pager .pg-w { font-style: normal; }
+    @media (max-width: 860px) {   /* iPad à la verticale : toute la barre d'outils tient sans défiler */
+      .tool { width: 36px; } .sw, .sz { width: 27px; } .pager .tool { width: 30px; }
+      .pager #pagerText { min-width: 34px; } .pager .pg-w { display: none; } body.focus .focus-title { display: none !important; }
+    }
+    .ans-line + .ans-line { margin-top: 8px; }
+    .answer .ans-line + .ans-line { padding-top: 8px; border-top: 1px dashed #bbf7d0; }
+    #peekPanel {
+      position: absolute; top: 0; left: 0; right: 0; z-index: 15; display: none; flex-direction: column; max-height: 46%;
+      background: #fff; border-bottom: 1px solid var(--line); box-shadow: 0 10px 24px rgba(15,23,42,.2);
+    }
+    #peekPanel.open { display: flex; }
+    #peekBody { overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding: 10px 16px 12px; font-size: 16px; line-height: 1.5; }
+    #peekBody p { margin: .4em 0; }
+    #peekBody ul { margin: .4em 0; padding-left: 1.3em; }
+    body.mode-doc #peekPanel { display: none !important; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .chip { height: 40px; padding: 0 14px; border-radius: 20px; background: var(--panel); box-shadow: 0 0 0 1px #cbd5e1; font-weight: 600; font-size: 14px; color: #334155; }
+    .chip.on { background: #dbeafe; color: #1d4ed8; box-shadow: inset 0 0 0 2px #93c5fd; }
+    .chip small { font-weight: 700; opacity: .7; margin-left: 4px; }
+    #homeResume { margin-bottom: 14px; }
+    #homeResume .btn { max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   </style>
 </head>
 <body>
@@ -400,6 +425,7 @@
       <button class="tb-btn" onclick="openBackup()"><span data-ic="save"></span><span>Sauvegarde</span></button>
     </header>
     <div class="scr-body"><div class="scr-inner">
+      <div id="homeResume"></div>
       <div id="courseGrid"></div>
       <div id="storageInfo"></div>
     </div></div>
@@ -434,9 +460,9 @@
     <button id="markDoneBtn" class="tb-btn ex-only" onclick="setExerciseStatus('done')" title="Réussi du premier coup"><span>✅</span><span class="lbl">Réussi</span></button>
     <button id="markAlmostBtn" class="tb-btn ex-only" onclick="setExerciseStatus('almost')" title="Presque : petit détail manqué ou j'ai hésité"><span>🟡</span><span class="lbl">Presque</span></button>
     <button id="markReviewBtn" class="tb-btn ex-only" onclick="setExerciseStatus('review')" title="Raté : à refaire"><span>❌</span><span class="lbl">À refaire</span></button>
-    <button id="markRevisitBtn" class="tb-btn ex-only" onclick="toggleRevisit()" title="À revoir avant l'examen (exercice spécial, info à retenir)"><span>🟣</span><span class="lbl">À revoir</span></button>
-    <button id="markRepassBtn" class="tb-btn ex-only" onclick="toggleRepass()" title="Repassé : j'ai déjà revu cet exercice"><span>🔵</span><span class="lbl">Repassé</span></button>
-    <button id="refBtn" class="tb-btn ex-only" onclick="openRef()" title="Aide-mémoire (formules, Ka)"><span data-ic="book"></span><span class="lbl">Formules</span></button>
+    <button id="markRevisitBtn" class="tb-btn ex-only" onclick="toggleRevisit()" title="À revoir avant l'examen (exercice spécial, info à retenir)"><span>🟣</span><span class="lbl lbl-x">À revoir</span></button>
+    <button id="markRepassBtn" class="tb-btn ex-only" onclick="toggleRepass()" title="Repassé : j'ai déjà revu cet exercice"><span>🔵</span><span class="lbl lbl-x">Repassé</span></button>
+    <button id="refBtn" class="tb-btn ex-only" onclick="openRef()" title="Aide-mémoire (formules)"><span data-ic="book"></span><span class="lbl lbl-x">Formules</span></button>
     <button class="tb-btn ex-only" onclick="openModal('apiModal')" title="Réglages de l'IA"><span id="apiDot" class="dot"></span><span>IA</span></button>
     <button class="tb-btn doc-only pdf-zoom" onclick="changeZoom(-1)" aria-label="Réduire"><span style="font-size:22px">−</span></button>
     <span id="zoomText" class="zoom-txt doc-only pdf-zoom">100 %</span>
@@ -470,6 +496,7 @@
     </span>
     <button class="tool focus-only ex-only" onclick="runAssistantAction('verify')" title="Voir la réponse" aria-label="Voir la réponse"><span data-ic="check"></span></button>
     <button id="focusRefBtn" class="tool focus-only ex-only" onclick="openRef()" title="Formules" aria-label="Formules"><span data-ic="book"></span></button>
+    <button id="peekTool" class="tool ex-only" onclick="togglePeek()" title="Revoir l'énoncé sans remonter" aria-label="Revoir l'énoncé"><span data-ic="doc"></span></button>
     <button id="moreBtn" class="tool" onclick="openMoreMenu()" title="Plus d'options" aria-label="Plus d'options"><span data-ic="more"></span></button>
     <button id="focusBtn" class="tool" onclick="toggleFocus()" title="Plein écran" aria-label="Plein écran"><span id="focusIc" data-ic="maximize"></span></button>
   </div>
@@ -502,6 +529,7 @@
     <div id="scrim" onclick="toggleDrawer(false)"></div>
 
     <div id="center">
+      <div id="peekPanel"><div id="peekBody" class="selectable"></div></div>
       <div id="page">
         <section id="statementCard" class="card">
           <div class="card-head" onclick="toggleStatement()">
@@ -856,6 +884,68 @@ $\vec{E} = \frac{\sigma}{2\varepsilon_{0}}\vec{u}_{n}$ $\qquad \vec{E} = \frac{|
 $U_{e} = \sum_{i&lt;j}^{N}k\frac{q_{i}q_{j}}{r_{ij}}$ $\qquad \Delta U_{e} = q\Delta V$
 $\Delta V = V_{b} - V_{a} = -\int_{a}^{b}\vec{E}\cdot d\vec{s}$ $\qquad V = \sum_{i=1}^{N}\frac{kq_{i}}{r_{i}}$ $\qquad V = k\int\frac{dq}{r}$
 $\vec{E} = -\left(\frac{\partial V}{\partial x}\vec{i} + \frac{\partial V}{\partial y}\vec{j} + \frac{\partial V}{\partial z}\vec{k}\right)$ $\qquad ℰ = \frac{W_{pile}}{q}$
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== MODALE : FORMULES DE PROBABILITÉS ===================== -->
+  <div id="refModalProba" class="modal" onclick="if(event.target===this) closeModal('refModalProba')">
+    <div class="modal-card wide">
+      <div class="modal-head"><h3>Formules : Probabilité et statistique (201-SN1-RE)</h3><button class="tb-btn" onclick="closeModal('refModalProba')" aria-label="Fermer"><span data-ic="x"></span></button></div>
+      <div class="modal-body selectable">
+        <div class="ref-grid">
+          <div class="box blue" data-render>
+<div class="box-title">Chapitre 3 — Variable aléatoire discrète</div>
+**Loi de probabilité :** $\sum P(X = k) = 1$
+**Espérance :** $E(X) = \mu = \sum k\,P(X = k)$
+**Variance :** $\mathrm{Var}(X) = \sigma^{2} = \sum (k - \mu)^{2}\,P(X = k)$
+**Écart type :** $\sigma = \sqrt{\mathrm{Var}(X)}$
+**Combinaisons :** $C(n, k) = \frac{n!}{k!\,(n - k)!}$
+**Jeu d'argent :** gain net = montant gagné − mise ; le jeu est avantageux si $E(X) &gt; 0$.
+          </div>
+          <div class="box indigo" data-render>
+<div class="box-title">Chapitre 3 — Loi binomiale X ~ B(n ; p)</div>
+**4 conditions :** $n$ reprises fixes, 2 résultats (succès ou échec), même $p$ à chaque reprise (indépendance), $X$ compte les succès.
+$$P(X = k) = C(n, k)\,p^{k}(1 - p)^{n-k}$$
+$E(X) = np$ $\qquad \mathrm{Var}(X) = np(1 - p)$
+**Au moins un :** $P(X \geq 1) = 1 - P(X = 0)$
+**Au plus $a$ :** $P(X \leq a) = P(X = 0) + \dots + P(X = a)$
+          </div>
+        </div>
+        <div class="ref-grid">
+          <div class="box green" data-render>
+<div class="box-title">Chapitre 4 — Variable aléatoire continue</div>
+**Densité :** $f(x) \geq 0$ et $\int_{-\infty}^{\infty} f(x)\,dx = 1$
+**Probabilité = aire :** $P(a \leq X \leq b) = \int_{a}^{b} f(x)\,dx$ $\qquad P(X = a) = 0$
+**Espérance :** $E(X) = \int x\,f(x)\,dx$
+**Variance :** $\mathrm{Var}(X) = \int (x - E(X))^{2} f(x)\,dx$
+**Intégrale impropre :** $\int_{a}^{\infty} f(x)\,dx = \lim_{b \to \infty}\int_{a}^{b} f(x)\,dx$
+**Primitive :** $\int x^{n}\,dx = \frac{x^{n+1}}{n+1}$ $(n \neq -1)$
+          </div>
+          <div class="box amber" data-render>
+<div class="box-title">Chapitre 4 — Loi normale X ~ N(μ ; σ²)</div>
+Le 2^{e} paramètre est la **variance** : $N(100 ; 25)$ veut dire $\sigma = 5$.
+**Centrer-réduire :** $z = \frac{x - \mu}{\sigma}$ $\qquad$ **À l'envers :** $x = \mu + z\sigma$
+**Table :** elle donne $P(0 &lt; Z &lt; z)$. Chaque moitié de la courbe vaut 0,5.
+**Symétrie :** $P(Z &lt; -a) = P(Z &gt; a)$ $\qquad P(-a &lt; Z &lt; 0) = P(0 &lt; Z &lt; a)$
+$P(Z &lt; a) = 0,5 + P(0 &lt; Z &lt; a)$ $\qquad P(Z &gt; a) = 0,5 - P(0 &lt; Z &lt; a)$ $\quad (a &gt; 0)$
+$P(a &lt; Z &lt; b) = P(0 &lt; Z &lt; b) - P(0 &lt; Z &lt; a)$ $\quad (0 &lt; a &lt; b)$
+**Valeur critique :** $z_{\alpha}$ est tel que $P(Z &gt; z_{\alpha}) = \alpha$ (aire $\alpha$ à droite).
+          </div>
+        </div>
+        <div class="box slate" data-render>
+<div class="box-title">Chapitre 5 — Estimation par intervalle de confiance</div>
+**Niveau de confiance** $1 - \alpha$ : on utilise $z_{\alpha/2}$. « 19 fois sur 20 » = 95 %.
+| Niveau de confiance | 90 % | 95 % | 98 % | 99 % |
+| $z_{\alpha/2}$ | $z_{0,05} = 1,645$ | $z_{0,025} = 1,96$ | $z_{0,01} = 2,33$ | $z_{0,005} = 2,575$ |
+**Moyenne ($n \geq 30$) :** $\mu \in \left[\bar{x} - ME ; \bar{x} + ME\right]$ avec $ME = z_{\alpha/2}\cdot\frac{s}{\sqrt{n}}$
+**Moyenne ($n &lt; 30$, population normale) :** loi de Student, $ME = t_{\alpha/2 ;\, n-1}\cdot\frac{s}{\sqrt{n}}$ (degrés de liberté $\nu = n - 1$)
+**Proportion :** $\pi \in \left[p - ME ; p + ME\right]$ avec $ME = z_{\alpha/2}\sqrt{\frac{p(1 - p)}{n}}$
+**Marge d'erreur :** $ME$ = moitié de la largeur de l'intervalle.
+**Sans remise et taux de sondage $\frac{n}{N} &gt; 5\,\%$ :** on multiplie l'erreur type par le facteur de correction $\sqrt{\frac{N - n}{N - 1}}$
+**Taille d'échantillon (moyenne) :** $n = \left(\frac{z_{\alpha/2}\cdot s}{ME}\right)^{2}$, arrondi vers le haut
+**Taille d'échantillon (proportion, $p$ inconnue : $p = 0,5$) :** $n = \left(\frac{z_{\alpha/2}}{2\cdot ME}\right)^{2}$, arrondi vers le haut
         </div>
       </div>
     </div>
@@ -6224,7 +6314,8 @@ $$n = \frac{1\,229,3}{0,7996 + 0,6147} = \frac{1\,229,3}{1,4143} \approx 869,2 \
       gamma: "<mi>γ</mi>", Sigma: '<mi mathvariant="normal">Σ</mi>', delta: "<mi>δ</mi>", ":": '<mspace width="0.22em"/>', "!": "",
       exp: '<mi>exp</mi><mspace width="0.17em"/>', sin: '<mi>sin</mi><mspace width="0.17em"/>', checkmark: "<mo>✓</mo>",
       div: "<mo>÷</mo>", ast: "<mo>∗</mo>", propto: "<mo>∝</mo>", leftrightharpoon: "<mo>⇌</mo>", xrightarrow: "<mo>→</mo>",
-      in: "<mo>∈</mo>", notin: "<mo>∉</mo>", nu: "<mi>ν</mi>", lim: '<mi>lim</mi><mspace width="0.17em"/>'
+      in: "<mo>∈</mo>", notin: "<mo>∉</mo>", nu: "<mi>ν</mi>", lim: '<mi>lim</mi><mspace width="0.17em"/>',
+      max: '<mi>max</mi><mspace width="0.17em"/>', min: '<mi>min</mi><mspace width="0.17em"/>', tan: '<mi>tan</mi><mspace width="0.17em"/>'
     };
     const MATH_IGNORED = /^(displaystyle|textstyle|scriptstyle|big|Big|bigg|Bigg|bigl|bigr|Bigl|Bigr|left|right|limits|nolimits)$/;
     const MATH_OPS = "+-−=<>/×·≈→⇌⇒≥≤!?:;,|";
@@ -6730,6 +6821,7 @@ $$n = \frac{1\,229,3}{0,7996 + 0,6147} = \frac{1\,229,3}{1,4143} \approx 869,2 \
       save: '<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/>',
       lasso: '<path d="M7 22a5 5 0 0 1-2-4"/><path d="M3.3 14A6.8 6.8 0 0 1 2 10c0-4.4 4.5-8 10-8s10 3.6 10 8-4.5 8-10 8a12 12 0 0 1-5-1" stroke-dasharray="3 3"/><path d="M5 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>',
       home: '<path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/>',
+      doc: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
       trash: '<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>'
     };
     function setIcon(el, name) {
@@ -6783,7 +6875,7 @@ $$n = \frac{1\,229,3}{0,7996 + 0,6147} = \frac{1\,229,3}{1,4143} \approx 869,2 \
     let prefs = {
       tool: "pen", color: "#0f172a", size: 1, paper: "grid", eraserMode: "stroke",
       fingerDraw: false, statementCollapsed: false, lastEx: null, drawerOpen: null,
-      lastByCourse: {}, docZoom: 1, docPos: {}
+      lastByCourse: {}, lastAny: null, docZoom: 1, docPos: {}
     };
 
     const sessions = {};   // exId -> { doc: {strokes, pageH}, undo: [], redo: [] }
@@ -6803,7 +6895,62 @@ $$n = \frac{1\,229,3}{0,7996 + 0,6147} = \frac{1\,229,3}{1,4143} \approx 869,2 \
       try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch (e) { return fallback; }
     }
     function safeSet(key, val) {
-      try { localStorage.setItem(key, JSON.stringify(val)); try { if (SYNC_MAPS.includes(key)) cloudDirty("ls:" + key); } catch (err) {} return true; } catch (e) { return false; }
+      const str = JSON.stringify(val);
+      try {
+        localStorage.setItem(key, str);
+        delete pendingLS[key];
+        try { if (SYNC_MAPS.includes(key)) cloudDirty("ls:" + key); } catch (err) {}
+        return true;
+      } catch (e) {
+        // Mémoire localStorage pleine (beaucoup de dessins de chimie) : on fait de la place, puis on réessaie
+        pendingLS[key] = str;
+        return relieveLocal();
+      }
+    }
+    // Quand localStorage est plein, les statuts et les notes ne peuvent plus s'enregistrer.
+    // On déplace alors les plus gros dessins vers IndexedDB (copie d'abord, retrait ensuite : rien n'est jamais perdu),
+    // puis on réécrit ce qui attendait. Les dessins déplacés se lisent comme avant (inkCache, comme le secours existant).
+    const pendingLS = {};
+    let relieving = false;
+    function biggestLocalInk() {
+      let big = null, len = 0;
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (!k || !k.startsWith(LS.ink)) continue;
+        const n = (localStorage.getItem(k) || "").length;
+        if (n > len) { len = n; big = k; }
+      }
+      return big;
+    }
+    function relieveLocal() {
+      if (relieving) return true;
+      let first = null;
+      try { first = idb && biggestLocalInk(); } catch (e) {}
+      if (!first) return false;
+      relieving = true;
+      (async () => {
+        try {
+          for (let n = 0; n < 8 && Object.keys(pendingLS).length; n++) {
+            const big = biggestLocalInk();
+            if (!big) break;
+            const id = big.slice(LS.ink.length), v = localStorage.getItem(big);
+            await idbPut("ink", id, v);
+            if (localStorage.getItem(big) !== v) continue;   // modifié entre-temps : on recommence
+            inkCache.set(id, v);
+            localStorage.removeItem(big);
+            Object.keys(pendingLS).forEach(k => {
+              try {
+                localStorage.setItem(k, pendingLS[k]);
+                delete pendingLS[k];
+                try { if (SYNC_MAPS.includes(k)) cloudDirty("ls:" + k); } catch (err) {}
+              } catch (e) {}
+            });
+          }
+        } catch (e) {}
+        relieving = false;
+        if (Object.keys(pendingLS).length && !warnedQuota) { warnedQuota = true; showToast("Mémoire de l'iPad pleine : ta dernière modification n'a pas pu être enregistrée."); }
+      })();
+      return true;
     }
     function savePrefs() { safeSet(LS.prefs, prefs); }
 
@@ -7125,26 +7272,32 @@ $$n = \frac{1\,229,3}{0,7996 + 0,6147} = \frac{1\,229,3}{1,4143} \approx 869,2 \
       }
     }
 
-    function selectChapter(ch) {
+    function showChapter(ch) {
       currentChapter = ch;
       currentCourse.chapters.forEach(([c]) => $("tabCh" + c).classList.toggle("on", c === ch));
       const chExercises = courseExercises(currentCourse.id).filter(e => e.chapter === ch);
       const sections = [...new Set(chExercises.map(e => e.section))];
       $("sectionFilter").innerHTML = `<option value="ALL">Toutes les sections (${chExercises.length})</option>` +
         sections.map(s => `<option value="${s}">${s}</option>`).join("");
+      return chExercises;
+    }
+    function selectChapter(ch) {
+      const chExercises = showChapter(ch);
       renderExerciseList();
       const curr = EXERCISES.find(e => e.id === currentExId);
       if ((!curr || curr.chapter !== ch) && chExercises.length) selectExercise(chExercises[0].id, true);
       else if (curr && !doc) selectExercise(curr.id, true);
     }
 
-    function getFilteredExercises() {
-      const sec = $("sectionFilter").value;
+    function getFilteredExercises(chapter) {
+      const other = chapter !== undefined && chapter !== currentChapter;   // autre chapitre : le filtre de section ne s'applique pas
+      const sec = other ? "ALL" : $("sectionFilter").value;
       const typ = $("typeFilter").value;
       const q = $("searchInput").value.trim().toLowerCase();
       const stf = $("statusFilter").value;
+      const ch = other ? chapter : currentChapter;
       return courseExercises(currentCourse.id).filter(ex => {
-        if (ex.chapter !== currentChapter) return false;
+        if (ex.chapter !== ch) return false;
         if (sec && sec !== "ALL" && ex.section !== sec) return false;
         if (typ !== "ALL" && ex.type !== typ) return false;
         if (stf === "repass" ? !repassMap[ex.id] : stf === "norepass" ? repassMap[ex.id] : stf === "revisit" ? !revisitMap[ex.id] : stf === "todo" ? exStatusMap[ex.id] : (stf !== "ALL" && exStatusMap[ex.id] !== stf)) return false;
@@ -7202,10 +7355,18 @@ $$n = \frac{1\,229,3}{0,7996 + 0,6147} = \frac{1\,229,3}{1,4143} \approx 869,2 \
       if (!ex) return;
       if (act) cancelStroke();
       saveNow();
+      // Nouvel exercice : son énoncé est toujours affiché, même si le précédent était masqué
+      if (exId !== shownExId && prefs.statementCollapsed) {
+        prefs.statementCollapsed = false;
+        $("statementCard").classList.remove("collapsed");
+        $("statementToggle").textContent = "Masquer";
+      }
+      shownExId = exId;
       currentExId = exId;
       if (ex.course === "chimie") prefs.lastEx = exId;
       prefs.lastByCourse = prefs.lastByCourse || {};
       prefs.lastByCourse[ex.course] = exId;
+      prefs.lastAny = exId;
       savePrefs();
 
       const info = TYPE_INFO[ex.type] || TYPE_INFO.probleme;
@@ -7214,6 +7375,7 @@ $$n = \frac{1\,229,3}{0,7996 + 0,6147} = \frac{1\,229,3}{1,4143} \approx 869,2 \
       $("exTitle").textContent = ex.title;
       $("exSectionPill").textContent = ex.section;
       $("exStatement").innerHTML = renderBlocks(ex.statement);
+      closePeek();
       $("tbTitle").textContent = ex.title;
       $("tbSub").textContent = `Chap. ${ex.chapter} · ${ex.section}`;
       $("focusTitle").textContent = ex.title;
@@ -7241,7 +7403,7 @@ $$n = \frac{1\,229,3}{0,7996 + 0,6147} = \frac{1\,229,3}{1,4143} \approx 869,2 \
       }
       const n = pageCount(currentExId);
       $("pager").hidden = n < 2;
-      $("pagerText").textContent = `Page ${currentPage}/${n}`;
+      $("pagerText").innerHTML = `<i class="pg-w">Page </i>${currentPage}/${n}`;
       $("deletePageItem").style.display = n > 1 ? "" : "none";
     }
     function changePage(delta) {
@@ -7287,9 +7449,29 @@ $$n = \frac{1\,229,3}{0,7996 + 0,6147} = \frac{1\,229,3}{1,4143} \approx 869,2 \
     function navigateExercise(delta) {
       const filtered = getFilteredExercises();
       const idx = filtered.findIndex(e => e.id === currentExId);
-      const next = filtered[idx + delta];
-      if (idx !== -1 && next) selectExercise(next.id, true);
-      else showToast(delta > 0 ? "C'est le dernier exercice de la liste." : "C'est le premier exercice de la liste.");
+      let next;
+      if (idx !== -1) next = filtered[idx + delta];
+      else {
+        // L'exercice ouvert n'est plus dans la liste filtrée (ex. filtre « À refaire » et on vient de le marquer ✅) :
+        // on prend le voisin le plus proche dans l'ordre du chapitre.
+        const all = courseExercises(currentCourse.id).filter(e => e.chapter === currentChapter);
+        const pos = all.findIndex(e => e.id === currentExId);
+        const after = filtered.filter(e => all.indexOf(e) > pos), before = filtered.filter(e => all.indexOf(e) < pos);
+        next = delta > 0 ? after[0] : before[before.length - 1];
+      }
+      if (next) { selectExercise(next.id, true); return; }
+      // Bout du chapitre : on continue dans le chapitre voisin (mêmes filtres de type, de statut et de recherche)
+      const chs = currentCourse.chapters.map(c => c[0]);
+      for (let ci = chs.indexOf(currentChapter) + delta; ci >= 0 && ci < chs.length; ci += delta) {
+        const list = getFilteredExercises(chs[ci]);
+        if (!list.length) continue;
+        const target = delta > 0 ? list[0] : list[list.length - 1];
+        showChapter(chs[ci]);
+        selectExercise(target.id, true);
+        showToast(`Chapitre ${chs[ci]} · ${currentCourse.chapters[ci][1]}`);
+        return;
+      }
+      showToast(delta > 0 ? "C'est le dernier exercice de la liste." : "C'est le premier exercice de la liste.");
     }
 
     function setExerciseStatus(status) {
@@ -7333,6 +7515,25 @@ $$n = \frac{1\,229,3}{0,7996 + 0,6147} = \frac{1\,229,3}{1,4143} \approx 869,2 \
       $("statementCard").classList.toggle("collapsed", prefs.statementCollapsed);
       $("statementToggle").textContent = prefs.statementCollapsed ? "Afficher" : "Masquer";
       ensureTile(false);
+    }
+
+    // ---------- Énoncé épinglé : le relire pendant qu'on écrit plus bas, sans remonter ----------
+    let shownExId = null;
+    function statementInView() {
+      return !prefs.statementCollapsed && $("exStatement").getBoundingClientRect().bottom > pageEl.getBoundingClientRect().top + 30;
+    }
+    function closePeek() {
+      $("peekPanel").classList.remove("open");
+      $("peekTool").classList.remove("on");
+    }
+    function togglePeek() {
+      if ($("peekPanel").classList.contains("open")) { closePeek(); return; }
+      if (prefs.statementCollapsed && pageEl.scrollTop < 30) { toggleStatement(); return; }   // en haut de la feuille : on rouvre simplement l'énoncé
+      if (statementInView()) { showToast("L'énoncé est déjà affiché en haut de la feuille."); return; }
+      $("peekBody").innerHTML = $("exStatement").innerHTML;
+      $("peekBody").scrollTop = 0;
+      $("peekPanel").classList.add("open");
+      $("peekTool").classList.add("on");
     }
 
     // =========================================================================
@@ -7807,7 +8008,10 @@ $$n = \frac{1\,229,3}{0,7996 + 0,6147} = \frac{1\,229,3}{1,4143} \approx 869,2 \
       $("selMenu").addEventListener("touchend", selMenuRun, { passive: false });
       $("selMenu").addEventListener("click", selMenuRun);
 
-      pageEl.addEventListener("scroll", () => { ensureTile(false); docTick(); }, { passive: true });
+      pageEl.addEventListener("scroll", () => {
+        ensureTile(false); docTick();
+        if ($("peekPanel").classList.contains("open") && statementInView()) closePeek();   // l'énoncé réel est revenu à l'écran
+      }, { passive: true });
       let rafPending = false;
       const relayout = () => {
         if (rafPending) return;
@@ -7833,8 +8037,8 @@ $$n = \frac{1\,229,3}{0,7996 + 0,6147} = \frac{1\,229,3}{1,4143} \approx 869,2 \
           e.preventDefault();
           if (e.shiftKey) redo(); else undo();
         } else if (e.key === "Escape") {
-          closeMoreMenu(); closeSheet();
-          ["apiModal", "refModal", "refModalEm", "clearModal", "deletePageModal", "backupModal", "docModal", "docDeleteModal", "pptModal"].forEach(closeModal);
+          closeMoreMenu(); closeSheet(); closePeek();
+          ["apiModal", "refModal", "refModalEm", "refModalProba", "aiModal", "cloudModal", "clearModal", "deletePageModal", "backupModal", "docModal", "docDeleteModal", "pptModal"].forEach(closeModal);
         }
       });
     }
@@ -8355,6 +8559,35 @@ $$n = \frac{1\,229,3}{0,7996 + 0,6147} = \frac{1\,229,3}{1,4143} \approx 869,2 \
       $("sheet").setAttribute("aria-hidden", "true");
     }
 
+    // Réponse finale : une ligne par sous-question (a, b, c…) au lieu d'un seul long paragraphe
+    function answerLines(src) {
+      const lines = [];
+      String(src || "").split("\n").forEach(line => {
+        line = line.trim();
+        if (!line) return;
+        if (!/^a\) /.test(line)) { lines.push(line); return; }
+        // on coupe devant « b) », « c) »… seulement hors des formules et seulement si les lettres se suivent
+        let cur = "", expect = "b", i = 0;
+        while (i < line.length) {
+          if (line[i] === "\\" && line[i + 1] === "$") { cur += "\\$"; i += 2; continue; }
+          if (line[i] === "$") {
+            const dbl = line[i + 1] === "$", end = line.indexOf(dbl ? "$$" : "$", i + (dbl ? 2 : 1));
+            if (end < 0) { cur += line.slice(i); break; }
+            cur += line.slice(i, end + (dbl ? 2 : 1)); i = end + (dbl ? 2 : 1); continue;
+          }
+          if (line[i] === " " && line[i + 1] === expect && line.startsWith(") ", i + 2)) {
+            lines.push(cur.trim().replace(/\s*;$/, "")); cur = ""; expect = String.fromCharCode(expect.charCodeAt(0) + 1); i++; continue;
+          }
+          cur += line[i++];
+        }
+        if (cur.trim()) lines.push(cur.trim());
+      });
+      return lines;
+    }
+    function answerHTML(src) {
+      return answerLines(src).map(l => `<div class="ans-line">${inlineHTML(l.replace(/^([a-z]\)) /, "**$1** "))}</div>`).join("");
+    }
+
     async function runAssistantAction(mode) {
       const ex = EXERCISES.find(e => e.id === currentExId);
       if (!ex) return;
@@ -8372,7 +8605,7 @@ $$n = \frac{1\,229,3}{0,7996 + 0,6147} = \frac{1\,229,3}{1,4143} \approx 869,2 \
         local = `
           <div class="box green">
             <div class="box-title">Réponse finale</div>
-            <div class="answer">${inlineHTML(ex.shortAnswer)}</div>
+            <div class="answer">${answerHTML(ex.shortAnswer)}</div>
             <div class="btn-row">
               <button class="mini green" onclick="setExerciseStatus('done'); showToast('Exercice marqué ✅ Réussi.')">✅ Réussi</button>
               <button class="mini amber" onclick="setExerciseStatus('almost'); showToast('Exercice marqué 🟡 Presque.')">🟡 Presque</button>
@@ -8380,6 +8613,7 @@ $$n = \frac{1\,229,3}{0,7996 + 0,6147} = \frac{1\,229,3}{1,4143} \approx 869,2 \
               <button class="mini purple" onclick="toggleRevisit()">🟣 À revoir</button>
               <button class="mini blue" onclick="toggleRepass()">🔵 Repassé</button>
             </div>
+            <div class="btn-row"><button class="mini white" onclick="navigateExercise(1)">Exercice suivant →</button></div>
           </div>`;
       } else if (mode === "error") {
         local = `
@@ -8390,7 +8624,7 @@ $$n = \frac{1\,229,3}{0,7996 + 0,6147} = \frac{1\,229,3}{1,4143} \approx 869,2 \
           </div>`;
       } else {
         local = `
-          <div class="box green"><div class="box-title">Réponse finale</div>${renderBlocks(ex.shortAnswer)}</div>
+          <div class="box green"><div class="box-title">Réponse finale</div>${answerHTML(ex.shortAnswer)}</div>
           <div class="box blue">
             <div class="box-title">Solution détaillée</div>
             ${renderBlocks(ex.solution)}
@@ -8689,6 +8923,9 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
           ${ex.length ? `<div class="bar"><div style="width:${Math.round(done / ex.length * 100)}%"></div></div>` : ""}
           <small>${parts.join(" · ")}</small></button>`;
       }).join("");
+      const lastEx = EXERCISES.find(e => e.id === prefs.lastAny);
+      $("homeResume").innerHTML = lastEx
+        ? `<button class="btn primary" onclick="openExercise('${lastEx.id}')">▶ Reprendre : ${lastEx.title} · ${courseById(lastEx.course).name}</button>` : "";
       updateStorageInfo();
     }
     async function updateStorageInfo() {
@@ -8706,6 +8943,7 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
     }
 
     function openCourse(id, tab) {
+      if (!currentCourse || currentCourse.id !== id) courseFilter = "ALL";
       currentCourse = courseById(id);
       courseTab = tab || (courseExercises(id).length ? "exercises" : "notes");
       $("courseTitle").textContent = currentCourse.name;
@@ -8727,18 +8965,44 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
       const last = list.find(e => e.id === lastExerciseOf(c.id));
       let html = "";
       if (last) html += `<div class="cs-actions"><button class="btn primary" onclick="openExercise('${last.id}')">Reprendre : ${last.title}</button></div>`;
+      // Filtres de révision : n'afficher que ce qu'il reste à faire, à refaire, à revoir…
+      if (!COURSE_FILTERS.some(f => f[0] === courseFilter)) courseFilter = "ALL";
+      html += `<div class="chips">` + COURSE_FILTERS.map(([k, label]) =>
+        `<button class="chip${k === courseFilter ? " on" : ""}" onclick="setCourseFilter('${k}')">${label}<small>${list.filter(e => courseFilterMatch(e, k)).length}</small></button>`).join("") + `</div>`;
+      let shown = 0;
       c.chapters.forEach(([n, label]) => {
-        const items = list.filter(e => e.chapter === n);
-        const done = items.filter(e => exStatusMap[e.id] === "done").length;
-        html += `<div class="cs-group"><h2>Chapitre ${n} · ${label} <small style="font-weight:500;color:#64748b">(${done}/${items.length})</small></h2>`;
+        const all = list.filter(e => e.chapter === n);
+        const items = all.filter(e => courseFilterMatch(e, courseFilter));
+        if (!items.length) return;
+        shown += items.length;
+        const counted = all.filter(e => !isLegacy(e));
+        const done = counted.filter(e => exStatusMap[e.id] === "done").length;
+        html += `<div class="cs-group"><h2>Chapitre ${n} · ${label} <small style="font-weight:500;color:#64748b">(${done}/${counted.length})</small></h2>`;
         let sec = "";
         items.forEach(e => {
           if (e.section !== sec) { sec = e.section; html += `<div class="ex-sec">${sec}</div>`; }
-          html += exItemHTML(e, "openExercise");
+          html += exItemHTML(e, "openFromList");
         });
         html += "</div>";
       });
+      if (!shown) html += `<div class="cs-empty">Aucun exercice dans cette catégorie.</div>`;
       if (courseTab === "exercises" && currentCourse === c) $("courseBody").innerHTML = html;
+    }
+    const COURSE_FILTERS = [["ALL", "Tous"], ["todo", "Pas encore faits"], ["review", "❌ À refaire"], ["almost", "🟡 Presque"], ["revisit", "🟣 À revoir"]];
+    let courseFilter = "ALL";
+    function courseFilterMatch(e, k) {
+      return k === "ALL" ? true : k === "todo" ? !exStatusMap[e.id] : k === "revisit" ? !!revisitMap[e.id] : exStatusMap[e.id] === k;
+    }
+    function openFromList(id) {
+      openExercise(id);
+      // la liste de gauche et les flèches restent dans la même catégorie que la page du cours
+      if (courseFilter !== "ALL") { $("statusFilter").value = courseFilter; renderExerciseList(); }
+    }
+    function setCourseFilter(k) {
+      const y = document.querySelector("#courseScreen .scr-body").scrollTop;
+      courseFilter = k;
+      renderCourseExercises();
+      document.querySelector("#courseScreen .scr-body").scrollTop = y;
     }
     function lastExerciseOf(id) {
       if (prefs.lastByCourse && prefs.lastByCourse[id]) return prefs.lastByCourse[id];
@@ -8767,7 +9031,7 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
       $("searchInput").value = "";
       $("searchInput").placeholder = c.search || "Rechercher";
       const chem = c.id === "chimie";
-      const hasRef = chem || c.id === "em";
+      const hasRef = chem || c.id === "em" || c.id === "proba";
       $("refBtn").style.display = hasRef ? "" : "none";
       $("focusRefBtn").classList.toggle("chem-only", !hasRef);
       $("ireItem").style.display = chem ? "" : "none";
@@ -8796,12 +9060,13 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
       selectChapter(ex.chapter);
       selectExercise(id, true);
     }
-    function openRef() { openModal(currentCourse && currentCourse.id === "em" ? "refModalEm" : "refModal"); }
+    function openRef() { openModal(currentCourse && currentCourse.id === "em" ? "refModalEm" : currentCourse && currentCourse.id === "proba" ? "refModalProba" : "refModal"); }
     function leaveToCourse() {
       if (act) cancelStroke();
       saveNow();
       clearSelection();
       closeSheet();
+      closePeek();
       if (document.body.classList.contains("focus")) toggleFocus();
       const wasDoc = !!docView;
       if (wasDoc) closeDocView();
@@ -9050,7 +9315,7 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
       const s = paperEl.clientWidth / PAGE_W;
       const top = pageEl.scrollTop / s, h = pageEl.clientHeight / s;
       const cur = currentDocPage();
-      $("pagerText").textContent = `Page ${cur + 1}/${v.nodes.length}`;
+      $("pagerText").innerHTML = `<i class="pg-w">Page </i>${cur + 1}/${v.nodes.length}`;
       const pw = paperEl.clientWidth;
       v.nodes.forEach((n, i) => {
         const near = v.tops[i] + v.heights[i] > top - h && v.tops[i] < top + 2 * h;
@@ -9922,7 +10187,7 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
           updateStatusUI(); renderExerciseList();
           const n = pageCount(currentExId);
           $("pager").hidden = n < 2;
-          $("pagerText").textContent = `Page ${currentPage}/${n}`;
+          $("pagerText").innerHTML = `<i class="pg-w">Page </i>${currentPage}/${n}`;
           $("deletePageItem").style.display = n > 1 ? "" : "none";
         }
       } catch (e) {}
