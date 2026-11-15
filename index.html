@@ -7372,7 +7372,7 @@ $$n = \frac{1\,229,3}{0,7996 + 0,6147} = \frac{1\,229,3}{1,4143} \approx 869,2 \
 
     function showChapter(ch) {
       currentChapter = ch;
-      currentCourse.chapters.forEach(([c]) => $("tabCh" + c).classList.toggle("on", c === ch));
+      examChapters(currentCourse).forEach(([c]) => $("tabCh" + c).classList.toggle("on", c === ch));
       const chExercises = courseExercises(currentCourse.id).filter(e => e.chapter === ch);
       const sections = [...new Set(chExercises.map(e => e.section))];
       $("sectionFilter").innerHTML = `<option value="ALL">Toutes les sections (${chExercises.length})</option>` +
@@ -7559,14 +7559,14 @@ $$n = \frac{1\,229,3}{0,7996 + 0,6147} = \frac{1\,229,3}{1,4143} \approx 869,2 \
       }
       if (next) { selectExercise(next.id, true); return; }
       // Bout du chapitre : on continue dans le chapitre voisin (mêmes filtres de type, de statut et de recherche)
-      const chs = currentCourse.chapters.map(c => c[0]);
+      const exChs = examChapters(currentCourse), chs = exChs.map(c => c[0]);
       for (let ci = chs.indexOf(currentChapter) + delta; ci >= 0 && ci < chs.length; ci += delta) {
         const list = getFilteredExercises(chs[ci]);
         if (!list.length) continue;
         const target = delta > 0 ? list[0] : list[list.length - 1];
         showChapter(chs[ci]);
         selectExercise(target.id, true);
-        showToast(`Chapitre ${chs[ci]} · ${currentCourse.chapters[ci][1]}`);
+        showToast(`Chapitre ${chs[ci]} · ${exChs[ci][1]}`);
         return;
       }
       showToast(delta > 0 ? "C'est le dernier exercice de la liste." : "C'est le premier exercice de la liste.");
@@ -9111,8 +9111,30 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
     const courseById = id => COURSES.find(c => c.id === id);
     // Exercices retirés de la liste du cours : toujours visibles, à la fin, mais hors du total
     const isLegacy = e => e.section === "Pas dans la liste";
-    const courseExercises = id => EXERCISES.filter(e => e.course === id);
-    const listedExercises = id => EXERCISES.filter(e => e.course === id && !isLegacy(e));
+    // Examens : un cours peut découper ses exercices par examen. La liste, la progression et les marques
+    // affichées sont alors celles de l'examen choisi (prefs.examByCourse). Les statuts eux-mêmes ne changent pas.
+    const CHEM_FINAL = new Set(["Calcul du pH des bases faibles", "Sels acides et basiques"]);
+    const chemFinal = e => e.chapter === 5 || CHEM_FINAL.has(e.section);
+    courseById("chimie").exams = [
+      { id: "ex2", name: "Examen 2", has: e => !chemFinal(e) },
+      { id: "final", name: "Examen final", has: chemFinal }
+    ];
+    function currentExam(c) {
+      if (!c || !c.exams) return null;
+      const k = (prefs.examByCourse || {})[c.id];
+      return c.exams.find(x => x.id === k) || c.exams[c.exams.length - 1];
+    }
+    const allCourseExercises = id => EXERCISES.filter(e => e.course === id);
+    const courseExercises = id => { const x = currentExam(courseById(id)); return allCourseExercises(id).filter(e => !x || x.has(e)); };
+    const listedExercises = id => courseExercises(id).filter(e => !isLegacy(e));
+    // Chapitres qui ont au moins un exercice dans l'examen choisi
+    const examChapters = c => c.exams ? c.chapters.filter(([n]) => courseExercises(c.id).some(e => e.chapter === n)) : c.chapters;
+    function setExam(courseId, examId, silent) {
+      prefs.examByCourse = prefs.examByCourse || {};
+      prefs.examByCourse[courseId] = examId;
+      savePrefs();
+      if (!silent) { courseFilter = "ALL"; renderCourseExercises(); }
+    }
     let currentCourse = null, courseTab = "exercises", docs = [];
 
     function setScreen(name) {
@@ -9131,7 +9153,8 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
         const done = ex.filter(e => exStatusMap[e.id] === "done").length;
         const n = docs.filter(d => d.course === c.id).length;
         const parts = [];
-        if (ex.length) parts.push(`✅ ${done} sur ${ex.length} exercices`);
+        const exam = currentExam(c);
+        if (ex.length) parts.push(`${exam ? exam.name + " : " : ""}✅ ${done} sur ${ex.length} exercices`);
         parts.push(n ? `${n} document${n > 1 ? "s" : ""}` : "Aucun document");
         return `<button class="course-card" style="--cc:${c.color}" onclick="openCourse('${c.id}')">
           <span class="ci">${c.icon}</span><b>${c.name}</b>
@@ -9160,7 +9183,7 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
     function openCourse(id, tab) {
       if (!currentCourse || currentCourse.id !== id) courseFilter = "ALL";
       currentCourse = courseById(id);
-      courseTab = tab || (courseExercises(id).length ? "exercises" : "notes");
+      courseTab = tab || (allCourseExercises(id).length ? "exercises" : "notes");
       $("courseTitle").textContent = currentCourse.name;
       setCourseTab(courseTab);
       setScreen("course");
@@ -9173,19 +9196,31 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
     }
     async function renderCourseExercises() {
       const c = currentCourse, list = courseExercises(c.id);
-      if (!list.length) {
+      if (!list.length && !c.exams) {
         $("courseBody").innerHTML = `<div class="cs-empty">Pas encore d'exercices dans ce cours.<br>Ils seront ajoutés ici plus tard.</div>`;
         return;
       }
       const last = list.find(e => e.id === lastExerciseOf(c.id));
       let html = "";
+      if (c.exams) {
+        // Choix de l'examen, puis progression et marques de cet examen seulement
+        const cur = currentExam(c), counted = list.filter(e => !isLegacy(e));
+        const cnt = st => counted.filter(e => exStatusMap[e.id] === st).length;
+        const doneN = cnt("done");
+        html += `<div class="chips">` + c.exams.map(x =>
+          `<button class="chip${x === cur ? " on" : ""}" style="height:46px;font-size:16px;padding:0 20px" onclick="setExam('${c.id}','${x.id}')">${x.name}</button>`).join("") + `</div>`;
+        html += `<div class="cs-group" style="padding:12px 16px 14px"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-weight:600;font-size:15px;margin-bottom:8px">
+          <span>${cur.name} : ${doneN} sur ${counted.length} réussis</span>
+          <span>✅ ${doneN} &nbsp;🟡 ${cnt("almost")} &nbsp;❌ ${cnt("review")} &nbsp;🟣 ${counted.filter(e => revisitMap[e.id]).length} &nbsp;🔵 ${counted.filter(e => repassMap[e.id]).length}</span></div>
+          <div style="height:10px;border-radius:5px;background:#e2e8f0;overflow:hidden"><div style="height:100%;border-radius:5px;background:#16a34a;width:${Math.round(doneN / Math.max(1, counted.length) * 100)}%"></div></div></div>`;
+      }
       if (last) html += `<div class="cs-actions"><button class="btn primary" onclick="openExercise('${last.id}')">Reprendre : ${last.title}</button></div>`;
       // Filtres de révision : n'afficher que ce qu'il reste à faire, à refaire, à revoir…
       if (!COURSE_FILTERS.some(f => f[0] === courseFilter)) courseFilter = "ALL";
       html += `<div class="chips">` + COURSE_FILTERS.map(([k, label]) =>
         `<button class="chip${k === courseFilter ? " on" : ""}" onclick="setCourseFilter('${k}')">${label}<small>${list.filter(e => courseFilterMatch(e, k)).length}</small></button>`).join("") + `</div>`;
       let shown = 0;
-      c.chapters.forEach(([n, label]) => {
+      examChapters(c).forEach(([n, label]) => {
         const all = list.filter(e => e.chapter === n);
         const items = all.filter(e => courseFilterMatch(e, courseFilter));
         if (!items.length) return;
@@ -9238,7 +9273,7 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
 
     // ---------- Ouvrir un exercice ----------
     function applyCourseChrome(c) {
-      $("chapterTabs").innerHTML = c.chapters.map(([n, label]) =>
+      $("chapterTabs").innerHTML = examChapters(c).map(([n, label]) =>
         `<button id="tabCh${n}" onclick="selectChapter(${n})">Chap. ${n}<small>${label}</small></button>`).join("");
       const types = [...new Set(courseExercises(c.id).map(e => e.type))];
       const labels = { interne: "Internes", probleme: "Problèmes", question: "Questions", exercice: "Exercices", supp: "Supplémentaires" };
@@ -9268,6 +9303,11 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
       setMode("ex");
       docView = null;
       currentCourse = courseById(ex.course);
+      // l'exercice ouvert fixe l'examen affiché (liste de gauche, progression, flèches)
+      if (currentCourse.exams) {
+        const x = currentCourse.exams.find(x => x.has(ex));
+        if (x && x !== currentExam(currentCourse)) setExam(currentCourse.id, x.id, true);
+      }
       applyCourseChrome(currentCourse);
       $("statusFilter").value = "ALL";
       setScreen("none");
@@ -9657,7 +9697,7 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
     }
     // Chapitres cochés dans la fenêtre (valeur "cours:chapitre")
     function aiChosen() { return new Set([...document.querySelectorAll("#aiChapters input:checked")].map(i => i.value)); }
-    const aiEx = c => { const ch = aiChosen(); return courseExercises(c.id).filter(e => ch.has(c.id + ":" + e.chapter)); };
+    const aiEx = c => { const ch = aiChosen(); return allCourseExercises(c.id).filter(e => ch.has(c.id + ":" + e.chapter)); };
     const aiCourses = sel => COURSES.filter(c => (sel === "all" || sel === c.id) && aiEx(c).length);
     // Exercices dont on met la démarche en images
     function aiInkExercises(courses, mode) {
@@ -9806,7 +9846,7 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
     function openAiExport() {
       closeModal("backupModal");
       $("aiCourse").innerHTML = `<option value="all">Tous les cours</option>` +
-        COURSES.filter(c => courseExercises(c.id).length).map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
+        COURSES.filter(c => allCourseExercises(c.id).length).map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
       $("aiReady").style.display = "none";
       $("aiGo").style.display = "";
       aiFiles = [];
@@ -9816,9 +9856,9 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
     // Une case par chapitre du ou des cours choisis, toutes cochées au départ
     function aiBuildChapters() {
       const sel = $("aiCourse").value;
-      const courses = COURSES.filter(c => courseExercises(c.id).length && (sel === "all" || sel === c.id));
+      const courses = COURSES.filter(c => allCourseExercises(c.id).length && (sel === "all" || sel === c.id));
       $("aiChapters").innerHTML = courses.map(c => {
-        const chs = [...new Set(courseExercises(c.id).map(e => e.chapter))].sort((a, b) => a - b);
+        const chs = [...new Set(allCourseExercises(c.id).map(e => e.chapter))].sort((a, b) => a - b);
         const label = n => { const f = c.chapters.find(x => x[0] === n); return `Chapitre ${n}${f ? " · " + escapeHtml(f[1]) : ""}`; };
         return (sel === "all" ? `<div class="ai-course">${escapeHtml(c.name)}</div>` : "") +
           chs.map(n => `<label class="ai-ch"><input type="checkbox" value="${c.id}:${n}" checked onchange="aiUpdateInfo()"> ${label(n)}</label>`).join("");
@@ -9826,7 +9866,7 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
       aiUpdateInfo();
     }
     function aiChapterNames(c) {
-      const ch = aiChosen(), all = [...new Set(courseExercises(c.id).map(e => e.chapter))];
+      const ch = aiChosen(), all = [...new Set(allCourseExercises(c.id).map(e => e.chapter))];
       const picked = all.filter(n => ch.has(c.id + ":" + n)).sort((a, b) => a - b);
       return picked.length === all.length ? "tous les chapitres" : (picked.length > 1 ? "chapitres " : "chapitre ") + picked.join(", ");
     }
@@ -9843,7 +9883,7 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
       const courses = aiCourses($("aiCourse").value), inkList = aiInkExercises(courses, $("aiInk").value);
       const inkSet = new Set(inkList.map(e => e.id)), date = new Date().toISOString().slice(0, 10);
       if (!courses.length) return;
-      const chosen = aiChosen(), allCh = COURSES.flatMap(c => [...new Set(courseExercises(c.id).map(e => c.id + ":" + e.chapter))]);
+      const chosen = aiChosen(), allCh = COURSES.flatMap(c => [...new Set(allCourseExercises(c.id).map(e => c.id + ":" + e.chapter))]);
       const partial = allCh.some(k => ($("aiCourse").value === "all" || k.startsWith($("aiCourse").value + ":")) && !chosen.has(k));
       const tag = ($("aiCourse").value === "all" ? "" : "_" + $("aiCourse").value) +
         (partial ? "_ch" + [...new Set([...chosen].map(k => k.split(":")[1]))].sort((a, b) => a - b).join("-") : "");
