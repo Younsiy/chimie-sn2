@@ -309,6 +309,80 @@
     #selMenu button { height: 40px; padding: 0 12px; border-radius: 9px; color: #fff; font-size: 13px; font-weight: 700; }
     #selMenu button:active { background: rgba(255,255,255,.15); }
 
+    /* ---------- Calcul (version 33) : bulle de la corde, puis calculatrice ---------- */
+    #calcBubble {
+      position: absolute; z-index: 21; display: none; flex-direction: column; gap: 4px; min-width: 220px; max-width: min(370px, 94%);
+      background: #fff; border: 2px solid #4f46e5; border-radius: 14px; padding: 10px 12px; box-shadow: 0 10px 26px rgba(15,23,42,.28);
+      font-size: 15px; color: #0f172a; touch-action: manipulation;
+    }
+    #calcBubble.open { display: flex; }
+    .cb-lbl { font-size: 11px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: #64748b; }
+    .cb-read, .cb-res { overflow-x: auto; overflow-y: hidden; padding: 3px 0; scrollbar-width: none; }
+    .cb-read { font-size: 16px; color: #334155; }
+    .cb-res { font-size: 21px; font-weight: 700; color: #1e1b4b; }
+    .cb-note { font-size: 13px; color: #64748b; line-height: 1.35; }
+    .cb-wait { display: flex; align-items: center; gap: 10px; font-weight: 600; padding: 4px 0; }
+    .cb-iso { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+    .cb-iso button { min-width: 44px; height: 40px; padding: 0 10px; border-radius: 10px; background: #eef2ff; color: #3730a3; font-size: 17px; font-weight: 700; }
+    .cb-iso button.on { background: #4f46e5; color: #fff; }
+    #cbInput { width: 100%; height: 42px; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 0 10px; background: #f8fafc; -webkit-user-select: text; user-select: text; }
+    .cb-actions { display: flex; gap: 6px; margin-top: 4px; }
+    .cb-actions button { flex: 1; height: 40px; border-radius: 10px; background: #f1f5f9; color: #334155; font-size: 14px; font-weight: 700; }
+    .cb-actions button:active, .cb-iso button:active { filter: brightness(.93); }
+
+    #calcPanel {
+      position: fixed; z-index: 35; left: 0; top: 0; width: 344px; max-width: calc(100vw - 8px); max-height: calc(100% - 8px);
+      display: none; flex-direction: column; background: #f1f5f9; border: 1px solid #94a3b8; border-radius: 18px; overflow: hidden;
+      box-shadow: 0 18px 44px rgba(15,23,42,.38); touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+    }
+    #calcPanel.open { display: flex; }
+    #calcHead { display: flex; align-items: center; gap: 4px; padding: 5px 6px 5px 10px; background: #0f172a; color: #e2e8f0; cursor: grab; flex-shrink: 0; }
+    #calcHead .grip { font-size: 12px; font-weight: 700; color: #94a3b8; margin-right: 2px; }
+    #calcHead button { height: 34px; min-width: 34px; padding: 0 7px; border-radius: 9px; font-size: 13px; font-weight: 700; color: #e2e8f0; }
+    #calcHead button.set { font-size: 17px; padding: 0 5px; opacity: .45; }
+    #calcHead button.set.on { opacity: 1; background: rgba(255,255,255,.16); }
+    #calcHead button.opt { background: rgba(255,255,255,.1); }
+    #calcHist { height: 64px; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; touch-action: pan-y; background: #e2e8f0; flex-shrink: 0; }
+    .ch-row { display: flex; align-items: center; gap: 8px; padding: 3px 8px; border-bottom: 1px solid #cbd5e1; font-size: 13px; }
+    .ch-ex { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; color: #475569; padding: 5px 0; }
+    .ch-val { flex-shrink: 0; padding: 5px 8px; border-radius: 8px; background: #fff; color: #0f172a; font-weight: 700; font-size: 14px; }
+    #calcScreen { background: #fff; padding: 6px 10px 6px; flex-shrink: 0; border-bottom: 1px solid #cbd5e1; }
+    #calcPrev { height: 34px; display: flex; align-items: center; font-size: 13px; color: #64748b; overflow: hidden; white-space: nowrap; }
+    #calcLine { height: 48px; display: flex; align-items: center; font-size: 24px; white-space: nowrap; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; padding: 4px 0; cursor: text; }
+    #calcLine::-webkit-scrollbar, .cp-scroll::-webkit-scrollbar { display: none; }
+    #calcLine .ct { display: inline-block; padding: 0 1px; }
+    #calcLine .cc-sup { font-size: .66em; vertical-align: .62em; line-height: 1; }
+    #calcLine .cc-ph { color: #94a3b8; }
+    #calcLine .cc-lit, .ch-ex .cc-lit { background: #e0e7ff; border-radius: 6px; padding: 0 4px; }
+    #calcLine .cc-caret { display: inline-block; width: 2px; height: 1.15em; margin: 0 -1px; background: #2563eb; vertical-align: -.2em; animation: ccBlink 1.1s steps(1) infinite; }
+    #calcLine .cc-sup .cc-caret { vertical-align: -.15em; }
+    #calcLine .cc-empty { color: #94a3b8; font-size: 15px; }
+    @keyframes ccBlink { 50% { opacity: 0; } }
+    #calcRes { height: 36px; display: flex; align-items: center; justify-content: flex-end; gap: 6px; font-size: 23px; font-weight: 700; color: #1e1b4b; white-space: nowrap; overflow: hidden; }
+    #calcRes.small { font-size: 17px; }
+    #calcRes .dim { font-size: 14px; font-weight: 600; color: #94a3b8; }
+    #calcHint { font-size: 12px; color: #64748b; height: 15px; line-height: 15px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    #calcBody { display: flex; flex-direction: column; gap: 5px; padding: 6px; overflow-y: auto; }
+    #calcPanel.mini #calcBody, #calcPanel.mini #calcHist { display: none; }
+    .cp-scroll { display: flex; gap: 5px; overflow-x: auto; scrollbar-width: none; touch-action: pan-x; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; flex-shrink: 0; }
+    .cc-chip { flex-shrink: 0; height: 42px; min-width: 52px; padding: 0 9px; border-radius: 10px; background: #fff; box-shadow: 0 1px 0 #cbd5e1; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; }
+    .cc-chip b { font-size: 16px; font-weight: 700; color: #0f172a; }
+    .cc-chip small { font-size: 10px; color: #64748b; white-space: nowrap; }
+    .cc-row { display: flex; gap: 5px; flex-shrink: 0; }
+    .cc-pad { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; flex-shrink: 0; }
+    .ck { height: 42px; border-radius: 11px; background: #fff; box-shadow: 0 1px 0 #cbd5e1; font-size: 21px; font-weight: 600; color: #0f172a; display: flex; align-items: center; justify-content: center; flex: 1; min-width: 0; }
+    .ck sup { font-size: .62em; vertical-align: .55em; line-height: 0; }
+    .ck.kf { background: #e2e8f0; font-size: 16px; height: 40px; }
+    .ck.ko { background: #dbeafe; color: #1d4ed8; }
+    .ck.kx { background: #fee2e2; color: #b91c1c; }
+    .ck.ke { background: #16a34a; color: #fff; grid-row: span 2; height: auto; font-size: 26px; }
+    .ck.hit, .cc-chip.hit, .ch-val.hit, #calcHead button.hit { filter: brightness(.86); transform: scale(.96); }
+    .cc-pad .ck.kf { height: 42px; font-size: 18px; }
+    .ck .ph { font-size: .72em; color: #64748b; }
+    .ch-ex math { font-size: .95em; }
+    .ch-empty { padding: 8px 10px; font-size: 12px; line-height: 1.35; color: #64748b; }
+    @media (max-height: 700px) { .ck, .cc-pad .ck.kf { height: 38px; } .ck.kf { height: 34px; } #calcHist { height: 34px; } }
+
     #toast {
       position: fixed; left: 50%; bottom: calc(80px + env(safe-area-inset-bottom)); transform: translateX(-50%);
       background: #0f172a; color: #fff; font-size: 14px; font-weight: 600; padding: 11px 16px; border-radius: 12px;
@@ -396,7 +470,7 @@
     @media (max-width: 1150px) { .tb-btn .lbl-x { display: none; } }
     .pager .pg-w { font-style: normal; }
     @media (max-width: 860px) {   /* iPad à la verticale : toute la barre d'outils tient sans défiler */
-      .tool { width: 36px; } .sw, .sz { width: 27px; } .pager .tool { width: 30px; }
+      .tool { width: 34px; } .sw, .sz { width: 25px; } .pager .tool { width: 30px; } #toolbar { gap: 1px; padding-left: calc(4px + env(safe-area-inset-left)); padding-right: calc(4px + env(safe-area-inset-right)); }   /* v33 : une touche de plus (calculatrice) */
       .pager #pagerText { min-width: 34px; } .pager .pg-w { display: none; } body.focus .focus-title { display: none !important; }
     }
     .ans-line + .ans-line { margin-top: 8px; }
@@ -500,6 +574,7 @@
     <button class="tool focus-only ex-only" onclick="runAssistantAction('verify')" title="Voir la réponse" aria-label="Voir la réponse"><span data-ic="check"></span></button>
     <button id="focusRefBtn" class="tool focus-only ex-only" onclick="openRef()" title="Formules" aria-label="Formules"><span data-ic="book"></span></button>
     <button id="peekTool" class="tool ex-only" onclick="togglePeek()" title="Revoir l'énoncé sans remonter" aria-label="Revoir l'énoncé"><span data-ic="doc"></span></button>
+    <button id="calcTool" class="tool" onclick="calcToggle()" title="Calculatrice (marche sans Internet)" aria-label="Calculatrice"><span data-ic="calc"></span></button>
     <button id="moreBtn" class="tool" onclick="openMoreMenu()" title="Plus d'options" aria-label="Plus d'options"><span data-ic="more"></span></button>
     <button id="focusBtn" class="tool" onclick="toggleFocus()" title="Plein écran" aria-label="Plein écran"><span id="focusIc" data-ic="maximize"></span></button>
   </div>
@@ -548,8 +623,17 @@
           <canvas id="inkCanvas"></canvas>
           <canvas id="liveCanvas"></canvas>
           <div id="selMenu">
+            <button type="button" data-sel="calc">🧮 Calculer</button>
             <button type="button" data-sel="dup">Dupliquer</button>
             <button type="button" data-sel="del">Supprimer</button>
+          </div>
+          <div id="calcBubble">
+            <div id="cbMain"></div>
+            <div id="cbEdit" hidden>
+              <div class="cb-lbl">Corrige la ligne, le résultat suit</div>
+              <input id="cbInput" type="text" inputmode="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" oninput="cbEdited()">
+            </div>
+            <div class="cb-actions" id="cbActions"></div>
           </div>
         </div>
 
@@ -1060,6 +1144,31 @@ $$n = \frac{z_{\alpha/2}^{2}\,N p(1 - p)}{(N - 1)(ME)^{2} + z_{\alpha/2}^{2}\,p(
     </div>
   </div>
   <div id="busy"><div><div class="spinner"></div><span id="busyText"></span></div></div>
+
+  <!-- ===================== CALCULATRICE (marche sans Internet) ===================== -->
+  <div id="calcPanel" aria-label="Calculatrice">
+    <div id="calcHead">
+      <span class="grip">⠿</span>
+      <span id="calcSets" style="display:inline-flex;gap:2px"></span>
+      <span class="grow"></span>
+      <button type="button" class="opt" id="calcCs" data-k="cs" title="Chiffres significatifs du résultat">tout</button>
+      <button type="button" class="opt" id="calcDeg" data-k="deg" title="Angles en degrés ou en radians">DEG</button>
+      <button type="button" data-k="min" title="Réduire ou agrandir" aria-label="Réduire ou agrandir">▁</button>
+      <button type="button" data-k="close" title="Fermer" aria-label="Fermer la calculatrice">✕</button>
+    </div>
+    <div id="calcHist"></div>
+    <div id="calcScreen">
+      <div id="calcPrev"></div>
+      <div id="calcLine"></div>
+      <div id="calcRes"></div>
+      <div id="calcHint"></div>
+    </div>
+    <div id="calcBody">
+      <div id="calcConsts" class="cp-scroll"></div>
+      <div id="calcFns" style="display:flex;flex-direction:column;gap:5px"></div>
+      <div id="calcPad" class="cc-pad"></div>
+    </div>
+  </div>
 
   <div id="toast"></div>
 
@@ -7119,7 +7228,8 @@ $$P(-z_{\alpha/2} < Z < z_{\alpha}) = 1 - \frac{\alpha}{2} - \alpha = \frac{2 - 
       lasso: '<path d="M7 22a5 5 0 0 1-2-4"/><path d="M3.3 14A6.8 6.8 0 0 1 2 10c0-4.4 4.5-8 10-8s10 3.6 10 8-4.5 8-10 8a12 12 0 0 1-5-1" stroke-dasharray="3 3"/><path d="M5 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>',
       home: '<path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/>',
       doc: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
-      trash: '<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>'
+      trash: '<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+      calc: '<rect x="4" y="2" width="16" height="20" rx="2.5"/><path d="M8 6.5h8"/><path d="M8 11h.01M12 11h.01M16 11h.01M8 14.5h.01M12 14.5h.01M16 14.5h.01M8 18h.01M12 18h.01M16 18h.01"/>'
     };
     function setIcon(el, name) {
       el.dataset.ic = name;
@@ -7293,6 +7403,7 @@ $$P(-z_{\alpha/2} < Z < z_{\alpha}) = 1 - \frac{\alpha}{2} - \alpha = \frac{2 - 
       try { if (localStorage.getItem(LS.aiSync) === null && safeGet(LS.key, "")) aiSyncSave(); } catch (e) {}
 
       buildToolbar();
+      try { calcInit(); } catch (e) {}
       setTool(prefs.tool, true);
       setPaper(prefs.paper, true);
       applyFingerDraw();
@@ -7692,6 +7803,7 @@ $$P(-z_{\alpha/2} < Z < z_{\alpha}) = 1 - \frac{\alpha}{2} - \alpha = \frac{2 - 
     // ---------- Pages d'un exercice ----------
     function openPage() {
       clearSelection();
+      calcBubbleClose();
       doc = session(curKey()).doc;
       pageEl.scrollTop = 0;
       layoutPaper();
@@ -8302,7 +8414,7 @@ $$P(-z_{\alpha/2} < Z < z_{\alpha}) = 1 - \frac{\alpha}{2} - \alpha = \frac{2 - 
         if (e.cancelable) e.preventDefault();
         if (Date.now() - selMenuAt < 700) return;   // un toucher envoie plusieurs événements : on n'agit qu'une fois
         selMenuAt = Date.now();
-        if (b.dataset.sel === "del") deleteSelection(); else duplicateSelection();
+        if (b.dataset.sel === "del") deleteSelection(); else if (b.dataset.sel === "calc") lassoCalc(); else duplicateSelection();
       };
       $("selMenu").addEventListener("pointerup", selMenuRun);
       $("selMenu").addEventListener("touchend", selMenuRun, { passive: false });
@@ -8337,7 +8449,7 @@ $$P(-z_{\alpha/2} < Z < z_{\alpha}) = 1 - \frac{\alpha}{2} - \alpha = \frac{2 - 
           e.preventDefault();
           if (e.shiftKey) redo(); else undo();
         } else if (e.key === "Escape") {
-          closeMoreMenu(); closeSheet(); closePeek();
+          closeMoreMenu(); closeSheet(); closePeek(); calcBubbleClose();
           ["apiModal", "refModal", "refModalEm", "refModalProba", "aiModal", "cloudModal", "clearModal", "deletePageModal", "backupModal", "docModal", "docDeleteModal", "pptModal"].forEach(closeModal);
         }
       });
@@ -10768,6 +10880,935 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
         setInterval(() => { if (cloud.auth && !document.hidden) cloudSync(false); }, 90000);
         if (cloud.auth) setTimeout(() => cloudSync(true), 1500);
       } catch (e) {}
+    }
+
+    // =========================================================================
+    // CALCUL (version 33)
+    //  1. Moteur : lit une expression, la calcule, résout une équation à une inconnue.
+    //  2. Corde → « Calculer » : l'IA lit seulement l'écriture ; c'est l'app qui calcule.
+    //  3. Calculatrice (bouton de la barre d'outils) : marche sans Internet.
+    // =========================================================================
+    // Constantes : mêmes valeurs que les aide-mémoire des cours (feuille de formules d'électricité, Cahier NDC)
+    const CX_CONST = {
+      pi:   { v: Math.PI,        d: "π",              tex: "{\\pi}",             sub: "3,1416" },
+      E:    { v: Math.E,         d: "e",              tex: "e" },
+      R:    { v: 8.314,          d: "R",              tex: "R",                  sub: "8,314" },
+      Ke:   { v: 1.0e-14,        d: "K<sub>e</sub>",  tex: "K_{e}",              sub: "1,0 × 10⁻¹⁴" },
+      NA:   { v: 6.022e23,       d: "N<sub>A</sub>",  tex: "N_{A}",              sub: "6,022 × 10²³" },
+      eps0: { v: 8.854e-12,      d: "ε<sub>0</sub>",  tex: "{\\varepsilon}_{0}", sub: "8,854 × 10⁻¹²" },
+      k:    { v: 8.9876e9,       d: "k",              tex: "k",                  sub: "8,9876 × 10⁹" },
+      e:    { v: 1.602e-19,      d: "e",              tex: "e",                  sub: "1,602 × 10⁻¹⁹ C" },
+      me:   { v: 9.1094e-31,     d: "m<sub>e</sub>",  tex: "m_{e}",              sub: "9,1094 × 10⁻³¹ kg" },
+      mp:   { v: 1.6726e-27,     d: "m<sub>p</sub>",  tex: "m_{p}",              sub: "1,6726 × 10⁻²⁷ kg" },
+      mn:   { v: 1.6749e-27,     d: "m<sub>n</sub>",  tex: "m_{n}",              sub: "1,6749 × 10⁻²⁷ kg" },
+      mu0:  { v: 4e-7 * Math.PI, d: "μ<sub>0</sub>",  tex: "{\\mu}_{0}",         sub: "4π × 10⁻⁷" },
+      g:    { v: 9.81,           d: "g",              tex: "g",                  sub: "9,81" },
+      c:    { v: 3.00e8,         d: "c",              tex: "c",                  sub: "3,00 × 10⁸" }
+    };
+    function cxFact(n) {
+      if (n < 0 || n > 170 || Math.abs(n - Math.round(n)) > 1e-9) return NaN;
+      let r = 1;
+      for (let i = 2; i <= Math.round(n); i++) r *= i;
+      return r;
+    }
+    function cxComb(n, k) {
+      if (Math.abs(n - Math.round(n)) > 1e-9 || Math.abs(k - Math.round(k)) > 1e-9 || n < 0 || k < 0) return NaN;
+      n = Math.round(n); k = Math.round(k);
+      if (k > n) return 0;
+      k = Math.min(k, n - k);
+      let r = 1;
+      for (let i = 1; i <= k; i++) r = r * (n - k + i) / i;
+      return Math.round(r);
+    }
+    function cxBin(k, n, p) {
+      if (p < 0 || p > 1) return NaN;
+      const c = cxComb(n, k);
+      return isNaN(c) ? NaN : c * Math.pow(p, k) * Math.pow(1 - p, Math.round(n) - Math.round(k));
+    }
+    function cxBinC(k, n, p) {
+      if (isNaN(cxBin(0, n, p))) return NaN;
+      let s = 0;
+      for (let i = 0; i <= Math.floor(k + 1e-9) && i <= n; i++) s += cxBin(i, n, p);
+      return Math.min(1, s);
+    }
+    function cxPhi(z) {   // P(Z ≤ z), loi normale centrée réduite (série, précise à plus de 10 chiffres)
+      if (z < -8) return 0;
+      if (z > 8) return 1;
+      let sum = z, term = z;
+      for (let i = 3; i < 600; i += 2) { term *= z * z / i; sum += term; if (Math.abs(term) < 1e-17 * Math.abs(sum)) break; }
+      return 0.5 + sum * Math.exp(-z * z / 2) / Math.sqrt(2 * Math.PI);
+    }
+    const CX_FUNCS = {
+      sqrt: { n: 1, f: Math.sqrt }, cbrt: { n: 1, f: Math.cbrt }, abs: { n: 1, f: Math.abs },
+      log: { n: 1, f: Math.log10, tex: "\\log" }, log10: { n: 1, f: Math.log10, tex: "\\log" }, ln: { n: 1, f: Math.log, tex: "\\ln" }, exp: { n: 1, f: Math.exp },
+      sin: { n: 1, f: Math.sin, trig: 1, tex: "\\sin" }, cos: { n: 1, f: Math.cos, trig: 1, tex: "\\text{cos}" }, tan: { n: 1, f: Math.tan, trig: 1, tex: "\\tan" },
+      asin: { n: 1, f: Math.asin, itrig: 1, tex: "\\text{arcsin}" }, acos: { n: 1, f: Math.acos, itrig: 1, tex: "\\text{arccos}" }, atan: { n: 1, f: Math.atan, itrig: 1, tex: "\\text{arctan}" },
+      C: { n: 2, f: cxComb, proba: 1, tex: "C" }, Bin: { n: 3, f: cxBin, proba: 1 }, BinC: { n: 3, f: cxBinC, proba: 1, tex: "\\text{Bin≤}" },
+      aireZ: { n: 1, f: z => cxPhi(z) - 0.5, proba: 1 }
+    };
+    CX_FUNCS.arcsin = CX_FUNCS.asin; CX_FUNCS.arccos = CX_FUNCS.acos; CX_FUNCS.arctan = CX_FUNCS.atan;
+    Object.keys(CX_FUNCS).forEach(k => { if (!CX_FUNCS[k].name) CX_FUNCS[k].name = k; });
+    // « ai » : texte venu de l'IA ou tapé au clavier ; les fonctions de probabilités n'y existent pas (C y est une lettre)
+    function cxFunc(name, ai) {
+      const f = Object.prototype.hasOwnProperty.call(CX_FUNCS, name) ? CX_FUNCS[name] : null;
+      if (f) return f.proba && ai ? null : f;
+      const low = name.toLowerCase(), g = Object.prototype.hasOwnProperty.call(CX_FUNCS, low) ? CX_FUNCS[low] : null;
+      return g && !g.proba ? g : null;
+    }
+
+    // ---------- Découpage en jetons ----------
+    //  « ᴇ » = touche ×10ˣ de la calculatrice ; « 6.02E23 » (collé, comme en Python) = même chose dans un texte.
+    //  {nom} = constante ; ⟦nombre⟧ = valeur reprise d'un ancien résultat (toute la précision).
+    function cxLex(src) {
+      const s = String(src).replace(/\*\*/g, "^");
+      const out = [];
+      let i = 0;
+      const numTex = t => { t = t.replace(".", ","); return t[0] === "," ? "0" + t : t; };
+      while (i < s.length) {
+        const ch = s[i], rest = s.slice(i);
+        if (/\s/.test(ch)) { i++; continue; }
+        let m = /^(\d+(?:[.,]\d+)?|[.,]\d+)/.exec(rest);
+        const standalone = !m && ch === "ᴇ";
+        if (m || standalone) {
+          const mant = m ? m[1].replace(",", ".") : "1";
+          let j = i + (m ? m[0].length : 0);
+          const e = /^\s*ᴇ\s*([+\-−]?)\s*(\d+(?:[.,]\d+)?)?/.exec(s.slice(j));
+          if (e) {
+            j += e[0].length;
+            if (!e[2] && !e[1] && /^\s*\(/.test(s.slice(j))) {      // 5 ×10^( … )
+              if (m) out.push({ t: "num", v: parseFloat(mant), tex: numTex(m[1]) }, { t: "op", v: "*" });
+              out.push({ t: "num", v: 10, tex: "10" }, { t: "op", v: "^" });
+              i = j; continue;
+            }
+            const neg = e[1] && e[1] !== "+", ex = (e[2] || "0").replace(",", ".");
+            const v = /^\d+$/.test(ex) ? parseFloat(mant + "e" + (neg ? "-" : "") + ex) : parseFloat(mant) * Math.pow(10, (neg ? -1 : 1) * parseFloat(ex));
+            const pw = "10^{" + (neg ? "-" : "") + (e[2] ? e[2].replace(".", ",") : "") + "}";
+            out.push({ t: "num", v, tex: m ? numTex(m[1]) + "\\times" + pw : pw, sci: !!m });
+            i = j; continue;
+          }
+          const py = /^[eE]([+\-−]?\d+)(?![\w.,])/.exec(s.slice(j));
+          if (py) {
+            const ex = py[1].replace("−", "-");
+            out.push({ t: "num", v: parseFloat(mant + "e" + ex), tex: numTex(m[1]) + "\\times10^{" + String(parseInt(ex, 10)) + "}", sci: true });
+            i = j + py[0].length; continue;
+          }
+          out.push({ t: "num", v: parseFloat(mant), tex: numTex(m[1]) });
+          i = j; continue;
+        }
+        if ((m = /^\{(\w+)\}/.exec(rest)) && CX_CONST[m[1]]) { out.push({ t: "const", v: m[1] }); i += m[0].length; continue; }
+        if ((m = /^⟦([^⟧]+)⟧/.exec(rest))) {
+          const v = Number(m[1]);
+          out.push({ t: "num", v, tex: cxFmtTex(v, 0, false), sci: Math.abs(v) >= 1e10 || (v !== 0 && Math.abs(v) < 1e-2) });
+          i += m[0].length; continue;
+        }
+        if (ch === "√") { out.push({ t: "id", v: "sqrt", root: 1 }); i++; continue; }
+        if (ch === "π") { out.push({ t: "const", v: "pi" }); i++; continue; }
+        if ((m = /^[A-Za-zÀ-ÖØ-öø-ÿΑ-Ωα-ω][A-Za-z0-9À-ÖØ-öø-ÿΑ-Ωα-ω_₀-₉']*/.exec(rest))) {
+          out.push(m[0] === "pi" ? { t: "const", v: "pi" } : { t: "id", v: m[0] });
+          i += m[0].length; continue;
+        }
+        const op = { "−": "-", "–": "-", "×": "*", "·": "*", "⋅": "*", "÷": "/", "[": "(", "]": ")", ":": "/" }[ch] || ch;
+        if ("+-*/^()=;!%∥".includes(op)) { out.push({ t: "op", v: op }); i++; continue; }
+        throw new Error("symbole « " + ch + " »");
+      }
+      return out;
+    }
+    // ---------- Lecture : jetons → arbre ----------
+    function cxParse(src, ai) {
+      const tk = cxLex(src);
+      let p = 0;
+      const isOp = v => p < tk.length && tk[p].t === "op" && tk[p].v === v;
+      const fail = m => { throw new Error(m); };
+      const starts = () => p < tk.length && (tk[p].t === "num" || tk[p].t === "id" || tk[p].t === "const" || isOp("("));
+      function sum() {
+        let a = term();
+        while (isOp("+") || isOp("-")) { const op = tk[p++].v; a = { t: "bin", op, a, b: term() }; }
+        return a;
+      }
+      function term() {
+        let a = par();
+        for (;;) {
+          if (isOp("*") || isOp("/")) { const op = tk[p++].v; a = { t: "bin", op, a, b: par() }; }
+          else if (starts()) a = { t: "bin", op: "*", a, b: par() };      // 2x, 3(a + b) : multiplication sous-entendue
+          else return a;
+        }
+      }
+      function par() {
+        let a = unary();
+        while (isOp("∥")) { p++; a = { t: "bin", op: "∥", a, b: unary() }; }
+        return a;
+      }
+      function unary() {
+        if (isOp("-")) { p++; return { t: "neg", a: unary() }; }
+        if (isOp("+")) { p++; return unary(); }
+        return pow();
+      }
+      function pow() {
+        const a = post();
+        if (isOp("^")) { p++; return { t: "bin", op: "^", a, b: unary() }; }
+        return a;
+      }
+      function post() {
+        let a = prim();
+        while (isOp("!") || isOp("%")) a = { t: tk[p++].v === "!" ? "fact" : "pct", a };
+        return a;
+      }
+      function close() { if (isOp(")")) p++; else if (p < tk.length) fail("parenthèse"); }   // en fin de ligne, la parenthèse se ferme toute seule
+      function prim() {
+        const t = tk[p];
+        if (!t) fail("incomplet");
+        if (t.t === "num") { p++; return { t: "num", v: t.v, tex: t.tex, sci: t.sci }; }
+        if (t.t === "const") { p++; return { t: "const", n: t.v }; }
+        if (isOp("(")) { p++; const a = sum(); close(); return { t: "grp", a }; }
+        if (t.t === "id") {
+          p++;
+          const fn = cxFunc(t.v, ai);
+          if (fn && (isOp("(") || t.root)) {
+            let args;
+            if (isOp("(")) { p++; args = [sum()]; while (isOp(";")) { p++; args.push(sum()); } close(); }
+            else args = [pow()];
+            if (args.length !== fn.n) fail(fn.name + " attend " + fn.n + " valeur" + (fn.n > 1 ? "s séparées par « ; »" : ""));
+            return { t: "call", f: fn.name, args };
+          }
+          return { t: "var", n: t.v };
+        }
+        fail("inattendu");
+      }
+      if (isOp("=")) p++;
+      const parts = [sum()];
+      while (isOp("=")) { p++; if (p >= tk.length) break; parts.push(sum()); }
+      if (p < tk.length) fail("inattendu");
+      return parts.length > 1 ? { t: "eq", parts } : parts[0];
+    }
+    function cxVars(n, set) {
+      if (n.t === "var") set.add(n.n);
+      else if (n.t === "eq") n.parts.forEach(x => cxVars(x, set));
+      else if (n.t === "call") n.args.forEach(x => cxVars(x, set));
+      else { if (n.a) cxVars(n.a, set); if (n.b) cxVars(n.b, set); }
+      return set;
+    }
+    function cxEval(n, env, vars) {
+      switch (n.t) {
+        case "num": return n.v;
+        case "const": return CX_CONST[n.n].v;
+        case "var":
+          if (vars && Object.prototype.hasOwnProperty.call(vars, n.n)) return vars[n.n];
+          throw new Error("lettre " + n.n);
+        case "grp": return cxEval(n.a, env, vars);
+        case "neg": return -cxEval(n.a, env, vars);
+        case "fact": return cxFact(cxEval(n.a, env, vars));
+        case "pct": return cxEval(n.a, env, vars) / 100;
+        case "bin": {
+          const a = cxEval(n.a, env, vars), b = cxEval(n.b, env, vars);
+          switch (n.op) {
+            case "+": return a + b;
+            case "-": return a - b;
+            case "*": return a * b;
+            case "/": return a / b;
+            case "^": return Math.pow(a, b);
+            default: return a * b / (a + b);          // ∥ : résistances en parallèle, condensateurs en série
+          }
+        }
+        case "call": {
+          const f = CX_FUNCS[n.f], a = n.args.map(x => cxEval(x, env, vars));
+          if (f.trig) { const r = f.f(env.deg ? a[0] * Math.PI / 180 : a[0]); return Math.abs(r) < 1e-15 ? 0 : Math.abs(r) > 1e15 ? NaN : r; }
+          if (f.itrig) { const r = f.f(a[0]); return env.deg ? r * 180 / Math.PI : r; }
+          return f.f.apply(null, a);
+        }
+      }
+      throw new Error("calcul");
+    }
+
+    // ---------- Affichage : arbre → mini-TeX (dessiné en 2D par texToMathML) ----------
+    const CX_GREEK = { alpha: "α", beta: "β", gamma: "γ", delta: "δ", epsilon: "ε", varepsilon: "ε", eta: "η", theta: "θ", kappa: "κ", lambda: "λ", mu: "μ", nu: "ν", rho: "ρ", sigma: "σ", tau: "τ", phi: "φ", chi: "χ", omega: "ω", Omega: "Ω", Delta: "Δ", Sigma: "Σ", Phi: "Φ" };
+    function cxVarTex(name) {
+      name = String(name).replace(/[^A-Za-z0-9À-ÖØ-öø-ÿΑ-Ωα-ω_₀-₉']/g, "");
+      const k = name.indexOf("_"), base = k < 0 ? name : name.slice(0, k), sub = k < 0 ? "" : name.slice(k + 1).replace(/_/g, " ");
+      const one = w => CX_GREEK[w] ? (MATH_SYMBOLS[w] ? "{\\" + w + "}" : "\\text{" + CX_GREEK[w] + "}") : (w.length > 1 ? "\\text{" + w + "}" : w);
+      return one(base) + (sub ? "_{" + (/^\d+$/.test(sub) ? sub : one(sub)) + "}" : "");
+    }
+    function cxTex(n, p) {
+      p = p || 0;
+      let s, q = 7;
+      switch (n.t) {
+        case "num": s = n.tex; q = n.v < 0 ? 1.5 : n.sci ? 2.2 : 7; break;
+        case "const": s = CX_CONST[n.n].tex; break;
+        case "var": s = cxVarTex(n.n); break;
+        case "grp": return cxTex(n.a, Math.max(p, 0.5));          // les parenthèses reviennent seulement là où il en faut
+        case "neg": s = "-" + cxTex(n.a, 2); q = 1.5; break;
+        case "fact": s = cxTex(n.a, 6) + "!"; q = 6; break;
+        case "pct": s = cxTex(n.a, 6) + "\\%"; q = 6; break;
+        case "eq": s = n.parts.map(x => cxTex(x, 0)).join("="); q = 0; break;
+        case "call": {
+          const a = n.args.map(x => cxTex(x, 0));
+          if (n.f === "sqrt") s = "\\sqrt{" + a[0] + "}";
+          else if (n.f === "cbrt") s = "\\sqrt[3]{" + a[0] + "}";
+          else if (n.f === "exp") { s = "e^{" + a[0] + "}"; q = 5; }
+          else if (n.f === "abs") s = "|" + a[0] + "|";
+          else s = (CX_FUNCS[n.f].tex || "\\text{" + n.f + "}") + "(" + a.join(" ; ") + ")";
+          break;
+        }
+        default: {
+          const a = n.a, b = n.b;
+          if (n.op === "+") { s = cxTex(a, 1) + "+" + cxTex(b, 1.6); q = 1; }
+          else if (n.op === "-") { s = cxTex(a, 1) + "-" + cxTex(b, 2); q = 1; }
+          else if (n.op === "/") { s = "\\frac{" + cxTex(a, 0) + "}{" + cxTex(b, 0) + "}"; q = 4.5; }
+          else if (n.op === "^") { s = "{" + cxTex(a, 6) + "}^{" + cxTex(b, 0) + "}"; q = 5; }
+          else if (n.op === "∥") { s = cxTex(a, 3) + "\\parallel " + cxTex(b, 3.5); q = 3; }
+          else {
+            const inner = x => x.t === "grp" ? inner(x.a) : x;
+            const sym = x => { x = inner(x); return x.t === "var" || x.t === "const" || (x.t === "bin" && x.op === "^" && sym(x.a)); };
+            const last = x => { x = inner(x); return x.t === "bin" && x.op === "*" ? last(x.b) : x; };
+            const l = last(a), plainB = b.t !== "grp" && sym(b);
+            const sep = plainB ? (l.t === "num" && !l.sci ? "" : sym(l) ? "\\," : "\\times ") : "\\times ";
+            s = cxTex(a, 1.5) + sep + cxTex(b, 2.1); q = 2;
+          }
+        }
+      }
+      return q < p ? "(" + s + ")" : s;
+    }
+    // ---------- Écriture d'un nombre : virgule décimale, × 10ⁿ, chiffres significatifs ----------
+    //  cs = nombre de chiffres significatifs (0 = tout, 10 au maximum) ; sci = forcer la notation scientifique
+    function cxFmt(v, cs, sci) {
+      if (!isFinite(v)) return null;
+      if (v === 0) return { neg: false, m: "0", e: null };
+      const dg = cs || 10, a = Math.abs(v);
+      let parts = a.toExponential(dg - 1).split("e"), m = parts[0];
+      const e = Number(parts[1]);
+      const trim = t => t.includes(".") ? t.replace(/0+$/, "").replace(/\.$/, "") : t;
+      const useSci = sci || e < -2 || e >= 10 || (cs && e >= cs && Number(a.toPrecision(cs)) !== a);
+      if (useSci) return { neg: v < 0, m: trim(m).replace(".", ","), e };
+      return { neg: v < 0, m: trim(a.toFixed(Math.max(0, dg - 1 - e))).replace(".", ","), e: null };
+    }
+    function cxFmtTex(v, cs, sci) {
+      const f = cxFmt(v, cs, sci);
+      return f ? (f.neg ? "-" : "") + f.m + (f.e !== null ? "\\times10^{" + f.e + "}" : "") : "\\text{indéfini}";
+    }
+    function cxFmtHtml(v, cs, sci) {
+      const f = cxFmt(v, cs, sci);
+      return f ? (f.neg ? "−" : "") + f.m + (f.e !== null ? " × 10<sup>" + (f.e < 0 ? "−" : "") + Math.abs(f.e) + "</sup>" : "") : "indéfini";
+    }
+    // ---------- Équation à une inconnue : toutes les solutions réelles trouvées entre −10¹⁵ et 10¹⁵ ----------
+    function cxSolve(L, R) {
+      const f = t => { try { const v = L(t) - R(t); return isFinite(v) ? v : NaN; } catch (e) { return NaN; } };
+      const xs = [0];
+      for (let k = -20; k <= 15.001; k += 0.05) { const q = Math.pow(10, k); xs.push(q, -q); }
+      for (let t = -50; t <= 50; t += 0.25) xs.push(t);
+      xs.sort((a, b) => a - b);
+      const fs = xs.map(f);
+      if (fs.filter(v => v === 0).length > 20) return [];                   // vraie pour tout x : rien à résoudre
+      // une vraie solution : |f| y est minuscule comparé à |f| juste à côté (écarte les asymptotes et les creux qui ne touchent pas zéro)
+      const good = r => {
+        const fr = Math.abs(f(r));
+        if (isNaN(fr)) return false;
+        if (fr === 0) return true;
+        const d = Math.max(Math.abs(r) * 1e-3, 1e-12), a = Math.abs(f(r + d)), b = Math.abs(f(r - d));
+        const side = Math.max(isNaN(a) ? 0 : a, isNaN(b) ? 0 : b);
+        return side > 0 && fr <= 1e-6 * side;
+      };
+      const polish = r => { const s = Number(r.toPrecision(9)); return Math.abs(f(s)) <= Math.abs(f(r)) ? s : r; };
+      const roots = [];
+      const add = r => {
+        if (!isFinite(r) || !good(r)) return;
+        r = polish(r);
+        if (!roots.some(o => Math.abs(o - r) <= 1e-7 * Math.max(Math.abs(o), Math.abs(r)) || (o === 0 && r === 0))) roots.push(r);
+      };
+      for (let i = 0; i < xs.length - 1 && roots.length < 6; i++) {
+        let a = xs[i], b = xs[i + 1], fa = fs[i];
+        const fb = fs[i + 1];
+        if (isNaN(fa) || isNaN(fb) || a === b) continue;
+        if (fa === 0) { add(a); continue; }
+        if (fb !== 0 && (fa < 0) !== (fb < 0)) {                             // changement de signe : on resserre par moitiés
+          for (let n = 0; n < 200; n++) {
+            const mid = (a + b) / 2;
+            if (mid === a || mid === b) break;
+            const fm = f(mid);
+            if (isNaN(fm)) { a = NaN; break; }
+            if (fm === 0) { a = b = mid; break; }
+            if ((fm < 0) === (fa < 0)) { a = mid; fa = fm; } else b = mid;
+          }
+          add((a + b) / 2);
+        } else if (i > 0 && fb !== 0 && !isNaN(fs[i - 1]) && Math.abs(fa) < Math.abs(fs[i - 1]) && Math.abs(fa) <= Math.abs(fb)) {
+          // creux de |f| sans changement de signe : racine double possible (x² − 2x + 1 = 0)
+          let lo = xs[i - 1], hi = b;
+          for (let n = 0; n < 120; n++) {
+            const m1 = lo + (hi - lo) / 3, m2 = hi - (hi - lo) / 3;
+            if (Math.abs(f(m1)) < Math.abs(f(m2))) hi = m2; else lo = m1;
+          }
+          const r = polish((lo + hi) / 2);
+          if (Math.abs(f(r)) <= 1e-9 * (Math.abs(f(r + Math.max(Math.abs(r) * 1e-2, 1e-9))) || 0)) add(r);
+        }
+      }
+      return roots.sort((a, b) => a - b);
+    }
+    // ---------- Analyse complète d'une ligne ----------
+    //  → { ok, tex, kind: "val" | "solve" | "vars" | "err", value, label, other, same, x, roots, vars, resTex, msg }
+    function cxAnalyse(src, o) {
+      o = o || {};
+      let ast;
+      try { ast = cxParse(src, o.ai); } catch (e) { return { ok: false, msg: e.message }; }
+      const out = { ok: true, ast, tex: cxTex(ast, 0) };
+      const parts = ast.t === "eq" ? ast.parts : [ast];
+      const vs = parts.map(q => [...cxVars(q, new Set())]);
+      const all = [...new Set([].concat(...vs))];
+      const env = { deg: o.deg !== false };
+      const val = q => cxEval(q, env, {});
+      const F = v => cxFmtTex(v, o.cs || 0, !!o.sci);
+      const bare = q => q.t === "grp" ? bare(q.a) : q;
+      try {
+        if (!all.length) {
+          out.kind = "val"; out.value = val(parts[0]); out.resTex = F(out.value);
+          if (parts.length > 1) {
+            out.other = val(parts[parts.length - 1]);
+            out.same = Math.abs(out.value - out.other) <= 5e-3 * Math.max(Math.abs(out.value), Math.abs(out.other));
+          }
+          return out;
+        }
+        const num = vs.findIndex(a => !a.length);
+        if (all.length === 1 && parts.length > 1) {
+          const x = all[0], i = vs.findIndex(a => a.length), j = num >= 0 ? num : (i === 0 ? 1 : 0);
+          out.kind = "solve"; out.x = x;
+          out.roots = bare(parts[i]).t === "var" && !vs[j].length
+            ? [val(parts[j])].filter(isFinite)
+            : cxSolve(t => cxEval(parts[i], env, { [x]: t }), t => cxEval(parts[j], env, { [x]: t }));
+          out.resTex = out.roots.map(r => cxVarTex(x) + "=" + F(r)).join("\\quad\\text{ou}\\quad ");
+          return out;
+        }
+        const lone = parts.find(q => bare(q).t === "var");
+        if (num >= 0 && lone) {                                              // Q = C·V = 4,7 × 10⁻⁶ × 12 → Q = …
+          out.kind = "val"; out.value = val(parts[num]); out.label = bare(lone).n; out.resTex = F(out.value);
+          return out;
+        }
+        out.kind = "vars"; out.vars = all;
+        return out;
+      } catch (e) { out.kind = "err"; out.msg = e.message; return out; }
+    }
+
+    // =========================================================================
+    // CORDE → « CALCULER » : une bulle à côté de ce qui est entouré
+    // =========================================================================
+    let cbRun = 0, cb = null;   // cb : { ink, box, lu, aiTex, iso, pick, edited }
+    function calcCfg() { if (!prefs.calc || typeof prefs.calc !== "object") prefs.calc = {}; return prefs.calc; }
+    function calcBubbleClose() {
+      cbRun++; cb = null;
+      const el = $("calcBubble");
+      if (el) { el.classList.remove("open"); $("cbEdit").hidden = true; }
+    }
+    function cbPlace() {
+      if (!cb) return;
+      const el = $("calcBubble"), b = cb.box, s = tile.s || 1, W = paperEl.clientWidth;
+      el.classList.add("open");
+      const w = el.offsetWidth, h = el.offsetHeight;
+      let left = (b[2] + 16) * s, top = (b[1] - 8) * s;
+      if (left + w > W - 4) { left = Math.max(4, Math.min(b[0] * s, W - w - 4)); top = (b[3] + 16) * s; }   // pas de place à droite : en dessous
+      top = Math.max(4, top);
+      try { maybeGrow((top + h) / s + 30); } catch (e) {}
+      el.style.left = left + "px";
+      el.style.top = top + "px";
+    }
+    function cbSet(main, actions) {
+      $("cbMain").innerHTML = main;
+      $("cbActions").innerHTML = actions.map(a => `<button type="button" data-cb="${a[0]}">${a[1]}</button>`).join("");
+      cbPlace();
+    }
+    // Image envoyée : seulement les traits entourés (et les coups de gomme qui les touchent), sur fond blanc
+    function cbImage(set, b) {
+      const pad = 26, x0 = b[0] - pad, y0 = b[1] - pad, w = b[2] - b[0] + 2 * pad, h = b[3] - b[1] + 2 * pad;
+      const SC = Math.max(1, Math.min(3, 1500 / Math.max(w, h)));
+      const W = Math.max(1, Math.round(w * SC)), H = Math.max(1, Math.round(h * SC));
+      const layer = document.createElement("canvas");
+      layer.width = W; layer.height = H;
+      const lx = layer.getContext("2d");
+      lx.setTransform(SC, 0, 0, SC, -x0 * SC, -y0 * SC);
+      doc.strokes.forEach(s => {
+        if (set.has(s)) { drawStroke(lx, s, false); return; }
+        if (s.t !== "px") return;
+        const q = bbox(s);
+        if (q[2] >= x0 && q[0] <= x0 + w && q[3] >= y0 && q[1] <= y0 + h) drawStroke(lx, s, false);
+      });
+      const c = document.createElement("canvas");
+      c.width = W; c.height = H;
+      const cx = c.getContext("2d");
+      cx.fillStyle = "#fff"; cx.fillRect(0, 0, W, H);
+      cx.drawImage(layer, 0, 0);
+      const data = c.toDataURL("image/png").split(",")[1];
+      layer.width = layer.height = c.width = c.height = 0;
+      return data;
+    }
+    // LaTeX → écriture en ligne, au cas où l'IA répond en LaTeX malgré la consigne
+    function cxFromTex(t) {
+      t = String(t).replace(/\\left|\\right|\\,|\\!|\\;|\\ /g, "").replace(/\\(?:times|cdot)/g, "*").replace(/\\div/g, "/")
+        .replace(/\\(?:varepsilon|epsilon)/g, "epsilon").replace(/_\{([^{}]*)\}/g, "_$1");
+      for (let n = 0; n < 30 && /\\d?frac\s*\{[^{}]*\}\s*\{[^{}]*\}|\\sqrt\s*\{[^{}]*\}|\^\{[^{}]*\}/.test(t); n++) {
+        t = t.replace(/\\d?frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, "(($1)/($2))").replace(/\\sqrt\s*\{([^{}]*)\}/g, "sqrt($1)").replace(/\^\{([^{}]*)\}/g, "^($1)");
+      }
+      return t.replace(/\\([A-Za-z]+)/g, "$1").replace(/[{]/g, "(").replace(/[}]/g, ")");
+    }
+    // L'IA ne fait que LIRE (modèle Flash, sans réflexion : 2 à 4 secondes). Le calcul est fait par cxAnalyse.
+    async function cxReadInk(apiKey, png) {
+      const prompt = `Tu lis l'image d'un calcul ou d'une équation écrit à la main par un étudiant de cégep (chimie, physique, probabilités).
+Recopie fidèlement ce qui est écrit. Ne calcule rien, ne corrige rien, ne complète rien.
+
+Réponds avec cet objet JSON, sans rien autour :
+{"lu": "...", "tex": "...", "isoler": [{"var": "...", "tex": "..."}]}
+
+"lu" : ce qui est écrit, sur UNE seule ligne, dans cette syntaxe stricte :
+- nombres avec un point décimal (0.25) ; une puissance de dix se colle au nombre : 6.02E23 pour 6,02 × 10^23, 1.8E-5 pour 1,8 × 10^-5, 1E-14 pour 10^-14 ;
+- opérations + - * / ^ et parenthèses ; mets TOUJOURS * entre deux facteurs : 2*x, R*I, 3*(a+b) ;
+- une fraction s'écrit (numérateur)/(dénominateur), avec les deux paires de parenthèses ;
+- fonctions : sqrt(...), log(...) pour le logarithme en base 10, ln(...), exp(...) pour e^(...), sin(...), cos(...), tan(...), abs(...) ; le nombre π s'écrit pi ;
+- lettres : garde-les telles quelles, indice avec _ (x, R, V_0, C_eq, K_a) ; lettre grecque en toutes lettres (epsilon_0, lambda) ;
+- garde le signe = d'une équation ; si rien n'est écrit après un « = » final (ou seulement « ? »), n'écris pas ce « = » ;
+- n'écris pas les unités (mol/L, V, Ω, µF, s…) : seulement les nombres et les lettres du calcul ;
+- s'il y a plusieurs lignes, recopie seulement la dernière.
+
+"tex" : la même chose en LaTeX simple (\\frac{}{}, ^{}, _{}, \\sqrt{}, \\times), avec la virgule décimale.
+
+"isoler" : seulement si "lu" est une équation qui contient au moins deux lettres différentes. Pour chaque lettre (6 au maximum), donne l'équation résolue pour cette lettre, en LaTeX simple, par exemple {"var": "R", "tex": "R = \\frac{V}{I}"}. Sinon : [].
+
+Si l'image est illisible ou ne contient aucun calcul : {"lu": "", "tex": "", "isoler": []}.`;
+      const body = think => JSON.stringify({
+        contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: "image/png", data: png } }] }],
+        generationConfig: Object.assign({ responseMimeType: "application/json" }, think ? { thinkingConfig: { thinkingBudget: 0 } } : {})
+      });
+      let models = ["gemini-flash-latest"], widened = false, lastErr = "";
+      for (let n = 0; n < models.length; n++) {
+        const m = models[n];
+        if (!aiNoQuota.has(m)) {
+          for (const think of [true, false]) {
+            const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 25000);
+            let resp;
+            try {
+              resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(m)}:generateContent?key=${encodeURIComponent(apiKey)}`, {
+                method: "POST", headers: { "Content-Type": "application/json" }, body: body(think), signal: ctl.signal
+              });
+            } finally { clearTimeout(timer); }
+            if (resp.ok) {
+              const data = await resp.json();
+              const text = (data?.candidates?.[0]?.content?.parts || []).filter(q => !q.thought).map(q => q.text || "").join("").trim();
+              if (!text) { lastErr = "réponse vide"; break; }
+              let o = null;
+              try { o = JSON.parse(text.replace(/^```[a-zA-Z]*\s*/, "").replace(/\s*```$/, "")); } catch (e) {}
+              if (!o) { const k = /"lu"\s*:\s*"((?:[^"\\]|\\.)*)"/.exec(text); o = { lu: k ? k[1].replace(/\\\\/g, "\\") : "" }; }
+              let lu = String(o.lu || "").trim();
+              if (/[\\{]/.test(lu)) lu = cxFromTex(lu);
+              return { lu, tex: String(o.tex || "").replace(/^\$+|\$+$/g, ""), iso: Array.isArray(o.isoler) ? o.isoler.slice(0, 6) : [], model: m };
+            }
+            let msg = "";
+            try { msg = (await resp.json())?.error?.message || ""; } catch (e) {}
+            lastErr = "erreur " + resp.status + (msg ? " : " + msg.slice(0, 140).replace(/\.$/, "") : "");
+            if (resp.status === 401 || resp.status === 403 || /api key/i.test(msg)) throw new Error(lastErr + ". Vérifie ta clé dans « IA »");
+            if (resp.status === 429 && /limit: ?0\b/i.test(msg)) aiNoQuota.add(m);
+            if (!(resp.status === 400 && think)) break;                   // 400 avec le réglage « sans réflexion » : on réessaie sans ce réglage
+          }
+        }
+        if (!widened && n === models.length - 1) {                        // le modèle rapide habituel n'a pas répondu : on essaie les autres
+          widened = true;
+          const all = await aiModelList(apiKey);
+          models = models.concat(all.filter(x => /flash/.test(x) && !models.includes(x)), all.filter(x => !/flash/.test(x)));
+        }
+      }
+      throw new Error(lastErr || "aucun modèle n'a répondu");
+    }
+    function lassoCalc() {
+      if (!selection) return;
+      const ink = selection.strokes.filter(s => s.pts && s.t !== "px");
+      if (!ink.length) { showToast("Entoure un calcul écrit à la main."); return; }
+      cbStart(ink, selection.box.slice());
+    }
+    function cbOffline() {
+      cbSet(`<div class="cb-note"><b>Pas d'Internet :</b> je ne peux pas lire ton écriture. La calculatrice, elle, marche sans Internet.</div>`,
+        [["calc", "🧮 Calculatrice"], ["retry", "Réessayer"], ["close", "Fermer"]]);
+    }
+    async function cbStart(ink, box) {
+      const run = ++cbRun;
+      cb = { ink, box };
+      $("cbEdit").hidden = true;
+      const apiKey = safeGet(LS.key, "");
+      if (!apiKey) {
+        cbSet(`<div class="cb-note">Pour lire ton écriture, il faut une clé dans « IA ». Sans clé, la calculatrice fait le calcul.</div>`,
+          [["key", "Ajouter une clé"], ["calc", "🧮 Calculatrice"], ["close", "Fermer"]]);
+        return;
+      }
+      if (navigator.onLine === false) { cbOffline(); return; }
+      cbSet(`<div class="cb-wait"><div class="spinner"></div><span>Je lis ton écriture…</span></div>`, [["close", "Annuler"]]);
+      try {
+        const r = await cxReadInk(apiKey, cbImage(new Set(ink), box));
+        if (run !== cbRun || !cb) return;
+        cb.lu = r.lu; cb.aiTex = r.tex; cb.iso = r.iso;
+        if (!cb.lu) {
+          cbSet(`<div class="cb-note">Je n'ai pas réussi à lire un calcul ici. Entoure seulement la ligne à calculer, ou écris-la toi-même.</div>`,
+            [["fix", "✏️ L'écrire"], ["close", "Fermer"]]);
+          return;
+        }
+        cbShow();
+      } catch (err) {
+        if (run !== cbRun || !cb) return;
+        if (err instanceof TypeError || navigator.onLine === false) { cbOffline(); return; }
+        const msg = err && err.name === "AbortError" ? "la lecture a pris trop de temps" : String(err && err.message || err);
+        cbSet(`<div class="cb-note"><b>La lecture n'a pas marché</b> (${escapeHtml(msg)}).</div>`,
+          [["retry", "Réessayer"], ["calc", "🧮 Calculatrice"], ["close", "Fermer"]]);
+      }
+    }
+    function cbShow() {
+      if (!cb) return;
+      const cfg = calcCfg();
+      const r = cxAnalyse(cb.lu || "", { ai: true, deg: cfg.deg !== false, cs: cfg.cs || 6 });
+      const M = t => texToMathML(String(t), false);
+      const read = r.ok ? M(r.tex) : (cb.aiTex && !cb.edited ? M(cb.aiTex) : escapeHtml(cb.lu || ""));
+      let res = "", note = "", iso = "";
+      if (!r.ok) note = cb.lu ? "Je n'arrive pas à calculer cette ligne telle quelle. Touche « Corriger » pour l'ajuster." : "";
+      else if (r.kind === "val") {
+        if (isFinite(r.value)) {
+          res = M((r.label ? cxVarTex(r.label) + "=" : "") + r.resTex);
+          if (r.other !== undefined && isFinite(r.other)) note = r.same ? "✓ C'est bien ce que tu as écrit à droite du « = »." : "⚠️ À droite du « = », tu as écrit " + cxFmtHtml(r.other, 6) + ".";
+        } else note = "Calcul impossible (division par zéro, racine ou logarithme d'un nombre négatif…).";
+      } else if (r.kind === "solve") {
+        if (r.roots.length) res = M(r.resTex);
+        else note = "Je ne trouve aucune solution réelle à cette équation.";
+      } else if (r.kind === "vars") {
+        const list = cb.edited ? [] : (cb.iso || []).filter(o => o && o.var && o.tex);
+        if (list.length) {
+          iso = `<div class="cb-lbl">Isoler quelle lettre ?</div><div class="cb-iso">` + list.map((o, i) =>
+            `<button type="button" data-cb="iso:${i}" class="${cb.pick === i ? "on" : ""}">${M(cxVarTex(o.var))}</button>`).join("") + "</div>";
+          if (cb.pick != null && list[cb.pick]) { res = M(list[cb.pick].tex); note = "🤖 Isolé par l'IA, pas par l'app : vérifie d'un coup d'œil."; }
+        } else note = "Il reste des lettres sans valeur (" + escapeHtml(r.vars.join(", ")) + ") : je ne peux pas donner un nombre. Touche « Corriger » pour mettre les nombres.";
+      } else note = "Calcul impossible avec cette ligne. Touche « Corriger » pour l'ajuster.";
+      cbSet((read ? `<div class="cb-lbl">J'ai lu</div><div class="cb-read">${read}</div>` : "") + iso
+        + (res ? `<div class="cb-lbl">Résultat</div><div class="cb-res">${res}</div>` : "")
+        + (note ? `<div class="cb-note">${note}</div>` : ""), [["fix", "✏️ Corriger"], ["close", "Fermer"]]);
+    }
+    function cbEdited() {
+      if (!cb) return;
+      cb.lu = $("cbInput").value; cb.edited = true; cb.pick = null;
+      cbShow();
+    }
+    function cbAction(k) {
+      if (k === "close") { calcBubbleClose(); return; }
+      if (k === "key") { openModal("apiModal"); return; }
+      if (k === "calc") { calcToggle(true); return; }
+      if (!cb) return;
+      if (k === "retry") cbStart(cb.ink, cb.box);
+      else if (k === "fix") {
+        const ed = $("cbEdit"), inp = $("cbInput");
+        ed.hidden = !ed.hidden;
+        if (!ed.hidden) {
+          inp.value = String(cb.lu || "").replace(/(\d)\.(\d)/g, "$1,$2").replace(/\*/g, "×").replace(/\s*=\s*/g, " = ");
+          cbPlace();
+          try { inp.focus({ preventScroll: true }); } catch (e) { inp.focus(); }
+        } else cbPlace();
+      } else if (k.startsWith("iso:")) { cb.pick = Number(k.slice(4)); cbShow(); }
+    }
+
+    // =========================================================================
+    // CALCULATRICE : pensée pour l'Apple Pencil, sans Internet
+    //  - le résultat s'affiche pendant qu'on tape (pas besoin de « = ») ;
+    //  - ×10ˣ en une touche, constantes et fonctions du cours ouvert en une touche ;
+    //  - « x » et « = » : l'équation se résout toute seule ;
+    //  - on touche un ancien résultat pour le réutiliser.
+    // =========================================================================
+    const CK = {};   // touches qui écrivent : { c: texte lu par le moteur, d: affichage, k: genre, hint }
+    "0123456789".split("").forEach(n => { CK[n] = { c: n, d: n, k: "dig" }; });
+    Object.assign(CK, {
+      ",": { c: ",", d: ",", k: "dig" },
+      "+": { c: "+", d: "+", k: "op" }, "-": { c: "-", d: "−", k: "op" }, "*": { c: "*", d: "×", k: "op" }, "/": { c: "/", d: "÷", k: "op" },
+      "=": { c: "=", d: " = ", k: "op" }, ";": { c: ";", d: " ; ", k: "op" }, par: { c: "∥", d: "∥", k: "op" },
+      "(": { c: "(", d: "(", k: "open" }, ")": { c: ")", d: ")", k: "close" },
+      "^": { c: "^", d: "", k: "pow" }, sci: { c: "ᴇ", d: "×10", k: "sci" },
+      x: { c: "x", d: "<i>x</i>", k: "val" }, "!": { c: "!", d: "!", k: "post" },
+      sqrt: { c: "sqrt(", d: "√(", k: "open" }, log: { c: "log(", d: "log(", k: "open" }, ln: { c: "ln(", d: "ln(", k: "open" },
+      sin: { c: "sin(", d: "sin(", k: "open" }, cos: { c: "cos(", d: "cos(", k: "open" }, tan: { c: "tan(", d: "tan(", k: "open" },
+      comb: { c: "C(", d: "C(", k: "open", hint: "C(n ; k) : combinaisons de k parmi n" },
+      bin: { c: "Bin(", d: "Bin(", k: "open", hint: "Bin(k ; n ; p) = P(X = k) si X ~ B(n ; p)" },
+      binc: { c: "BinC(", d: "Bin≤(", k: "open", hint: "Bin≤(k ; n ; p) = P(X ≤ k) si X ~ B(n ; p)" },
+      airez: { c: "aireZ(", d: "aireZ(", k: "open", hint: "aireZ(z) = P(0 ≤ Z ≤ z), comme dans la table" },
+      pmu: { c: "ᴇ-6", d: "µ", k: "pre" }, pn: { c: "ᴇ-9", d: "n", k: "pre" }, pp: { c: "ᴇ-12", d: "p", k: "pre" },
+      pm: { c: "ᴇ-3", d: "m", k: "pre" }, pk: { c: "ᴇ3", d: "k", k: "pre" }, pM: { c: "ᴇ6", d: "M", k: "pre" }
+    });
+    Object.keys(CX_CONST).forEach(n => { CK["c:" + n] = { c: "{" + n + "}", d: CX_CONST[n].d, k: "val" }; });
+    // touches qui écrivent plusieurs jetons d'un coup
+    const CK_MACRO = { sq: ["^", "2"], pw: ["^"], p10: ["1", "0", "^"], exp: ["c:E", "^", "("], mlog: ["-", "log"], inv: ["^", "-", "1"] };
+    const CK_LABEL = {
+      left: "←", right: "→", bk: "⌫", clr: "C", ans: "Rép", ent: "↵", sq: "<span class=\"ph\">□</span><sup>2</sup>", pw: "<span class=\"ph\">□</span><sup>□</sup>", sqrt: "√", sci: "×10<sup>□</sup>",
+      "/": "÷", "*": "×", "-": "−", x: "<i>x</i>", "=": "=", p10: "10<sup>□</sup>", exp: "e<sup>□</sup>", mlog: "−log", inv: "<span class=\"ph\">□</span><sup>−1</sup>", par: "∥",
+      comb: "C(n;k)", "!": "n!", ";": ";", bin: "Bin =", binc: "Bin ≤", airez: "aire Z",
+      pmu: "µ", pn: "n", pp: "p", pm: "m", pk: "k", pM: "M"
+    };
+    const CK_PAD = ["x", "=", "left", "right", "bk", "(", ")", "sq", "pw", "sqrt", "7", "8", "9", "/", "clr", "4", "5", "6", "*", "ans", "1", "2", "3", "-", "ent", "0", ",", "sci", "+"];
+    // Ce qui change d'un cours à l'autre : constantes (ou valeurs utiles) et fonctions
+    const CALC_SETS = {
+      chimie: { icon: "🧪", name: "Chimie", consts: ["c:R", "d:0,08206|R en L·atm", "c:Ke", "c:NA", "d:273,15|0 °C en K", "d:101,325|1 atm en kPa", "c:pi"],
+        rows: [["log", "p10", "mlog", "ln", "exp"]] },
+      em: { icon: "⚡", name: "Électricité", consts: ["c:eps0", "c:k", "c:e", "c:me", "c:mp", "c:mn", "c:mu0", "c:g", "c:c", "c:pi"],
+        rows: [["pmu", "pn", "pp", "pm", "pk", "pM"], ["par", "inv", "exp", "ln", "sin", "cos"]] },
+      proba: { icon: "📊", name: "Probabilités", consts: ["d:1,645|z à 90 %", "d:1,96|z à 95 %", "d:2,33|z à 98 %", "d:2,575|z à 99 %", "c:pi"],
+        rows: [["comb", "!", ";", "exp", "ln"], ["bin", "binc", "airez"]] },
+      gen: { icon: "∑", name: "Général", consts: ["c:pi", "c:g", "c:c", "c:NA", "c:R"],
+        rows: [["sin", "cos", "tan", "log", "ln", "exp"]] }
+    };
+    const calc = { toks: [], cur: 0, hist: [], ans: null, set: "gen", setFor: "", open: false, sci: false, last: null };
+    const calcDef = t => t.id ? CK[t.id] : { c: "⟦" + t.v + "⟧", d: `<span class="cc-lit">${cxFmtHtml(t.v, 6)}</span>`, k: "val" };
+    const calcCanon = toks => toks.map(t => { const d = calcDef(t); return d.k === "dig" || d.k === "sci" || d.k === "pre" ? d.c : " " + d.c + " "; }).join("");
+
+    function calcSave() {
+      const cfg = calcCfg();
+      cfg.hist = calc.hist.slice(-12); cfg.ans = calc.ans;
+      savePrefs();
+    }
+    function calcSyncCourse() {      // à l'ouverture : les touches du cours affiché (on peut ensuite en choisir un autre dans l'en-tête)
+      const id = currentCourse && CALC_SETS[currentCourse.id] ? currentCourse.id : "gen";
+      if (calc.setFor !== id) { calc.setFor = id; calc.set = id; }
+    }
+    function calcToggle(on) {
+      const p = $("calcPanel");
+      calc.open = on === undefined ? !calc.open : !!on;
+      p.classList.toggle("open", calc.open);
+      $("calcTool").classList.toggle("on", calc.open);
+      if (!calc.open) return;
+      calcSyncCourse();
+      calcBuild();
+      calcRender();
+      const pos = calcCfg().pos;
+      if (pos) calcMoveTo(pos.x, pos.y); else calcMoveTo(1e6, 1e6);          // 1re fois : en bas à droite
+    }
+    function calcMoveTo(x, y) {
+      const p = $("calcPanel"), w = p.offsetWidth, h = p.offsetHeight;
+      x = Math.max(4, Math.min(x, window.innerWidth - w - 4));
+      y = Math.max(4, Math.min(y, window.innerHeight - Math.min(h, 120) - 4));
+      if (y + h > window.innerHeight - 4) y = Math.max(4, window.innerHeight - h - 4);
+      p.style.left = x + "px"; p.style.top = y + "px";
+      return { x, y };
+    }
+    function calcBuild() {
+      const set = CALC_SETS[calc.set] || CALC_SETS.gen, cfg = calcCfg();
+      const key = (k, cls) => `<button type="button" class="ck ${cls}" data-k="${k}">${CK_LABEL[k] || (CK[k] && CK[k].d) || k}</button>`;
+      $("calcSets").innerHTML = Object.keys(CALC_SETS).map(k =>
+        `<button type="button" class="set${k === calc.set ? " on" : ""}" data-k="set:${k}" title="${CALC_SETS[k].name}" aria-label="Touches : ${CALC_SETS[k].name}">${CALC_SETS[k].icon}</button>`).join("");
+      $("calcConsts").innerHTML = set.consts.map(k => {
+        if (k.startsWith("d:")) { const q = k.slice(2).split("|"); return `<button type="button" class="cc-chip" data-k="dg:${q[0]}"><b>${q[0]}</b><small>${q[1]}</small></button>`; }
+        const c = CX_CONST[k.slice(2)];
+        return `<button type="button" class="cc-chip" data-k="${k}"><b>${c.d}</b><small>${c.sub || ""}</small></button>`;
+      }).join("");
+      $("calcFns").innerHTML = set.rows.map(r => `<div class="cc-row">${r.map(k => key(k, "kf")).join("")}</div>`).join("");
+      $("calcPad").innerHTML = CK_PAD.map(k => key(k, k === "ent" ? "ke" : k === "bk" || k === "clr" ? "kx"
+        : /^\d$|^,$/.test(k) ? "" : /^[-+*/]$/.test(k) ? "ko" : "kf")).join("");
+      $("calcCs").textContent = cfg.cs ? cfg.cs + " c.s." : "tout";
+      $("calcDeg").textContent = cfg.deg === false ? "RAD" : "DEG";
+      $("calcDeg").style.display = set.rows.some(r => r.includes("sin")) ? "" : "none";
+      $("calcPanel").classList.toggle("mini", !!cfg.mini);
+    }
+    // Résultat de la ligne en cours, même pas finie : on ignore ce qui traîne à la fin (« 3 × » → 3)
+    function calcLive() {
+      const cfg = calcCfg(), t = calc.toks.slice();
+      let r = null;
+      for (let n = 0; n < 14 && t.length; n++) {
+        r = cxAnalyse(calcCanon(t), { deg: cfg.deg !== false, cs: cfg.cs || 0, sci: calc.sci });
+        if (r.ok) { r.partial = n > 0; return r; }
+        const k = calcDef(t[t.length - 1]).k;
+        if (k === "op" || k === "open" || k === "pow") t.pop(); else break;
+      }
+      return r;
+    }
+    function calcLineHtml() {
+      const T = calc.toks, n = T.length, defs = T.map(calcDef);
+      if (!n) return '<i class="cc-caret"></i><span class="cc-empty">&nbsp;Tape ton calcul</span>';
+      let caretDone = false;
+      const caret = at => { if (calc.cur !== at || caretDone) return ""; caretDone = true; return '<i class="cc-caret"></i>'; };
+      const seg = (a, b, endCaret) => {
+        let h = "", i = a;
+        while (i < b) {
+          const d = defs[i];
+          h += caret(i) + `<span class="ct" data-i="${i}">${d.d}</span>`;
+          if (d.k === "pow" || d.k === "sci") {            // ce qui suit monte en exposant
+            let j = i + 1, closed = false;
+            if (j < b && (T[j].id === "-" || T[j].id === "+")) j++;
+            if (d.k === "pow" && j < b && defs[j].k === "open") {
+              let depth = 0;
+              for (; j < b; j++) { const k = defs[j].k; if (k === "open") depth++; else if (k === "close" && --depth === 0) { j++; closed = true; break; } }
+            } else if (j < b && defs[j].k === "dig") { while (j < b && defs[j].k === "dig") j++; }
+            else if (d.k === "pow" && j < b && defs[j].k === "val") { j++; closed = true; }
+            const inner = seg(i + 1, j, !closed);
+            h += `<span class="cc-sup">${inner || '<span class="cc-ph">▫</span>'}</span>`;
+            i = j;
+          } else i++;
+        }
+        return h + (endCaret ? caret(b) : "");
+      };
+      return seg(0, n, true);
+    }
+    function calcResHtml(r) {
+      const cfg = calcCfg(), F = v => cxFmtHtml(v, cfg.cs || 0, calc.sci);
+      if (!r) return { h: "", hint: "" };
+      if (!r.ok) return { h: "", hint: /attend/.test(r.msg || "") ? r.msg : "" };
+      if (r.kind === "val") {
+        if (!isFinite(r.value)) return { h: '<span class="dim">calcul impossible</span>', hint: "Division par zéro, racine ou log d'un nombre négatif…" };
+        return { h: '<span class="dim">=</span>' + F(r.value), hint: r.other !== undefined && isFinite(r.other) ? (r.same ? "✓ Les deux côtés du « = » sont égaux." : "Côté droit du « = » : " + F(r.other).replace(/<[^>]+>/g, "^")) : "" };
+      }
+      if (r.kind === "solve") {
+        if (!r.roots.length) return { h: '<span class="dim">pas de solution réelle</span>', hint: "" };
+        return { h: r.roots.map(v => "<i>x</i> = " + F(v)).join('<span class="dim">ou</span>'), small: r.roots.length > 1, hint: r.roots.length > 1 ? "Plusieurs solutions : garde celle qui a du sens (une concentration est positive)." : "" };
+      }
+      if (r.kind === "vars") return { h: "", hint: "Ajoute « = » et l'autre côté : je trouve x." };
+      return { h: '<span class="dim">calcul impossible</span>', hint: "" };
+    }
+    function calcRender() {
+      if (!calc.open) return;
+      const line = $("calcLine"), r = calcLive();
+      calc.last = r;
+      line.innerHTML = calcLineHtml();
+      const c = line.querySelector(".cc-caret");
+      if (c) {       // le curseur reste visible quand la ligne est longue
+        const cr = c.getBoundingClientRect(), lr = line.getBoundingClientRect();
+        if (cr.right > lr.right - 6) line.scrollLeft += cr.right - lr.right + 24;
+        else if (cr.left < lr.left + 6) line.scrollLeft -= lr.left - cr.left + 24;
+      }
+      const o = calcResHtml(r);
+      $("calcRes").innerHTML = o.h;
+      $("calcRes").classList.toggle("small", !!o.small);
+      // aperçu en 2D seulement quand il aide à vérifier (fraction, racine, exposant)
+      const show2d = r && r.ok && /\\frac|\\sqrt|\^\{|parallel/.test(r.tex);
+      $("calcPrev").innerHTML = show2d ? texToMathML(r.tex, false) : "";
+      // aide : fonction en cours (ordre des valeurs), sinon message du résultat
+      let hint = o.hint || "";
+      for (let i = calc.cur - 1, depth = 0; i >= 0; i--) {
+        const d = calcDef(calc.toks[i]);
+        if (d.k === "close") depth++;
+        else if (d.k === "open") { if (depth === 0) { if (d.hint) hint = d.hint; break; } depth--; }
+      }
+      $("calcHint").textContent = hint;
+      const hEl = $("calcHist");
+      hEl.innerHTML = calc.hist.map((h, i) => `<div class="ch-row"><span class="ch-ex" data-k="h:${i}">${h.tex ? texToMathML(h.tex, false) : ""}</span>`
+        + h.vals.map((v, j) => `<span class="ch-val" data-k="hv:${i}:${j}">${h.x ? "<i>x</i> = " : "= "}${cxFmtHtml(v, calcCfg().cs || 6, false)}</span>`).join("") + "</div>").join("")
+        || '<div class="ch-empty">Tes calculs validés avec ↵ restent ici. Touche un résultat pour le réutiliser.</div>';
+      hEl.scrollTop = hEl.scrollHeight;
+    }
+    function calcInsert(ids) {
+      ids.forEach(id => { calc.toks.splice(calc.cur, 0, typeof id === "string" ? { id } : id); calc.cur++; });
+    }
+    function calcEnter() {
+      const r = calc.last;
+      if (!calc.toks.length) return;
+      const vals = r && r.ok ? (r.kind === "val" && isFinite(r.value) ? [r.value] : r.kind === "solve" ? r.roots : []) : [];
+      if (!vals.length || r.partial) { showToast(r && r.partial ? "Calcul pas fini : il manque quelque chose à la fin." : "Rien à calculer pour l'instant."); return; }
+      calc.hist.push({ toks: calc.toks.slice(), tex: r.tex, x: r.kind === "solve" ? 1 : 0, vals: vals.slice(0, 4) });
+      if (calc.hist.length > 12) calc.hist.shift();
+      const pos = vals.filter(v => v > 0);
+      calc.ans = vals.length === 1 ? vals[0] : pos.length === 1 ? pos[0] : vals[0];
+      calc.toks = []; calc.cur = 0; calc.sci = false;
+      calcSave();
+    }
+    function calcKey(k) {
+      const cfg = calcCfg();
+      if (k === "close") { calcToggle(false); return; }
+      if (k === "min") { cfg.mini = !cfg.mini; savePrefs(); $("calcPanel").classList.toggle("mini", cfg.mini); calcMoveTo(parseFloat($("calcPanel").style.left) || 0, parseFloat($("calcPanel").style.top) || 0); return; }
+      if (k === "cs") { cfg.cs = { 0: 3, 3: 4, 4: 5, 5: 0 }[cfg.cs || 0] || 0; savePrefs(); calcBuild(); calcRender(); return; }
+      if (k === "deg") { cfg.deg = cfg.deg === false; savePrefs(); calcBuild(); calcRender(); return; }
+      if (k === "res") { calc.sci = !calc.sci; calcRender(); return; }
+      if (k.startsWith("set:")) { calc.set = k.slice(4); calcBuild(); calcRender(); calcMoveTo(parseFloat($("calcPanel").style.left) || 0, parseFloat($("calcPanel").style.top) || 0); return; }
+      if (k.startsWith("h:")) { const h = calc.hist[Number(k.slice(2))]; if (h) { calc.toks = h.toks.slice(); calc.cur = calc.toks.length; } calcRender(); return; }
+      if (k.startsWith("hv:")) { const q = k.split(":"), h = calc.hist[Number(q[1])]; if (h) calcInsert([{ v: h.vals[Number(q[2])] }]); calcRender(); return; }
+      if (k === "left") calc.cur = Math.max(0, calc.cur - 1);
+      else if (k === "right") calc.cur = Math.min(calc.toks.length, calc.cur + 1);
+      else if (k === "bk") { if (calc.cur > 0) { calc.toks.splice(calc.cur - 1, 1); calc.cur--; } }
+      else if (k === "clr") {
+        if (calc.toks.length) { calc.toks = []; calc.cur = 0; calc.sci = false; }
+        else if (calc.hist.length) { calc.hist = []; calc.ans = null; calcSave(); showToast("Historique de la calculatrice effacé."); }
+      }
+      else if (k === "ent") calcEnter();
+      else if (k === "ans") { if (calc.ans === null || calc.ans === undefined) showToast("Pas encore de résultat à reprendre."); else calcInsert([{ v: calc.ans }]); }
+      else if (k.startsWith("dg:")) calcInsert(k.slice(3).split(""));
+      else {
+        const ids = CK_MACRO[k] || (CK[k] ? [k] : null);
+        if (!ids) return;
+        // la ligne est vide et on commence par une opération : elle s'applique au dernier résultat
+        if (!calc.toks.length && calc.ans !== null && calc.ans !== undefined && /^(\+|\*|\/|sq|pw|inv|!|par)$/.test(k)) calcInsert([{ v: calc.ans }]);
+        calcInsert(ids);
+      }
+      calcRender();
+    }
+    function calcInit() {
+      const cfg = calcCfg(), p = $("calcPanel");
+      calc.hist = Array.isArray(cfg.hist) ? cfg.hist.filter(h => h && Array.isArray(h.toks) && Array.isArray(h.vals) && h.toks.every(t => t && (t.id ? CK[t.id] : typeof t.v === "number"))) : [];
+      calc.ans = typeof cfg.ans === "number" ? cfg.ans : null;
+      $("calcRes").dataset.k = "res";
+
+      // --- bulle de la corde : mêmes précautions que le menu de sélection (agir au lever, une seule fois par toucher) ---
+      const bub = $("calcBubble");
+      ["pointerdown", "touchstart", "touchmove"].forEach(t => bub.addEventListener(t, e => e.stopPropagation(), { passive: true }));
+      let bubAt = 0;
+      const bubRun = e => {
+        const b = e.target.closest && e.target.closest("[data-cb]");
+        if (!b) return;
+        e.stopPropagation();
+        if (e.cancelable) e.preventDefault();
+        if (Date.now() - bubAt < 700) return;
+        bubAt = Date.now();
+        cbAction(b.dataset.cb);
+      };
+      bub.addEventListener("pointerup", bubRun);
+      bub.addEventListener("touchend", bubRun, { passive: false });
+      bub.addEventListener("click", bubRun);
+      window.addEventListener("resize", () => { if (cb) requestAnimationFrame(cbPlace); if (calc.open) calcMoveTo(parseFloat(p.style.left) || 0, parseFloat(p.style.top) || 0); });
+
+      // --- calculatrice : une touche réagit dès que le crayon (ou le doigt) se pose, sans attendre un « click » ---
+      let drag = null, pend = null, rep = null;
+      const stopRep = () => { if (rep) { clearTimeout(rep.t); clearInterval(rep.i); rep = null; } };
+      const fire = b => {
+        b.classList.add("hit");
+        setTimeout(() => b.classList.remove("hit"), 110);
+        calcKey(b.dataset.k);
+      };
+      p.addEventListener("pointerdown", e => {
+        if (e.pointerType === "touch" && act) return;                          // la paume pendant qu'on écrit sur la feuille
+        if (e.pointerType === "mouse" && e.button !== 0) return;
+        const b = e.target.closest("[data-k]");
+        if (b && b.closest(".cp-scroll, #calcHist")) { pend = { b, x: e.clientX, y: e.clientY, id: e.pointerId }; return; }   // zone qui défile : on attend le lever
+        if (e.cancelable) e.preventDefault();
+        if (b) {
+          fire(b);
+          if (/^(bk|left|right)$/.test(b.dataset.k)) { stopRep(); rep = { t: setTimeout(() => { rep.i = setInterval(() => calcKey(b.dataset.k), 70); }, 420) }; }
+          return;
+        }
+        if (e.target.closest("#calcLine")) {                                   // toucher la ligne : le curseur va là
+          let cur = calc.toks.length;
+          const spans = [...$("calcLine").querySelectorAll(".ct")].filter(s => s.offsetWidth > 0);
+          for (const s of spans) { const r = s.getBoundingClientRect(); if (e.clientX < r.left + r.width / 2) { cur = Number(s.dataset.i); break; } cur = Number(s.dataset.i) + 1; }
+          calc.cur = cur; calcRender();
+          return;
+        }
+        if (e.target.closest("#calcHead")) {                                   // l'en-tête sert à déplacer la calculatrice
+          const r = p.getBoundingClientRect();
+          drag = { id: e.pointerId, dx: e.clientX - r.left, dy: e.clientY - r.top };
+          try { p.setPointerCapture(e.pointerId); } catch (err) {}
+        }
+      });
+      p.addEventListener("pointermove", e => { if (drag && e.pointerId === drag.id) calcMoveTo(e.clientX - drag.dx, e.clientY - drag.dy); });
+      const up = e => {
+        stopRep();
+        if (pend && e.pointerId === pend.id) {
+          if (e.type === "pointerup" && Math.hypot(e.clientX - pend.x, e.clientY - pend.y) < 10) fire(pend.b);
+          pend = null;
+        }
+        if (drag && e.pointerId === drag.id) {
+          drag = null;
+          calcCfg().pos = { x: parseFloat(p.style.left) || 0, y: parseFloat(p.style.top) || 0 };
+          savePrefs();
+        }
+      };
+      window.addEventListener("pointerup", up);
+      window.addEventListener("pointercancel", up);
+      ["touchstart", "touchmove"].forEach(t => p.addEventListener(t, e => { if (!e.target.closest(".cp-scroll, #calcHist") && e.cancelable) e.preventDefault(); }, { passive: false }));
+      p.addEventListener("contextmenu", e => e.preventDefault());
+
+      // clavier (PC ou clavier d'iPad) quand la calculatrice est ouverte
+      document.addEventListener("keydown", e => {
+        if (!calc.open || e.metaKey || e.ctrlKey || e.altKey) return;
+        if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+        if (document.querySelector(".modal.open")) return;
+        const map = { Enter: "ent", Backspace: "bk", ArrowLeft: "left", ArrowRight: "right", Delete: "clr", ".": ",", "×": "*", "÷": "/", ":": "/", "e": "sci", "E": "sci", "X": "x" };
+        const k = map[e.key] || e.key;
+        if (k.length > 1 ? /^(ent|bk|left|right|clr|sci)$/.test(k) : CK[k]) { e.preventDefault(); calcKey(k); }
+      });
     }
 
     initApp();
