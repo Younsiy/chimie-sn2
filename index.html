@@ -893,60 +893,32 @@ $\vec{E} = -\left(\frac{\partial V}{\partial x}\vec{i} + \frac{\partial V}{\part
   <!-- ===================== MODALE : FORMULES DE PROBABILITÉS ===================== -->
   <div id="refModalProba" class="modal" onclick="if(event.target===this) closeModal('refModalProba')">
     <div class="modal-card wide">
-      <div class="modal-head"><h3>Formules : Probabilité et statistique (201-SN1-RE)</h3><button class="tb-btn" style="width:auto;padding:0 .6rem;font-weight:600" onclick="document.getElementById('probaTableZ').scrollIntoView({behavior:'smooth'})">Table Z</button><button class="tb-btn" style="width:auto;padding:0 .6rem;font-weight:600" onclick="document.getElementById('probaTableT').scrollIntoView({behavior:'smooth'})">Table t</button><button class="tb-btn" onclick="closeModal('refModalProba')" aria-label="Fermer"><span data-ic="x"></span></button></div>
+      <div class="modal-head"><h3>Formules fournies à l'examen 3</h3><button class="tb-btn" style="width:auto;padding:0 .6rem;font-weight:600" onclick="document.getElementById('probaTableZ').scrollIntoView({behavior:'smooth'})">Table Z</button><button class="tb-btn" style="width:auto;padding:0 .6rem;font-weight:600" onclick="document.getElementById('probaTableT').scrollIntoView({behavior:'smooth'})">Table t</button><button class="tb-btn" onclick="closeModal('refModalProba')" aria-label="Fermer"><span data-ic="x"></span></button></div>
       <div class="modal-body selectable">
+        <p style="margin:0 0 .6rem;font-size:.95em">Voici seulement les formules fournies durant l'examen #3 (guide d'étude), plus les deux tables. Les autres formules sont à connaître par cœur.</p>
         <div class="ref-grid">
           <div class="box blue" data-render>
-<div class="box-title">Chapitre 3 — Variable aléatoire discrète</div>
-**Loi de probabilité :** $\sum P(X = k) = 1$
-**Espérance :** $E(X) = \mu = \sum k\,P(X = k)$
-**Variance :** $\mathrm{Var}(X) = \sigma^{2} = \sum (k - \mu)^{2}\,P(X = k)$
-**Écart type :** $\sigma = \sqrt{\mathrm{Var}(X)}$
-**Combinaisons :** $C(n, k) = \frac{n!}{k!\,(n - k)!}$
-**Jeu d'argent :** gain net = montant gagné − mise ; le jeu est avantageux si $E(X) &gt; 0$.
-          </div>
-          <div class="box indigo" data-render>
-<div class="box-title">Chapitre 3 — Loi binomiale X ~ B(n ; p)</div>
-**4 conditions :** $n$ reprises fixes, 2 résultats (succès ou échec), même $p$ à chaque reprise (indépendance), $X$ compte les succès.
-$$P(X = k) = C(n, k)\,p^{k}(1 - p)^{n-k}$$
-$E(X) = np$ $\qquad \mathrm{Var}(X) = np(1 - p)$
-**Au moins un :** $P(X \geq 1) = 1 - P(X = 0)$
-**Au plus $a$ :** $P(X \leq a) = P(X = 0) + \dots + P(X = a)$
-          </div>
-        </div>
-        <div class="ref-grid">
-          <div class="box green" data-render>
-<div class="box-title">Chapitre 4 — Variable aléatoire continue</div>
-**Densité :** $f(x) \geq 0$ et $\int_{-\infty}^{\infty} f(x)\,dx = 1$
-**Probabilité = aire :** $P(a \leq X \leq b) = \int_{a}^{b} f(x)\,dx$ $\qquad P(X = a) = 0$
-**Espérance :** $E(X) = \int x\,f(x)\,dx$
-**Variance :** $\mathrm{Var}(X) = \int (x - E(X))^{2} f(x)\,dx$
-**Intégrale impropre :** $\int_{a}^{\infty} f(x)\,dx = \lim_{b \to \infty}\int_{a}^{b} f(x)\,dx$
-**Primitive :** $\int x^{n}\,dx = \frac{x^{n+1}}{n+1}$ $(n \neq -1)$
+<div class="box-title">Estimation de moyenne</div>
+**$n \geq 30$, avec remise :**
+$$ME = z_{\alpha/2}\,\frac{s}{\sqrt{n}} \qquad\qquad n = \left(\frac{z_{\alpha/2}\,s}{ME}\right)^{2}$$
+**$n \geq 30$, sans remise :**
+$$ME = z_{\alpha/2}\,\frac{s}{\sqrt{n}}\sqrt{\frac{N - n}{N - 1}}$$
+$$n = \frac{N\left(z_{\alpha/2}\right)^{2}s^{2}}{(N - 1)(ME)^{2} + \left(z_{\alpha/2}\right)^{2}s^{2}}$$
+**$n &lt; 30$ :**
+$$ME = t_{\alpha/2 ;\, n-1}\,\frac{s}{\sqrt{n}}$$
           </div>
           <div class="box amber" data-render>
-<div class="box-title">Chapitre 4 — Loi normale X ~ N(μ ; σ²)</div>
-Le 2^{e} paramètre est la **variance** : $N(100 ; 25)$ veut dire $\sigma = 5$.
-**Centrer-réduire :** $z = \frac{x - \mu}{\sigma}$ $\qquad$ **À l'envers :** $x = \mu + z\sigma$
-**Table :** elle donne $P(0 &lt; Z &lt; z)$. Chaque moitié de la courbe vaut 0,5.
-**Symétrie :** $P(Z &lt; -a) = P(Z &gt; a)$ $\qquad P(-a &lt; Z &lt; 0) = P(0 &lt; Z &lt; a)$
-$P(Z &lt; a) = 0,5 + P(0 &lt; Z &lt; a)$ $\qquad P(Z &gt; a) = 0,5 - P(0 &lt; Z &lt; a)$ $\quad (a &gt; 0)$
-$P(a &lt; Z &lt; b) = P(0 &lt; Z &lt; b) - P(0 &lt; Z &lt; a)$ $\quad (0 &lt; a &lt; b)$
-**Valeur critique :** $z_{\alpha}$ est tel que $P(Z &gt; z_{\alpha}) = \alpha$ (aire $\alpha$ à droite).
+<div class="box-title">Estimation de proportion</div>
+**$n \geq 30$, avec remise :**
+$$ME = z_{\alpha/2}\sqrt{\frac{p(1 - p)}{n}} \qquad\qquad n = \frac{z_{\alpha/2}^{2}\,p(1 - p)}{(ME)^{2}}$$
+**$n \geq 30$, sans remise :**
+$$ME = z_{\alpha/2}\sqrt{\frac{p(1 - p)(N - n)}{n(N - 1)}}$$
+$$n = \frac{z_{\alpha/2}^{2}\,N p(1 - p)}{(N - 1)(ME)^{2} + z_{\alpha/2}^{2}\,p(1 - p)}$$
           </div>
         </div>
         <div class="box slate" data-render>
-<div class="box-title">Chapitre 5 — Estimation par intervalle de confiance</div>
-**Niveau de confiance** $1 - \alpha$ : on utilise $z_{\alpha/2}$. « 19 fois sur 20 » = 95 %.
-| Niveau de confiance | 90 % | 95 % | 98 % | 99 % |
-| $z_{\alpha/2}$ | $z_{0,05} = 1,645$ | $z_{0,025} = 1,96$ | $z_{0,01} = 2,33$ | $z_{0,005} = 2,575$ |
-**Moyenne ($n \geq 30$) :** $\mu \in \left[\bar{x} - ME ; \bar{x} + ME\right]$ avec $ME = z_{\alpha/2}\cdot\frac{s}{\sqrt{n}}$
-**Moyenne ($n &lt; 30$, population normale) :** loi de Student, $ME = t_{\alpha/2 ;\, n-1}\cdot\frac{s}{\sqrt{n}}$ (degrés de liberté $\nu = n - 1$)
-**Proportion :** $\pi \in \left[p - ME ; p + ME\right]$ avec $ME = z_{\alpha/2}\sqrt{\frac{p(1 - p)}{n}}$
-**Marge d'erreur :** $ME$ = moitié de la largeur de l'intervalle.
-**Sans remise et taux de sondage $\frac{n}{N} &gt; 5\,\%$ :** on multiplie l'erreur type par le facteur de correction $\sqrt{\frac{N - n}{N - 1}}$
-**Taille d'échantillon (moyenne) :** $n = \left(\frac{z_{\alpha/2}\cdot s}{ME}\right)^{2}$, arrondi vers le haut
-**Taille d'échantillon (proportion, $p$ inconnue : $p = 0,5$) :** $n = \left(\frac{z_{\alpha/2}}{2\cdot ME}\right)^{2}$, arrondi vers le haut
+**Note 1 :** Assumez que vous devez connaître toutes les formules nécessaires pour faire les exercices et qui sont absentes de cette page.
+**Note 2 :** Avec ces formules, vous aurez aussi une feuille avec une table de loi normale centrée réduite au recto et une table de loi de Student au verso.
         </div>
         <div class="box-title" id="probaTableZ" style="margin-top:10px">Table 1 · Loi normale centrée réduite N(0 ; 1) : aire P(0 ≤ Z ≤ z)</div>
         <p style="margin:.3rem 0;font-size:.9em">La ligne donne l'unité et la 1<sup>re</sup> décimale de z, la colonne donne la 2<sup>e</sup> décimale. Exemple : P(0 ≤ Z ≤ 1,73) → ligne 1,7, colonne 0,03 → 0,4582. Pour z ≥ 4 : ≈ 0,5000.</p>
@@ -6305,6 +6277,230 @@ $$\pi \in [0,8 - 0,029 ; 0,8 + 0,029] = [0,771 ; 0,829]$$
 $$n = \frac{z_{0,025}^{2}\cdot N\cdot p(1 - p)}{(N - 1)(ME)^{2} + z_{0,025}^{2}\cdot p(1 - p)} = \frac{1,96^{2}(2\,000)(0,8)(0,2)}{1\,999(0,02)^{2} + 1,96^{2}(0,8)(0,2)}$$
 $$n = \frac{1\,229,3}{0,7996 + 0,6147} = \frac{1\,229,3}{1,4143} \approx 869,2 \;\Rightarrow\; n = 870$$
 **c)** **Non.** L'inférence statistique ne permet de généraliser qu'à la population d'où l'échantillon a été prélevé : les personnes qui ont assisté à cette représentation précise à la salle BONBILLET, pas l'ensemble des spectateurs de toutes ses représentations.
+=== proba-rev3-e1 | 6 | Exercices supplémentaires examen #3 | exercice | Exercice 1 (révision)
+Q:
+Au casino, vous tombez sur une nouvelle machine à sous. Pour participer, vous devez payer 5 \$.
+La machine comporte trois rouleaux qui se mettent à tourner indépendamment les uns des autres. Chaque rouleau a la même probabilité de s'arrêter sur l'une des trois images suivantes : un visage triste, un visage heureux ou Steven. Voici les règles du jeu :
+- Si au moins un des rouleaux s'arrête sur un visage triste, vous ne remportez rien.
+- Si les trois rouleaux s'arrêtent sur Steven, vous remportez 100 \$.
+- Dans tous les autres cas, vous récupérez votre mise de 5 \$.
+**(a)** Quelle est votre espérance de gain avec cette machine à sous ? Interprétez la valeur dans le contexte.
+**(b)** Si vous participez 100 fois, quelle est la probabilité d'obtenir au plus deux triple Steven?
+A:
+(a) $E(X) = 0$ \$ : le jeu est équitable. (b) $P(S \leq 2) \approx 0,2794$ (27,94 %)
+H:
+Gain net = montant gagné − mise. (a) Loi de probabilité du gain net, puis $E(X) = \sum k\,P(X = k)$. (b) Loi binomiale avec $n = 100$ et $p = P(\text{triple Steven})$.
+S:
+**(a)** Soit X le gain net (en \$) : X vaut −5 (rien gagné), 0 (mise récupérée) ou 95 (100 \$ − 5 \$).
+Chaque rouleau a 3 images équiprobables, donc $3^{3} = 27$ résultats possibles.
+- Aucun visage triste : chaque rouleau a 2 choix sur 3, soit $\left(\frac{2}{3}\right)^{3} = \frac{8}{27}$. Donc au moins un visage triste : $P(X = -5) = 1 - \frac{8}{27} = \frac{19}{27}$.
+- Trois Steven : $P(X = 95) = \left(\frac{1}{3}\right)^{3} = \frac{1}{27}$.
+- Le reste : $P(X = 0) = 1 - \frac{19}{27} - \frac{1}{27} = \frac{7}{27}$.
+| k | −5 | 0 | 95 |
+| P(X = k) | 19/27 | 7/27 | 1/27 |
+$$E(X) = (-5)\cdot\frac{19}{27} + 0\cdot\frac{7}{27} + 95\cdot\frac{1}{27} = \frac{-95 + 95}{27} = 0$$
+Interprétation : à long terme, en moyenne, on ne s'enrichit pas et on ne s'appauvrit pas. Le jeu est équitable.
+**(b)** Soit S le nombre de triple Steven en 100 parties. Les 4 conditions de la loi binomiale sont remplies : 100 parties fixes et indépendantes, 2 résultats (triple Steven ou non), $p = \frac{1}{27}$ constant, S compte les succès. Donc S ~ B(100 ; 1/27).
+« Au plus deux » : $P(S \leq 2) = P(S = 0) + P(S = 1) + P(S = 2)$.
+$$P(S = 0) = C(100, 0)\left(\frac{1}{27}\right)^{0}\left(\frac{26}{27}\right)^{100} \approx 0,0230$$
+$$P(S = 1) = C(100, 1)\left(\frac{1}{27}\right)^{1}\left(\frac{26}{27}\right)^{99} \approx 0,0883$$
+$$P(S = 2) = C(100, 2)\left(\frac{1}{27}\right)^{2}\left(\frac{26}{27}\right)^{98} \approx 0,1681$$
+$$P(S \leq 2) \approx 0,0230 + 0,0883 + 0,1681 = 0,2794$$
+=== proba-rev3-e2 | 6 | Exercices supplémentaires examen #3 | exercice | Exercice 2 (révision)
+Q:
+Pour chacune des situations suivantes, déterminez si la variable aléatoire décrite suit une loi binomiale. Justifiez votre réponse.
+**(a)** Un laboratoire teste 30 échantillons indépendants. Chaque échantillon a une probabilité de 0,08 d'être contaminé. On compte le nombre d'échantillons contaminés.
+**(b)** Steven tombe sur une boîte contenant 50 feux d'artifice. Chaque feu est soit bleu, soit rouge, mais sa couleur ne peut être révélée qu'au moment de l'explosion. Steven sélectionne donc un feu au hasard, l'allume, attend son explosion, note sa couleur, puis passe au suivant. Il répète cette expérience cinq fois et compte le nombre de feux d'artifice rouges obtenus.
+**(c)** Une usine produit des bouteilles. Chaque bouteille a une probabilité de 0,03 d'être défectueuse, indépendamment des autres. On inspecte 100 bouteilles et on compte le nombre de bouteilles défectueuses.
+**(d)** Dans une population, 45% des individus préfèrent utiliser une voiture pour se déplacer, 10% préfèrent la marche, 15% préfèrent l'autobus et 30% préfèrent le métro. Un sondage demande à 200 personnes de choisir leur moyen de transport préféré parmi quatre possibilités. On suppose que la taille de l'échantillon est très petite par rapport à la population. On compte le nombre de personnes qui choisissent l'autobus.
+A:
+(a) Oui : X ~ B(30 ; 0,08) (b) Non : sans remise, les essais ne sont pas indépendants (c) Oui : X ~ B(100 ; 0,03) (d) Oui : X ~ B(200 ; 0,15)
+H:
+Les 4 conditions : nombre fixe de reprises, 2 résultats (succès ou échec), même $p$ à chaque reprise (indépendance), X compte les succès.
+S:
+**(a)** Oui.
+- Nombre fixe de 30 essais indépendants.
+- Deux issues possibles : contaminé ou non contaminé.
+- La probabilité de succès est constante : $p = 0,08$.
+- X compte les échantillons contaminés.
+Ainsi X ~ B(30 ; 0,08).
+**(b)** Non. Un feu allumé n'est pas remis dans la boîte : l'expérience est faite **sans remise** dans une petite boîte de 50. La probabilité d'obtenir un feu rouge change selon les feux déjà tirés : les essais ne sont pas indépendants et $p$ n'est pas constant.
+**(c)** Oui.
+- Nombre fixe de 100 essais indépendants.
+- Deux issues possibles : défectueuse ou non défectueuse.
+- La probabilité de succès est constante : $p = 0,03$.
+- X compte les bouteilles défectueuses.
+Ainsi X ~ B(100 ; 0,03).
+**(d)** Oui.
+- Nombre fixe de 200 essais, qu'on peut supposer indépendants (taux de sondage très faible).
+- Il y a quatre choix, mais on ne regarde que deux issues : préfère l'autobus ou ne préfère pas l'autobus.
+- La probabilité de succès est constante : $p = 0,15$.
+- X compte les personnes qui préfèrent l'autobus.
+Ainsi X ~ B(200 ; 0,15).
+=== proba-rev3-e3 | 6 | Exercices supplémentaires examen #3 | exercice | Exercice 3 (révision)
+Q:
+Un collectionneur passionné de cartes Pokémon achète régulièrement des paquets de cartes afin de compléter sa collection. Chaque paquet contient 11 cartes. On suppose que chaque carte a une probabilité de 15 % d'être holographique (c'est-à-dire une carte brillante avec un effet réfléchissant), indépendamment des autres cartes du paquet.
+Si le collectionneur achète un très grand nombre de paquets, combien de cartes holographiques peut-il s'attendre à obtenir, en moyenne, par paquet?
+**Justifiez complètement votre raisonnement avec les outils du cours.**
+A:
+$E(X) = np = 1,65$ carte holographique par paquet, en moyenne.
+H:
+« En moyenne, à long terme » = espérance. Vérifie d'abord les 4 conditions de la loi binomiale, puis $E(X) = np$.
+S:
+Soit X le nombre de cartes holographiques dans un paquet. Les 4 conditions de la loi binomiale sont respectées :
+- 11 essais (cartes) fixes et indépendants ;
+- 2 résultats : holographique ou non ;
+- probabilité de succès constante : $p = 0,15$ ;
+- X compte les succès.
+Donc X ~ B(11 ; 0,15). La moyenne à long terme est l'espérance :
+$$E(X) = np = 11 \times 0,15 = 1,65$$
+Le collectionneur peut s'attendre à obtenir, en moyenne, 1,65 carte holographique par paquet.
+=== proba-rev3-e4 | 6 | Exercices supplémentaires examen #3 | exercice | Exercice 4 (révision)
+Q:
+Des bébés tortues viennent tout juste d'éclore de leurs œufs sur une plage, à 9 mètres de la mer. Malheureusement pour elles, des mouettes affamées rôdent dans les environs et sont bien décidées à en faire leur prochain repas ! On définit la variable aléatoire continue X comme étant la distance, en mètres, entre une tortue et la mer au moment où elle se fait attraper par une mouette.
+On suppose que la fonction de densité de probabilité de X est donnée par :
+$$f(x) = c\sqrt{x} \text{ si } 0 \leq x \leq 9 \quad ; \quad f(x) = 0 \text{ sinon.}$$
+**(a)** Déterminez la valeur de la constante de normalisation c.
+**(b)** Quelle proportion des tortues se font dévorer avant d'avoir parcouru 2 mètres?
+**(c)** À partir de quelle distance de la mer ne retrouve-t-on plus que 15% des tortues?
+**(d)** Quelle est la probabilité qu'une tortue atteingne la mer ?
+**(e)** Évaluez E(X) et interprétez cette valeur dans le contexte.
+**(f)** Posez, sans le faire, le calcul permettant d'évaluer l'écart-type de X.
+A:
+(a) $c = \frac{1}{18}$ (b) $\approx 0,3141$ (31,41 %) (c) $d \approx 2,54$ m (d) $P(X = 0) = 0$ (e) $E(X) = 5,4$ m (f) $\sigma = \sqrt{\int_{0}^{9}(x - 5,4)^{2}\cdot\frac{1}{18}\sqrt{x}\,dx}$
+H:
+L'aire totale sous $f$ vaut 1. $\sqrt{x} = x^{1/2}$, de primitive $\frac{x^{3/2}}{3/2}$. En (b), la tortue part à 9 m de la mer : avoir parcouru moins de 2 m, c'est être encore entre 7 m et 9 m de la mer.
+S:
+**(a)** L'aire totale doit valoir 1 :
+$$\int_{0}^{9} c\,x^{1/2}\,dx = c\left[\frac{x^{3/2}}{3/2}\right]_{0}^{9} = c\cdot\frac{2}{3}\cdot 9^{3/2} = c\cdot\frac{2}{3}\cdot 27 = 18c$$
+$$18c = 1 \;\Rightarrow\; c = \frac{1}{18}$$
+**(b)** La tortue part à 9 m de la mer. Si elle a parcouru moins de 2 m, elle est encore à plus de 7 m de la mer : on cherche $P(7 < X \leq 9)$.
+$$P(7 < X \leq 9) = \frac{1}{18}\left[\frac{x^{3/2}}{3/2}\right]_{7}^{9} = \frac{1}{27}\left(9^{3/2} - 7^{3/2}\right) = 1 - \frac{\sqrt{7^{3}}}{27} = 1 - \frac{18,52}{27} \approx 0,3141$$
+**(c)** On cherche $d$ tel que $P(0 \leq X \leq d) = 0,15$ :
+$$\int_{0}^{d}\frac{1}{18}\sqrt{x}\,dx = \frac{1}{27}d^{3/2} = 0,15 \;\Rightarrow\; d^{3/2} = 27 \times 0,15 = 4,05$$
+$$d = (4,05)^{2/3} \approx 2,54\text{ m}$$
+À environ 2,54 m de la mer, il reste encore 15 % des tortues.
+**(d)** Atteindre la mer, c'est X = 0 exactement. Pour une variable continue, la probabilité d'une valeur précise est nulle : $P(X = 0) = 0$. (Cela ne veut pas dire que c'est impossible, mais presque.)
+**(e)**
+$$E(X) = \int_{0}^{9} x\cdot\frac{1}{18}\sqrt{x}\,dx = \frac{1}{18}\int_{0}^{9} x^{3/2}\,dx = \frac{1}{18}\left[\frac{x^{5/2}}{5/2}\right]_{0}^{9} = \frac{1}{18}\cdot\frac{2}{5}\cdot 243 = \frac{27}{5} = 5,4\text{ m}$$
+En moyenne, les tortues se font attraper à 5,4 m de la mer.
+**(f)** L'écart-type est la racine de la variance :
+$$\sigma = \sqrt{\int_{0}^{9}(x - 5,4)^{2}\cdot\frac{1}{18}\sqrt{x}\,dx}$$
+=== proba-rev3-e5 | 6 | Exercices supplémentaires examen #3 | exercice | Exercice 5 (révision)
+Q:
+Steven adore aller chez Tim Hortons pour commander un bon café glacé en été. Les cafés sont parfois délicieux, mais ils manquent aussi parfois un peu de ce fameux sirop qui les rend sucrés. La quantité de sucre ajoutée varie légèrement d'un café à l'autre en raison des imprécisions du processus de préparation.
+On modélise la concentration en sucre des cafés glacés par une variable aléatoire normale de moyenne 50 g/L et d'écart-type 8 g/L. La concentration moyenne correspond à la concentration optimale recherchée.
+**(a)** Définissez une variable aléatoire dans ce contexte et écrivez quelle loi de probabilité suit cette variable à l'aide de la bonne notation.
+**(b)** Un café glacé est considéré comme imbuvable lorsque sa concentration en sucre est inférieure à 35 g/L. Quelle est la probabilité qu'un café glacé choisi au hasard soit imbuvable ?
+**(c)** Steven achète un café glacé chaque jour pendant deux semaines (14 jours). En supposant que les concentrations en sucre des différents cafés sont indépendantes. Quelle est la probabilité que plus de 2 cafés soient imbuvables?
+**(d)** Tim Hortons souhaite améliorer son service de cafés glacés et conserver uniquement les 80 % de cafés glacés ayant une concentration en sucre la plus proche de la concentration optimale de 50 g/L. Quelles sont les concentrations minimale et maximale acceptables ? Autrement dit, à partir de quelles concentrations devrait-on jeter un café glacé ?
+A:
+(a) X : concentration en sucre (g/L) d'un café glacé choisi au hasard ; X ~ N(50 ; 8²) (b) $P(X < 35) \approx 0,0304$ (3,04 %) (c) $P(Y > 2) \approx 0,0079$ (0,79 %) (d) entre environ 39,74 g/L et 60,26 g/L
+H:
+(b) Centrer-réduire : $z = \frac{x - \mu}{\sigma}$, puis la table. (c) Loi binomiale avec le $p$ trouvé en (b). (d) 80 % au centre = 40 % de chaque côté de la moyenne : chercher $z$ tel que $P(0 < Z < z) = 0,40$.
+S:
+**(a)** X : concentration en sucre, en g/L, d'un café glacé choisi au hasard. X ~ N(50 ; 8²) (le 2^{e} paramètre est la variance : $\sigma = 8$).
+**(b)**
+$$z = \frac{35 - 50}{8} = -1,875$$
+−1,875 est à mi-chemin entre 1,87 (0,4693) et 1,88 (0,4699) dans la table : aire ≈ 0,4696.
+$$P(X < 35) = P(Z < -1,875) = 0,5 - 0,4696 = 0,0304$$
+**(c)** Soit Y le nombre de cafés imbuvables parmi les 14. Essais indépendants, 2 résultats, $p = 0,0304$ constant : Y ~ B(14 ; 0,0304).
+$$P(Y > 2) = 1 - P(Y = 0) - P(Y = 1) - P(Y = 2)$$
+$$P(Y = 0) = (0,9696)^{14} \approx 0,6491$$
+$$P(Y = 1) = C(14, 1)(0,0304)(0,9696)^{13} \approx 0,2849$$
+$$P(Y = 2) = C(14, 2)(0,0304)^{2}(0,9696)^{12} \approx 0,0581$$
+$$P(Y > 2) \approx 1 - 0,6491 - 0,2849 - 0,0581 = 0,0079$$
+**(d)** On cherche $k$ tel que $P(50 - k < X < 50 + k) = 0,80$, soit 0,40 de chaque côté de la moyenne. Dans la table, $P(0 < Z < z) = 0,40$ donne $z \approx 1,282$ (entre 1,28 et 1,29).
+$$k = z\sigma = 1,282 \times 8 \approx 10,256$$
+$$50 - 10,256 \approx 39,74\text{ g/L} \qquad 50 + 10,256 \approx 60,26\text{ g/L}$$
+On jette un café sous 39,74 g/L ou au-dessus de 60,26 g/L.
+=== proba-rev3-e6 | 6 | Exercices supplémentaires examen #3 | exercice | Exercice 6 (révision)
+Q:
+Un fabricant de moteurs électriques souhaite estimer la durée de fonctionnement moyenne de ses moteurs avant qu'ils ne subissent une première panne. Pour ce faire, il soumet plusieurs moteurs à des tests continus jusqu'à ce qu'une panne survienne.
+Comme ces tests peuvent durer plusieurs semaines et mobilisent des équipements coûteux, le fabricant ne peut tester qu'un petit nombre de moteurs. Il sélectionne donc au hasard 12 moteurs de sa production et mesure leur durée de fonctionnement avant la première panne.
+Les résultats de l'étude indiquent une durée de fonctionnement moyenne de 20,45 milliers d'heures, avec un écart-type de 1,72 millier d'heures.
+On suppose que la durée de fonctionnement des moteurs avant une première panne suit une distribution normale.
+**(a)** Construisez un intervalle de confiance à 95 % pour estimer la durée de fonctionnement moyenne de l'ensemble des moteurs produits par ce fabricant.
+**(b)** Interprétez cet intervalle de confiance dans le contexte du problème.
+**(c)** Plusieurs années plus tard, les moteurs électriques sont désormais bien établis sur le marché et largement répandus. Il est donc devenu beaucoup moins coûteux de tester un grand nombre de moteurs. Le fabricant sélectionne alors un nouvel échantillon aléatoire de 250 moteurs sans remise, parmi l'ensemble des moteurs produits. Le taux de sondage est d'environ 0,6%.
+La durée de fonctionnement moyenne observée dans cet échantillon est de 20,3 milliers d'heures, avec un écart-type de 1,65 millier d'heures. Construisez un intervalle de confiance à 95 % pour estimer la durée de fonctionnement moyenne de l'ensemble des moteurs produits par ce fabricant.
+**(d)** Quelle devrait être la taille de l'échantillon minimale pour que la marge d'erreur soit d'au plus 100 heures ?
+A:
+(a) $\mu \in [19,36 ; 21,54]$ milliers d'heures (b) Avec un niveau de confiance de 95 %, la durée moyenne de tous les moteurs se situe entre 19,36 et 21,54 milliers d'heures. (c) $\mu \in [20,10 ; 20,50]$ milliers d'heures (d) $n = 1046$ moteurs
+H:
+(a) $n < 30$ et population normale : loi de Student, $\nu = n - 1$. (c) $n \geq 30$ et taux de sondage sous 5 % : pas de facteur de correction. (d) Attention aux unités : 100 heures = 0,1 millier d'heures.
+S:
+**(a)** $n = 12 < 30$ et population normale : loi de Student avec $\nu = 11$. À 95 %, $t_{0,025 ; 11} = 2,201$.
+$$ME = t_{0,025 ; 11}\cdot\frac{s}{\sqrt{n}} = 2,201 \times \frac{1,72}{\sqrt{12}} = 2,201 \times 0,4965 \approx 1,093$$
+$$\mu \in [20,45 - 1,093 ; 20,45 + 1,093] = [19,36 ; 21,54]\text{ milliers d'heures}$$
+**(b)** On peut affirmer, avec un niveau de confiance de 95 %, que la durée de fonctionnement moyenne de l'ensemble des moteurs produits se situe entre 19,36 et 21,54 milliers d'heures. (Ce n'est pas « 95 % de probabilité que la moyenne soit dans cet intervalle ».)
+**(c)** $n = 250 \geq 30$ : loi normale, $z_{0,025} = 1,96$. L'échantillon est sans remise, mais le taux de sondage (0,6 %) est sous 5 % : on néglige le facteur de correction.
+$$ME = 1,96 \times \frac{1,65}{\sqrt{250}} = 1,96 \times 0,10436 \approx 0,2045$$
+$$\mu \in [20,3 - 0,2045 ; 20,3 + 0,2045] = [20,10 ; 20,50]\text{ milliers d'heures}$$
+**(d)** 100 heures = 0,1 millier d'heures. Avec $s = 1,65$ (le plus récent) et 95 % :
+$$n = \left(\frac{z_{0,025}\cdot s}{ME}\right)^{2} = \left(\frac{1,96 \times 1,65}{0,1}\right)^{2} = 32,34^{2} = 1045,9$$
+On arrondit vers le haut : il faut au moins 1046 moteurs.
+=== proba-rev3-e7 | 6 | Exercices supplémentaires examen #3 | exercice | Exercice 7 (révision)
+Q:
+Dans une publicité qui passe à la télévision, une compagnie de dentifrice s'exclame :
+« Notre produit est recommandé par 9 dentistes sur 10! »
+Vous doutez que cette affirmation soit fondée, alors vous constituez un échantillon aléatoire sans remise de 528 dentistes parmi les 4 500 dentistes en fonction au Québec. Dans votre échantillon, 423 dentistes recommandent le dentifrice.
+(a) Quelle est l'**estimation ponctuelle** de la proportion?
+(b) Estimez la proportion des dentistes recommandant ce dentifrice avec un niveau de confiance de 99%.
+(c) La proportion communiquée dans la publicité vous parait-elle plausible? **Justifiez.**
+Un collègue fait la même expérience que vous avec un échantillon différent, mais de même taille. Il obtient un intervalle de confiance π ∈ [70,4 ; 80,8] %.
+(d) A-t-il utilisé un niveau de confiance plus haut ou plus faible que vous ? **Justifiez.**
+A:
+(a) $p = \frac{423}{528} \approx 0,8011$ (80,11 %) (b) $\pi \in [0,7591 ; 0,8432]$ (c) Peu plausible : 90 % n'est pas dans l'intervalle. (d) Plus haut que 99 % : sa marge d'erreur (5,2 points) dépasse celle qu'il aurait eue à 99 % (4,5 points).
+H:
+Sans remise et $\frac{n}{N} = \frac{528}{4500} > 5\,\%$ : il faut le facteur de correction. En (d), trouve son centre et sa marge d'erreur, puis compare avec la marge qu'il aurait à 99 %.
+S:
+**(a)**
+$$p = \frac{423}{528} \approx 0,8011$$
+**(b)** Sans remise et taux de sondage $\frac{528}{4500} = 11,7\,\% > 5\,\%$ : on garde le facteur de correction. À 99 %, $z_{0,005} = 2,575$.
+$$ME = z_{0,005}\sqrt{\frac{p(1 - p)(N - n)}{n(N - 1)}} = 2,575\sqrt{\frac{0,8011 \times 0,1989 \times (4500 - 528)}{528 \times (4500 - 1)}}$$
+$$ME = 2,575\sqrt{2,664\times10^{-4}} = 2,575 \times 0,01632 \approx 0,0420$$
+$$\pi \in [0,8011 - 0,0420 ; 0,8011 + 0,0420] = [0,7591 ; 0,8432]$$
+**(c)** La publicité annonce 90 %. Or 0,90 n'est pas dans l'intervalle [75,91 % ; 84,32 %]. Ce n'est pas impossible, mais c'est peu plausible : la méthode produit des intervalles qui contiennent la vraie proportion 99 % du temps.
+**(d)** Son intervalle [70,4 ; 80,8] % a pour centre $p = \frac{70,4 + 80,8}{2} = 75,6\,\%$ et pour marge d'erreur $\frac{80,8 - 70,4}{2} = 5,2$ points.
+S'il avait utilisé 99 % :
+$$ME = 2,575\sqrt{\frac{0,756 \times 0,244 \times (4500 - 528)}{528 \times (4500 - 1)}} = 2,575 \times 0,01756 \approx 0,045$$
+soit 4,5 points. Sa marge réelle (5,2 points) est plus grande, donc son $z_{\alpha/2}$ est plus grand que 2,575 : il a utilisé un niveau de confiance **supérieur à 99 %**.
+=== proba-rev3-e8 | 6 | Exercices supplémentaires examen #3 | exercice | Exercice 8 (révision)
+Q:
+Répondez aux questions **VRAI ou FAUX** suivantes avec une justification.
+**(a)** Une variable aléatoire discrète ne prend que des valeurs entières.
+**(b)** Si X est une variable aléatoire continue, alors P(a < X < b) = P(a ≤ X ≤ b).
+**(c)** Si l'espérance d'un jeu est positive, un joueur qui participe à ce jeu gagnera nécessairement de l'argent.
+**(d)** Si on double la taille d'un échantillon créé avec remise, la marge d'erreur d'un intervalle de confiance est divisée par deux, toutes choses étant égales par ailleurs.
+**(e)** Si une variable aléatoire continue suit une loi normale, la probabilité qu'elle prenne exactement sa moyenne supérieure à 50%.
+**(f)** Une fonction de densité de probabilité peut prendre des valeurs supérieures à 1.
+**(g)** $P(-z_{\alpha/2} < Z < z_{\alpha}) = \frac{2 - 3\alpha}{2}$
+**(h)** Si X ~ N(μ ; σ²), alors $P(\mu - 2\sigma < X < \mu + \sigma) \approx 81,85\,\%$.
+**(i)** Lorsqu'on effectue un recensement complet de la population, le facteur de correction est égal à 1.
+**(j)** Pour un même échantillon, l'intervalle de confiance construit avec la loi de Student est généralement plus large que celui construit avec la loi normale centrée réduite.
+**(k)** Le théorème central limite affirme que toutes les distributions d'une variable quantitative dans une population suivent une loi normale.
+**(l)** Lorsque le théorème central limite s'applique, augmenter la taille de l'échantillon diminue l'écart-type de la distribution des moyennes d'échantillons.
+**(m)** Deux échantillons de même taille provenant d'une même population produisent nécessairement le même intervalle de confiance.
+A:
+(a) Faux (b) Vrai (c) Faux (d) Faux (e) Faux (f) Vrai (g) Vrai (h) Vrai (i) Faux (j) Vrai (k) Faux (l) Vrai (m) Faux
+H:
+Pense aux définitions : $P(X = a) = 0$ pour une variable continue ; $ME$ dépend de $\frac{1}{\sqrt{n}}$ ; $z_{\alpha}$ laisse une aire $\alpha$ à droite ; facteur de correction $\sqrt{\frac{N - n}{N - 1}}$.
+S:
+**(a)** Faux. Une variable discrète prend des valeurs isolées, pas forcément entières : par exemple {1,2 ; 3,5 ; 7 ; 8,5}.
+**(b)** Vrai, car pour une variable continue $P(X = a) = P(X = b) = 0$ : ajouter les bornes ne change rien.
+**(c)** Faux. Une espérance positive est un gain moyen à long terme ; sur une partie précise, le joueur peut quand même perdre.
+**(d)** Faux. $ME = z_{\alpha/2}\frac{s}{\sqrt{n}}$ : doubler $n$ divise la marge par $\sqrt{2}$ seulement. Pour la diviser par deux, il faut quadrupler $n$.
+**(e)** Faux. Pour une variable continue, $P(X = \mu) = 0$.
+**(f)** Vrai. Il suffit que $f(x) \geq 0$ et que l'aire totale vaille 1 ; la hauteur peut dépasser 1 (par exemple $f(x) = 2$ sur [0 ; 0,5]).
+**(g)** Vrai. Par définition $P(Z > z_{\alpha}) = \alpha$ et $P(Z < -z_{\alpha/2}) = P(Z > z_{\alpha/2}) = \frac{\alpha}{2}$.
+$$P(-z_{\alpha/2} < Z < z_{\alpha}) = 1 - \frac{\alpha}{2} - \alpha = \frac{2 - 3\alpha}{2}$$
+**(h)** Vrai. En cotes z : $P(-2 < Z < 1) = P(0 < Z < 2) + P(0 < Z < 1) = 0,4772 + 0,3413 = 0,8185$.
+**(i)** Faux. Si $n = N$, alors $\sqrt{\frac{N - n}{N - 1}} = 0$, pas 1 (il n'y a plus d'incertitude).
+**(j)** Vrai. Pour un même niveau de confiance, $t_{\alpha/2 ; n-1} > z_{\alpha/2}$ (par exemple 2,201 contre 1,96), donc la marge d'erreur est plus grande.
+**(k)** Faux. Le TCL porte sur la distribution des moyennes échantillonnales $\bar{X}$, pas sur la distribution de la population.
+**(l)** Vrai. L'écart-type de la distribution de $\bar{X}$ est $\frac{\sigma}{\sqrt{n}}$, qui diminue quand $n$ augmente.
+**(m)** Faux. Le centre ($\bar{x}$ ou $p$) et la marge d'erreur ($s$ ou $p$) dépendent de l'échantillon tiré.
    </script>
   <script>
     // =========================================================================
@@ -7477,7 +7673,7 @@ $$n = \frac{1\,229,3}{0,7996 + 0,6147} = \frac{1\,229,3}{1,4143} \approx 869,2 \
       $("exStatement").innerHTML = renderBlocks(ex.statement);
       closePeek();
       $("tbTitle").textContent = ex.title;
-      $("tbSub").textContent = `Chap. ${ex.chapter} · ${ex.section}`;
+      $("tbSub").textContent = `${chapName(ex.course, ex.chapter, true)} · ${ex.section}`;
       $("focusTitle").textContent = ex.title;
       $("noteInput").value = safeGet(LS.notes, {})[exId] || "";
 
@@ -7568,7 +7764,7 @@ $$n = \frac{1\,229,3}{0,7996 + 0,6147} = \frac{1\,229,3}{1,4143} \approx 869,2 \
         const target = delta > 0 ? list[0] : list[list.length - 1];
         showChapter(chs[ci]);
         selectExercise(target.id, true);
-        showToast(`Chapitre ${chs[ci]} · ${exChs[ci][1]}`);
+        showToast(`${chapName(currentCourse.id, chs[ci])} · ${exChs[ci][1]}`);
         return;
       }
       showToast(delta > 0 ? "C'est le dernier exercice de la liste." : "C'est le premier exercice de la liste.");
@@ -9108,9 +9304,11 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
       { id: "anat", name: "Anatomie et physiologie humaines", icon: "🫀", color: "#be123c", chapters: [] },
       { id: "em", name: "Électricité et magnétisme", icon: "⚡", color: "#b45309", chapters: [[5, "Condensateurs"], [6, "Courant"], [7, "Circuits"]], search: "Rechercher (E13, P7, RC…)" },
       { id: "chimie", name: "Chimie des solutions", icon: "🧪", color: "#0f766e", chapters: [[2, "Cinétique"], [3, "Équilibre"], [4, "Acides/bases"], [5, "Solutions tampon"]], search: "Rechercher (2.4, pH, Kp…)" },
-      { id: "proba", name: "Probabilité et statistique", icon: "📊", color: "#4338ca", chapters: [[3, "Lois discrètes"], [4, "Lois continues"], [5, "Estimation"]], search: "Rechercher (E28, binomiale…)" }
+      { id: "proba", name: "Probabilité et statistique", icon: "📊", color: "#4338ca", chapters: [[3, "Lois discrètes"], [4, "Lois continues"], [5, "Estimation"], [6, "Exercices supp. examen 3", "Révision"]], search: "Rechercher (E28, binomiale…)" }
     ];
     const courseById = id => COURSES.find(c => c.id === id);
+    // Nom d'un chapitre : « Chapitre 4 » (ou « Chap. 4 »), sauf si le cours lui donne un nom à part (3e élément, ex. « Révision »)
+    function chapName(courseId, n, short) { const c = courseById(courseId), f = c && c.chapters.find(x => x[0] === n); return f && f[2] ? f[2] : (short ? "Chap. " : "Chapitre ") + n; }
     // Exercices retirés de la liste du cours : toujours visibles, à la fin, mais hors du total
     const isLegacy = e => e.section === "Pas dans la liste";
     // Examens : un cours peut découper ses exercices par examen. La liste, la progression et les marques
@@ -9233,7 +9431,7 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
         shown += items.length;
         const counted = all.filter(e => !isLegacy(e));
         const done = counted.filter(e => exStatusMap[e.id] === "done").length;
-        html += `<div class="cs-group"><h2>Chapitre ${n} · ${label} <small style="font-weight:500;color:#64748b">(${done}/${counted.length})</small></h2>`;
+        html += `<div class="cs-group"><h2>${chapName(c.id, n)} · ${label} <small style="font-weight:500;color:#64748b">(${done}/${counted.length})</small></h2>`;
         let sec = "";
         items.forEach(e => {
           if (e.section !== sec) { sec = e.section; html += `<div class="ex-sec">${sec}</div>`; }
@@ -9280,7 +9478,7 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
     // ---------- Ouvrir un exercice ----------
     function applyCourseChrome(c) {
       $("chapterTabs").innerHTML = examChapters(c).map(([n, label]) =>
-        `<button id="tabCh${n}" onclick="selectChapter(${n})">Chap. ${n}<small>${label}</small></button>`).join("");
+        `<button id="tabCh${n}" onclick="selectChapter(${n})">${chapName(c.id, n, true)}<small>${label}</small></button>`).join("");
       const types = [...new Set(courseExercises(c.id).map(e => e.type))];
       const labels = { interne: "Internes", probleme: "Problèmes", question: "Questions", exercice: "Exercices", supp: "Supplémentaires" };
       $("typeFilter").innerHTML = `<option value="ALL">Tous</option>` + types.map(t => `<option value="${t}">${labels[t]}</option>`).join("");
@@ -9735,7 +9933,7 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
         (c.chapters.length ? c.chapters : [[null, ""]]).forEach(([num, label]) => {
           const items = list.filter(e => num === null || e.chapter === num);
           if (!items.length) return;
-          if (num !== null) md += `\n### Chapitre ${num} · ${label}\n`;
+          if (num !== null) md += `\n### ${chapName(c.id, num)} · ${label}\n`;
           items.forEach(e => {
             const pages = aiInkPages(e.id);
             md += `\n#### ${e.title} · \`${e.id}\`\n\n`;
@@ -9865,7 +10063,7 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
       const courses = COURSES.filter(c => allCourseExercises(c.id).length && (sel === "all" || sel === c.id));
       $("aiChapters").innerHTML = courses.map(c => {
         const chs = [...new Set(allCourseExercises(c.id).map(e => e.chapter))].sort((a, b) => a - b);
-        const label = n => { const f = c.chapters.find(x => x[0] === n); return `Chapitre ${n}${f ? " · " + escapeHtml(f[1]) : ""}`; };
+        const label = n => { const f = c.chapters.find(x => x[0] === n); return `${chapName(c.id, n)}${f ? " · " + escapeHtml(f[1]) : ""}`; };
         return (sel === "all" ? `<div class="ai-course">${escapeHtml(c.name)}</div>` : "") +
           chs.map(n => `<label class="ai-ch"><input type="checkbox" value="${c.id}:${n}" checked onchange="aiUpdateInfo()"> ${label(n)}</label>`).join("");
       }).join("");
