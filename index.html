@@ -331,13 +331,24 @@
     .cb-res { font-size: 21px; font-weight: 700; color: #1e1b4b; }
     .cb-note { font-size: 13px; color: #64748b; line-height: 1.35; }
     .cb-wait { display: flex; align-items: center; gap: 10px; font-weight: 600; padding: 4px 0; }
-    .cb-iso { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
-    .cb-iso button { min-width: 44px; height: 40px; padding: 0 10px; border-radius: 10px; background: #eef2ff; color: #3730a3; font-size: 17px; font-weight: 700; }
-    .cb-iso button.on { background: #4f46e5; color: #fff; }
+    .cb-chips { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 5px; }
+    .cb-chips button { min-width: 36px; height: 42px; padding: 0 8px; border-radius: 9px; background: #f1f5f9; color: #0f172a; font-size: 20px; font-weight: 700; }
+    .cb-chips button.sup { height: 32px; min-width: 30px; font-size: 15px; background: #e0e7ff; align-self: flex-start; }
+    .cb-chips button.on { background: #f59e0b; color: #fff; }
+    .cb-pick { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; }
+    .cb-pick button { height: 42px; border-radius: 9px; background: #eef2ff; color: #3730a3; font-size: 19px; font-weight: 700; }
+    .cb-pick button.wide { font-size: 13px; background: #f1f5f9; color: #475569; }
+    .cb-links { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+    .cb-links button, .cb-link { height: 34px; padding: 0 10px; border-radius: 9px; background: #f8fafc; color: #4338ca; font-size: 13px; font-weight: 700; box-shadow: inset 0 0 0 1px #c7d2fe; }
+    .cb-pick button:active, .cb-chips button:active, .cb-links button:active, .cb-link:active { filter: brightness(.9); }
+    .hw-ask { display: flex; align-items: baseline; gap: 8px; font-size: 16px; margin: 4px 0 8px; color: #334155; }
+    .hw-ask b { font-size: 30px; color: #4f46e5; }
+    .hw-ask span { margin-left: auto; font-size: 13px; color: #94a3b8; }
+    #hwPad { display: block; width: 100%; height: 240px; border-radius: 14px; background: #fff; box-shadow: inset 0 0 0 2px #c7d2fe; touch-action: none; }
     #cbInput { width: 100%; height: 42px; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 0 10px; background: #f8fafc; -webkit-user-select: text; user-select: text; }
     .cb-actions { display: flex; gap: 6px; margin-top: 4px; }
     .cb-actions button { flex: 1; height: 40px; border-radius: 10px; background: #f1f5f9; color: #334155; font-size: 14px; font-weight: 700; }
-    .cb-actions button:active, .cb-iso button:active { filter: brightness(.93); }
+    .cb-actions button:active { filter: brightness(.93); }
 
     #calcPanel {
       position: fixed; z-index: 35; left: 0; top: 0; width: 344px; max-width: calc(100vw - 8px); max-height: calc(100% - 8px);
@@ -1151,6 +1162,21 @@ $$n = \frac{z_{\alpha/2}^{2}\,N p(1 - p)}{(N - 1)(ME)^{2} + z_{\alpha/2}^{2}\,p(
         <h3 style="margin:0 0 6px;font-size:17px">Convertis d'abord ton PowerPoint en PDF</h3>
         <p style="margin:0;color:#475569">Dans l'app PowerPoint ou Keynote : Exporter, puis PDF. Importe ensuite ce PDF ici : tu pourras écrire dessus, même hors ligne.</p>
         <div class="modal-actions"><button class="btn primary" onclick="closeModal('pptModal')">Compris</button></div>
+      </div>
+    </div>
+  </div>
+  <div id="hwModal" class="modal">
+    <div class="modal-card" style="max-width:440px">
+      <div class="modal-body">
+        <h3 style="margin:0 0 4px;font-size:17px">Apprendre ton écriture</h3>
+        <p style="margin:0;color:#64748b;font-size:14px">Écris le symbole demandé dans le cadre, comme d'habitude. Après une seconde sans écrire, il passe tout seul au suivant. Environ une minute, une seule fois.</p>
+        <div class="hw-ask">Écris : <b id="hwSym">0</b><span id="hwStep"></span></div>
+        <canvas id="hwPad"></canvas>
+        <div class="modal-actions">
+          <button class="btn plain" onclick="hwPadClear()">Effacer</button>
+          <button class="btn plain" onclick="hwTrainNext(true)">Passer</button>
+          <button class="btn primary" onclick="hwTrainEnd()">Terminé</button>
+        </div>
       </div>
     </div>
   </div>
@@ -8480,7 +8506,7 @@ $$P(-z_{\alpha/2} < Z < z_{\alpha}) = 1 - \frac{\alpha}{2} - \alpha = \frac{2 - 
           if (e.shiftKey) redo(); else undo();
         } else if (e.key === "Escape") {
           closeMoreMenu(); closeSheet(); closePeek(); calcBubbleClose();
-          ["apiModal", "refModal", "refModalEm", "refModalProba", "aiModal", "cloudModal", "clearModal", "deletePageModal", "backupModal", "docModal", "docDeleteModal", "pptModal"].forEach(closeModal);
+          ["apiModal", "refModal", "refModalEm", "refModalProba", "aiModal", "cloudModal", "clearModal", "deletePageModal", "backupModal", "docModal", "docDeleteModal", "pptModal", "hwModal"].forEach(closeModal);
         }
       });
     }
@@ -8508,7 +8534,7 @@ $$P(-z_{\alpha/2} < Z < z_{\alpha}) = 1 - \frac{\alpha}{2} - \alpha = \frac{2 - 
         act.lasso = (b && x > b[0] - 14 && x < b[2] + 14 && y > b[1] - 14 && y < b[3] + 14)
           ? { mode: "move", lx: x, ly: y, dx: 0, dy: 0 }
           : { mode: "draw", pts: [] };
-        if (act.lasso.mode === "draw") clearSelection();
+        if (act.lasso.mode === "draw") { clearSelection(); calcBubbleClose(); }
         $("selMenu").classList.remove("open");
         liveC.style.opacity = 1;
         addPoint(e);
@@ -11385,14 +11411,368 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
     }
 
     // =========================================================================
-    // CORDE → « CALCULER » : une bulle à côté de ce qui est entouré
+    // CORDE → « CALCULER » (version 34) : l'écriture est lue SUR L'IPAD, sans Internet ni IA, tout de suite.
+    //  1. Les traits sont regroupés en symboles ; on repère les barres de fraction et les exposants
+    //     (symboles plus hauts que la ligne).
+    //  2. Chaque symbole est reconnu : règles simples (−, =, +, ×, 1, virgule), sinon comparaison de nuages
+    //     de points ($P, Vatavu 2012) avec des modèles de chiffres et les modèles appris de l'étudiant.
+    //  3. La ligne obtenue passe dans le moteur de calcul (cxAnalyse).
+    //  Toucher un symbole mal lu et choisir le bon : il est corrigé ET appris (clé sn2v2_ecriture).
     // =========================================================================
-    let cbRun = 0, cb = null;   // cb : { ink, box, lu, aiTex, iso, pick, edited }
+    const HW_KEY = "sn2v2_ecriture";      // modèles appris : { "7": [[x, y, x, y… normalisés], …], … }
+    const HW_N = 32;
+    function hwEll(cx, cy, rx, ry, a0, turn, n, slant) {
+      const o = [];
+      for (let i = 0; i <= n; i++) {
+        const a = (a0 + turn * i / n) * Math.PI / 180, y = cy + ry * Math.sin(a);
+        o.push(cx + rx * Math.cos(a) + (slant || 0) * (cy - y), y);
+      }
+      return o;
+    }
+    // Modèles de départ, dessinés dans un carré de 100 (y vers le bas) : plusieurs façons d'écrire chaque symbole
+    const HW_TPL = {
+      "0": [[hwEll(50, 50, 30, 50, -90, -360, 28)], [hwEll(50, 50, 22, 50, -90, 360, 28)], [hwEll(50, 50, 32, 50, -80, -370, 28, 0.25)]],
+      "1": [[[30, 22, 52, 0, 52, 100]], [[30, 22, 52, 0, 52, 100], [30, 100, 74, 100]], [[34, 18, 56, 0, 48, 100]]],
+      "2": [[[12, 28, 22, 10, 40, 1, 60, 1, 76, 10, 82, 26, 76, 44, 58, 62, 34, 80, 10, 100, 50, 99, 90, 100]],
+            [[15, 20, 35, 3, 60, 2, 78, 15, 75, 35, 10, 100, 90, 100]],
+            [[10, 30, 20, 8, 45, 0, 70, 6, 80, 24, 72, 46, 48, 68, 22, 88, 10, 100, 30, 90, 50, 94, 70, 100, 90, 98]]],
+      "3": [[[12, 12, 30, 2, 55, 0, 75, 8, 80, 24, 70, 40, 48, 48, 72, 56, 84, 72, 78, 90, 58, 100, 32, 100, 12, 90]],
+            [[10, 0, 85, 0, 45, 40, 70, 48, 85, 68, 75, 90, 50, 100, 15, 92]],
+            [[15, 8, 45, 0, 72, 10, 70, 32, 42, 48, 75, 58, 82, 80, 62, 98, 30, 100, 10, 88]]],
+      "4": [[[55, 0, 8, 65, 90, 65], [68, 28, 68, 100]], [[15, 0, 10, 55, 88, 55], [70, 0, 70, 100]], [[62, 100, 62, 0, 8, 66, 92, 66]]],
+      "5": [[[22, 0, 18, 45, 40, 38, 62, 40, 80, 52, 85, 72, 75, 90, 52, 100, 28, 98, 10, 88], [22, 0, 85, 0]],
+            [[85, 0, 22, 0, 18, 45, 40, 38, 62, 40, 80, 52, 85, 72, 75, 90, 52, 100, 28, 98, 10, 88]],
+            [[20, 2, 16, 48, 50, 40, 78, 54, 82, 78, 62, 98, 30, 100, 12, 90], [18, 2, 80, 0]]],
+      "6": [[[72, 4, 52, 0, 32, 10, 18, 32, 12, 58, 18, 82, 36, 98, 60, 98, 78, 84, 80, 64, 66, 50, 44, 48, 24, 58, 14, 72]],
+            [[65, 0, 30, 40, 15, 70, 25, 92, 50, 100, 72, 90, 78, 70, 62, 55, 38, 56, 20, 70]]],
+      "7": [[[8, 2, 90, 2, 38, 100]], [[8, 2, 90, 2, 38, 100], [30, 52, 76, 52]], [[10, 12, 20, 2, 90, 4, 50, 100]]],
+      "8": [[[72, 12, 52, 0, 28, 6, 20, 22, 32, 38, 52, 48, 72, 60, 80, 78, 70, 94, 50, 100, 28, 94, 20, 78, 30, 60, 52, 48, 70, 36, 78, 20, 72, 12]],
+            [hwEll(50, 24, 22, 24, 90, 360, 20), hwEll(50, 73, 28, 27, -90, 360, 20)],
+            [[30, 10, 50, 0, 70, 10, 30, 85, 50, 100, 70, 85, 30, 10]]],
+      "9": [[[78, 22, 62, 4, 40, 0, 22, 10, 16, 28, 24, 44, 44, 50, 66, 42, 78, 22, 78, 50, 72, 100]],
+            [[80, 25, 60, 3, 35, 2, 18, 18, 22, 40, 45, 48, 70, 38, 80, 25, 80, 100]],
+            [hwEll(50, 25, 28, 25, 0, -360, 20), [78, 20, 76, 100]]],
+      "x": [[[0, 0, 100, 100], [100, 0, 0, 100]], [[10, 5, 40, 15, 48, 50, 40, 85, 10, 95], [90, 5, 60, 15, 52, 50, 60, 85, 90, 95]],
+            [[0, 10, 30, 0, 50, 50, 70, 100, 100, 90], [100, 10, 50, 50, 0, 90]]],
+      "+": [[[50, 0, 50, 100], [0, 50, 100, 50]]],
+      "(": [[[72, 0, 45, 15, 30, 35, 26, 55, 32, 75, 48, 90, 72, 100]], [[60, 0, 35, 30, 32, 70, 60, 100]]],
+      "=": [[[0, 30, 100, 30], [0, 70, 100, 70]]]
+    };
+    HW_TPL[")"] = HW_TPL["("].map(t => t.map(s => s.map((v, i) => i % 2 ? v : 100 - v)));
+    // Ce que l'étudiant peut choisir en corrigeant un symbole (valeur, affichage), et le modèle appris pour chaque choix
+    const HW_PICK = [["0", "0"], ["1", "1"], ["2", "2"], ["3", "3"], ["4", "4"], ["5", "5"], ["6", "6"], ["7", "7"], ["8", "8"], ["9", "9"],
+      [",", ","], ["+", "+"], ["-", "−"], ["×", "×"], ["xv", "x"], ["=", "="], ["(", "("], [")", ")"], ["skip", "Ignorer"]];
+    const HW_LEARN = { "×": "x", xv: "x", "+": "+", "=": "=", "(": "(", ")": ")" };
+    "0123456789".split("").forEach(d => { HW_LEARN[d] = d; });
+
+    // ---------- Nuage de points : 32 points répartis sur le tracé, même échelle dans les deux sens, centré ----------
+    function hwCloud(strokes) {   // strokes : tableaux plats [x, y, x, y…]
+      const pts = [];
+      strokes.forEach((s, id) => { for (let i = 0; i + 1 < s.length; i += 2) pts.push([s[i], s[i + 1], id]); });
+      if (!pts.length) return null;
+      let L = 0;
+      for (let i = 1; i < pts.length; i++) if (pts[i][2] === pts[i - 1][2]) L += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+      let out;
+      if (L < 1e-6) out = Array.from({ length: HW_N }, () => [pts[0][0], pts[0][1]]);
+      else {
+        const I = L / (HW_N - 1);
+        out = [[pts[0][0], pts[0][1]]];
+        let D = 0;
+        for (let i = 1; i < pts.length && out.length < HW_N; i++) {
+          if (pts[i][2] !== pts[i - 1][2]) continue;
+          const a = pts[i - 1], b = pts[i], d = Math.hypot(b[0] - a[0], b[1] - a[1]);
+          if (d > 0 && D + d >= I) {
+            const t = (I - D) / d, q = [a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1]), b[2]];
+            out.push([q[0], q[1]]);
+            pts.splice(i, 0, q);
+            D = 0;
+          } else D += d;
+        }
+        const last = pts[pts.length - 1];
+        while (out.length < HW_N) out.push([last[0], last[1]]);
+      }
+      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+      out.forEach(p => { x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); y0 = Math.min(y0, p[1]); y1 = Math.max(y1, p[1]); });
+      const size = Math.max(x1 - x0, y1 - y0) || 1;
+      let cx = 0, cy = 0;
+      out.forEach(p => { p[0] = (p[0] - x0) / size; p[1] = (p[1] - y0) / size; cx += p[0]; cy += p[1]; });
+      cx /= HW_N; cy /= HW_N;
+      const flat = [];
+      out.forEach(p => flat.push(p[0] - cx, p[1] - cy));
+      return flat;
+    }
+    function hwCloudDist(a, b, start) {
+      const n = HW_N, used = new Uint8Array(n);
+      let sum = 0, i = start;
+      do {
+        let min = Infinity, idx = 0;
+        const ax = a[2 * i], ay = a[2 * i + 1];
+        for (let j = 0; j < n; j++) {
+          if (used[j]) continue;
+          const dx = ax - b[2 * j], dy = ay - b[2 * j + 1], d = dx * dx + dy * dy;
+          if (d < min) { min = d; idx = j; }
+        }
+        used[idx] = 1;
+        sum += (1 - ((i - start + n) % n) / n) * Math.sqrt(min);
+        i = (i + 1) % n;
+      } while (i !== start);
+      return sum;
+    }
+    function hwDist(a, b) {
+      const step = Math.floor(Math.sqrt(HW_N));
+      let m = Infinity;
+      for (let i = 0; i < HW_N; i += step) m = Math.min(m, hwCloudDist(a, b, i), hwCloudDist(b, a, i));
+      return m;
+    }
+    let hwUserData = null, hwTpls = null;
+    function hwUser() {
+      if (hwUserData) return hwUserData;
+      const raw = safeGet(HW_KEY, {});
+      hwUserData = {};
+      if (raw && typeof raw === "object") Object.keys(raw).forEach(c => {
+        if (HW_TPL[c] && Array.isArray(raw[c])) hwUserData[c] = raw[c].filter(p => Array.isArray(p) && p.length === 2 * HW_N && p.every(Number.isFinite)).slice(-12);
+      });
+      return hwUserData;
+    }
+    const hwLearnedCount = () => Object.values(hwUser()).reduce((n, l) => n + l.length, 0);
+    function hwTemplates() {
+      if (hwTpls) return hwTpls;
+      hwTpls = [];
+      // les modèles sont dessinés dans un carré ; un chiffre écrit est étroit : on les resserre (deux largeurs)
+      const narrow = (t, k) => t.map(s => s.map((v, i) => i % 2 ? v : 50 + (v - 50) * k));
+      const widths = c => /^[0-9]$/.test(c) ? [0.5, 0.72] : c === "(" || c === ")" ? [0.4] : c === "x" || c === "+" ? [0.75, 1] : [1];
+      Object.keys(HW_TPL).forEach(c => HW_TPL[c].forEach(t => widths(c).forEach(k => hwTpls.push({ c, p: hwCloud(narrow(t, k)), u: 0 }))));
+      const u = hwUser();
+      Object.keys(u).forEach(c => u[c].forEach(p => hwTpls.push({ c, p, u: 1 })));
+      return hwTpls;
+    }
+    function hwLearn(c, strokes) {
+      const p = hwCloud(strokes);
+      if (!p || !HW_TPL[c]) return;
+      const u = hwUser();
+      (u[c] = u[c] || []).push(p.map(v => Math.round(v * 1000) / 1000));
+      if (u[c].length > 12) u[c].shift();
+      safeSet(HW_KEY, u);
+      hwTpls = null;
+    }
+    function hwMatch(strokes) {      // classes triées de la plus probable à la moins probable
+      const p = hwCloud(strokes), best = {};
+      if (!p) return ["skip"];
+      hwTemplates().forEach(t => {
+        const d = hwDist(p, t.p) * (t.u ? 0.88 : 1);     // l'écriture de l'étudiant compte un peu plus
+        if (!(t.c in best) || d < best[t.c]) best[t.c] = d;
+      });
+      return Object.keys(best).sort((a, b) => best[a] - best[b]);
+    }
+
+    // ---------- Mise en page : symboles, fractions, exposants ----------
+    function hwInfo(s, i) {
+      const p = s.pts, n = p.length / 3, xy = [];
+      if (s.t === "line" && n > 1) xy.push(p[0], p[1], p[(n - 1) * 3], p[(n - 1) * 3 + 1]);
+      else for (let k = 0; k < p.length; k += 3) xy.push(p[k], p[k + 1]);
+      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity, len = 0;
+      for (let k = 0; k < xy.length; k += 2) {
+        x0 = Math.min(x0, xy[k]); x1 = Math.max(x1, xy[k]); y0 = Math.min(y0, xy[k + 1]); y1 = Math.max(y1, xy[k + 1]);
+        if (k) len += Math.hypot(xy[k] - xy[k - 2], xy[k + 1] - xy[k - 1]);
+      }
+      const ex = xy[xy.length - 2] - xy[0], ey = xy[xy.length - 1] - xy[1], chord = Math.hypot(ex, ey);
+      // ventre du trait : de combien il s'écarte de la ligne droite, et de quel côté (+ = vers la droite) : ( ou )
+      let bulge = 0;
+      if (chord > 0) for (let k = 0; k < xy.length; k += 2) {
+        const d = ((xy[k] - xy[0]) * ey - (xy[k + 1] - xy[1]) * ex) / chord;
+        if (Math.abs(d) > Math.abs(bulge)) bulge = d;
+      }
+      bulge = chord > 0 ? bulge / chord * (ey >= 0 ? 1 : -1) : 0;
+      return { i, xy, b: [x0, y0, x1, y1], w: x1 - x0, h: y1 - y0, cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, bulge,
+        straight: len > 0 ? chord / len : 1, ang: Math.atan2(Math.abs(ey), Math.abs(ex)) * 180 / Math.PI, sl: Math.sign(ex * ey) };
+    }
+    function hwHeight(S) {   // hauteur habituelle d'un chiffre dans cette écriture
+      let hs = S.filter(s => s.h > s.w * 0.6 && s.h > 2).map(s => s.h);
+      if (!hs.length) hs = S.map(s => Math.max(s.w, s.h));
+      hs.sort((a, b) => a - b);
+      return Math.max(6, hs[Math.floor(hs.length * 0.7)] || 30);
+    }
+    function hwBox(g, H) {
+      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+      g.st.forEach(s => { x0 = Math.min(x0, s.b[0]); y0 = Math.min(y0, s.b[1]); x1 = Math.max(x1, s.b[2]); y1 = Math.max(y1, s.b[3]); });
+      Object.assign(g, { b: [x0, y0, x1, y1], w: x1 - x0, h: y1 - y0, cx: (x0 + x1) / 2, cy: (y0 + y1) / 2 });
+      g.flat = g.h <= 0.35 * g.w && g.w > 0.2 * H;
+    }
+    // Deux morceaux appartiennent au même symbole (le 4, le 5, le +, le ×, le =) ?
+    function hwSame(A, B, H) {
+      const nar = A.w <= B.w ? A : B, wid = nar === A ? B : A, m = Math.min(wid.w * 0.12, 0.15 * H);
+      const top = Math.min(A.b[1], B.b[1]), bot = Math.max(A.b[3], B.b[3]);
+      // 9 en deux traits : une boucle en haut, une tige droite collée à son bord
+      const stem = A.h >= B.h ? A : B, loop = stem === A ? B : A, s0 = stem.st[0];
+      if (stem.st.length === 1 && s0.straight > 0.85 && s0.ang > 60 && !loop.flat && loop.h < 0.75 * stem.h
+          && stem.cx >= loop.b[0] - 0.1 * loop.w && stem.cx <= loop.b[2] + 0.12 * loop.w
+          && loop.cy < stem.b[1] + 0.42 * stem.h && loop.b[1] < stem.b[1] + 0.25 * stem.h) return true;
+      if (!(nar.cx >= wid.b[0] + m && nar.cx <= wid.b[2] - m)) return false;
+      if (A.flat && B.flat) return bot - top < 0.9 * H && nar.w > 0.4 * wid.w;
+      // deux boucles empilées (un 8 en deux traits) : bien centrées l'une sur l'autre et qui se touchent
+      const gap = Math.max(A.b[1], B.b[1]) - Math.min(A.b[3], B.b[3]);
+      if (!A.flat && !B.flat && Math.abs(A.cx - B.cx) < 0.35 * wid.w && gap < 0.12 * H && bot - top <= 1.3 * H) return true;
+      if (A.flat || B.flat) {      // barre du 5, du 7, du + ; mais pas le « − » d'un exposant posé en haut à droite
+        const f = A.flat ? A : B, o = f === A ? B : A;
+        if (f.b[0] > o.b[0] + 0.55 * o.w && f.cy < o.b[1] + 0.2 * o.h) return false;
+        return f.cy >= o.b[1] - 0.12 * H && f.cy <= o.b[3] + 0.12 * H;
+      }
+      const up = A.cy <= B.cy ? A : B, lo = up === A ? B : A;
+      if (up.b[3] < lo.cy && up.cx > lo.cx + 0.15 * lo.w) return false;   // un exposant, en haut à droite, reste à part
+      return bot - top <= 1.6 * Math.max(A.h, B.h);
+    }
+    function hwGroup(S, H) {
+      const G = [];
+      S.slice().sort((a, b) => a.b[0] - b.b[0]).forEach(s => {
+        const n = { st: [s] };
+        hwBox(n, H);
+        const g = G.find(g => hwSame(g, n, H));
+        if (g) { g.st.push(s); hwBox(g, H); } else G.push(n);
+      });
+      for (let k = 0; k < G.length; k++) for (let j = k + 1; j < G.length; j++) {
+        if (hwSame(G[k], G[j], H)) { G[k].st.push(...G[j].st); hwBox(G[k], H); G.splice(j, 1); j = k; }
+      }
+      return G;
+    }
+    function hwClassify(g) {
+      const st = g.st;
+      if (st.length === 1) {
+        const s = st[0];
+        if (g.flat) return ["-", "="];
+        if (s.straight > 0.85 && s.ang > 58) {   // trait vertical : 1, ou parenthèse s'il est bombé
+          if (Math.abs(s.bulge) > 0.07) return s.bulge > 0 ? [")", "1", "("] : ["(", "1", ")"];
+          return ["1", ")", "(", "7"];
+        }
+        if (s.straight > 0.9) {
+          if (s.ang < 22) return ["-", "1"];
+          if (s.ang > 58) return ["1", "(", ")", "7"];
+          return ["/", "1", "x"];
+        }
+      }
+      if (st.length === 2) {
+        const p = st[0], q = st[1];
+        if (p.flat && q.flat) return ["=", "-"];
+        if (p.straight > 0.85 && q.straight > 0.85) {
+          const fl = p.ang < 25 ? p : q.ang < 25 ? q : null, up = fl === p ? q : p;
+          if (fl && up.ang > 60 && up.cx > fl.b[0] + 0.15 * fl.w && up.cx < fl.b[2] - 0.15 * fl.w
+              && fl.cy > up.b[1] + 0.15 * up.h && fl.cy < up.b[3] - 0.15 * up.h) return ["+", "x"];
+          if (p.ang >= 25 && p.ang <= 72 && q.ang >= 25 && q.ang <= 72 && p.sl !== q.sl) return ["x", "+"];
+        }
+      }
+      return hwMatch(st.map(s => s.xy));
+    }
+    function hwLine(S, H, syms) {
+      const G = hwGroup(S, H).sort((a, b) => a.cx - b.cx);
+      const mids = G.filter(g => !g.flat).map(g => g.cy).sort((a, b) => a - b);
+      const mid0 = mids.length ? mids[mids.length >> 1] : (G[0] ? G[0].cy : 0);
+      const out = [];
+      let base = null, inSup = false;
+      for (const g of G) {
+        g.tiny = !g.flat && Math.max(g.w, g.h) < 0.3 * H;
+        let sup = false, alts;
+        if (base && !g.tiny) {
+          const ref = Math.max(base.h, 0.6 * H), lift = base.cy - g.cy;
+          sup = lift > (inSup ? 0.15 : 0.28) * ref && g.b[3] < base.b[3] - 0.2 * ref && (g.flat || g.h < 0.92 * ref || g.b[3] < base.cy);
+        }
+        if (g.tiny) {   // petite marque : virgule en bas, point de multiplication au milieu
+          const low = g.cy > (base ? base.cy - 0.1 * Math.max(base.h, 0.6 * H) : mid0 - 0.1 * H);
+          alts = low ? [",", "·"] : ["·", ","];
+        } else alts = hwClassify(g);
+        inSup = sup;
+        if (!sup && !g.tiny && !g.flat) base = g;
+        const node = { t: "sym", g, key: g.st.map(s => s.i).sort((a, b) => a - b).join("."), alts, sup };
+        syms.push(node);
+        out.push(node);
+      }
+      return out;
+    }
+    function hwLayout(S, H, syms, depth) {
+      if (!S.length) return [];
+      if (depth < 4) {
+        // barre de fraction : un trait plat assez long, avec quelque chose juste au-dessus ET juste en dessous
+        const bars = S.filter(s => s.flat && s.w >= 0.8 * H).sort((a, b) => b.w - a.w);
+        for (const bar of bars) {
+          const span = s => s.cx >= bar.b[0] - 0.08 * bar.w && s.cx <= bar.b[2] + 0.08 * bar.w;
+          const rest = S.filter(s => s !== bar);
+          const up = rest.filter(s => span(s) && s.cy < bar.cy), dn = rest.filter(s => span(s) && s.cy >= bar.cy);
+          if (up.some(s => bar.cy - s.b[3] < 1.2 * H) && dn.some(s => s.b[1] - bar.cy < 1.2 * H)) {
+            const left = rest.filter(s => !span(s) && s.cx < bar.cx), right = rest.filter(s => !span(s) && s.cx > bar.cx);
+            const L = hwLayout(left, H, syms, depth + 1);
+            const num = hwLayout(up, H, syms, depth + 1), den = hwLayout(dn, H, syms, depth + 1);
+            return [...L, { t: "frac", num, den }, ...hwLayout(right, H, syms, depth + 1)];
+          }
+        }
+      }
+      return hwLine(S, H, syms);
+    }
+    function hwRead(strokes) {
+      const S = strokes.filter(s => s.pts && s.pts.length >= 3 && (s.t === "pen" || s.t === "line")).map(hwInfo);
+      if (!S.length) return null;
+      const H = hwHeight(S);
+      S.forEach(s => { s.flat = s.h <= 0.35 * s.w && s.w > 0.2 * H; });
+      const syms = [];
+      return { nodes: hwLayout(S, H, syms, 0), syms, H };
+    }
+    // Ligne lue → texte pour le moteur de calcul (« x » entre deux nombres = multiplication)
+    function hwExpr(nodes, inSup) {
+      let s = "";
+      for (let i = 0; i < nodes.length; i++) {
+        const n = nodes[i];
+        if (n.t === "frac") { s += "((" + hwExpr(n.num) + ")/(" + hwExpr(n.den) + "))"; continue; }
+        if (n.sup && !inSup) {
+          const run = [];
+          let j = i;
+          while (j < nodes.length && nodes[j].t === "sym" && nodes[j].sup) run.push(nodes[j++]);
+          const e = hwExpr(run, true);
+          if (e) s += "^(" + e + ")";
+          i = j - 1;
+          continue;
+        }
+        const c = n.cls;
+        if (c === "skip") { n.shown = "∅"; continue; }
+        if (c === "x" || c === "×" || c === "xv") {
+          const nx = nodes[i + 1];
+          const nextNum = !!nx && (inSup || nx.t === "frac" || !nx.sup) && (nx.t === "frac" || /^[0-9(]$/.test(nx.cls));
+          const mul = c === "×" || (c === "x" && /[0-9)]$/.test(s) && nextNum);
+          s += mul ? "*" : "x";
+          n.shown = mul ? "×" : "x";
+        } else if (c === "·") { s += "*"; n.shown = "·"; }
+        else if (c === "-") { s += "-"; n.shown = "−"; }
+        else { s += c; n.shown = c; }
+      }
+      return s;
+    }
+    const hwGood = t => { if ((t.match(/\(/g) || []).length !== (t.match(/\)/g) || []).length) return false; const r = cxAnalyse(t, { ai: true }); return r.ok && ((r.kind === "val" && isFinite(r.value)) || (r.kind === "solve" && r.roots.length > 0)); };
+    function hwText(rd, over) {
+      if (!rd) return "";
+      rd.syms.forEach(n => { n.cls = over[n.key] || n.alts[0]; });
+      let lu = hwExpr(rd.nodes);
+      if (!hwGood(lu)) {      // la ligne ne se calcule pas : on essaie le 2e (ou 3e) choix d'un symbole
+        let tries = 0, ok = false;
+        for (const n of rd.syms) {
+          if (over[n.key] || ok) continue;
+          for (const a of n.alts.slice(1, 3)) {
+            if (++tries > 40) break;
+            const keep = n.cls;
+            n.cls = a;
+            if (hwGood(hwExpr(rd.nodes))) { ok = true; break; }
+            n.cls = keep;
+          }
+        }
+        lu = hwExpr(rd.nodes);
+      }
+      return lu;
+    }
+
+    // ---------- La bulle ----------
+    let cb = null;   // { ink, box, rd, over, lu, fixing, sel, edited }
     function calcCfg() { if (!prefs.calc || typeof prefs.calc !== "object") prefs.calc = {}; return prefs.calc; }
     function calcBubbleClose() {
-      cbRun++; cb = null;
+      const had = !!cb;
+      cb = null;
       const el = $("calcBubble");
       if (el) { el.classList.remove("open"); $("cbEdit").hidden = true; }
+      if (had && doc) try { redrawLive(); } catch (e) {}
     }
     function cbPlace() {
       if (!cb) return;
@@ -11411,153 +11791,41 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
       $("cbActions").innerHTML = actions.map(a => `<button type="button" data-cb="${a[0]}">${a[1]}</button>`).join("");
       cbPlace();
     }
-    // Image envoyée : seulement les traits entourés (et les coups de gomme qui les touchent), sur fond blanc
-    function cbImage(set, b) {
-      const pad = 26, x0 = b[0] - pad, y0 = b[1] - pad, w = b[2] - b[0] + 2 * pad, h = b[3] - b[1] + 2 * pad;
-      const SC = Math.max(1, Math.min(3, 1500 / Math.max(w, h)));
-      const W = Math.max(1, Math.round(w * SC)), H = Math.max(1, Math.round(h * SC));
-      const layer = document.createElement("canvas");
-      layer.width = W; layer.height = H;
-      const lx = layer.getContext("2d");
-      lx.setTransform(SC, 0, 0, SC, -x0 * SC, -y0 * SC);
-      doc.strokes.forEach(s => {
-        if (set.has(s)) { drawStroke(lx, s, false); return; }
-        if (s.t !== "px") return;
-        const q = bbox(s);
-        if (q[2] >= x0 && q[0] <= x0 + w && q[3] >= y0 && q[1] <= y0 + h) drawStroke(lx, s, false);
-      });
-      const c = document.createElement("canvas");
-      c.width = W; c.height = H;
-      const cx = c.getContext("2d");
-      cx.fillStyle = "#fff"; cx.fillRect(0, 0, W, H);
-      cx.drawImage(layer, 0, 0);
-      const data = c.toDataURL("image/png").split(",")[1];
-      layer.width = layer.height = c.width = c.height = 0;
-      return data;
-    }
-    // LaTeX → écriture en ligne, au cas où l'IA répond en LaTeX malgré la consigne
-    function cxFromTex(t) {
-      t = String(t).replace(/\\left|\\right|\\,|\\!|\\;|\\ /g, "").replace(/\\(?:times|cdot)/g, "*").replace(/\\div/g, "/")
-        .replace(/\\(?:varepsilon|epsilon)/g, "epsilon").replace(/_\{([^{}]*)\}/g, "_$1");
-      for (let n = 0; n < 30 && /\\d?frac\s*\{[^{}]*\}\s*\{[^{}]*\}|\\sqrt\s*\{[^{}]*\}|\^\{[^{}]*\}/.test(t); n++) {
-        t = t.replace(/\\d?frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, "(($1)/($2))").replace(/\\sqrt\s*\{([^{}]*)\}/g, "sqrt($1)").replace(/\^\{([^{}]*)\}/g, "^($1)");
-      }
-      return t.replace(/\\([A-Za-z]+)/g, "$1").replace(/[{]/g, "(").replace(/[}]/g, ")");
-    }
-    // L'IA ne fait que LIRE (modèle Flash, sans réflexion : 2 à 4 secondes). Le calcul est fait par cxAnalyse.
-    async function cxReadInk(apiKey, png) {
-      const prompt = `Tu lis l'image d'un calcul ou d'une équation écrit à la main par un étudiant de cégep (chimie, physique, probabilités).
-Recopie fidèlement ce qui est écrit. Ne calcule rien, ne corrige rien, ne complète rien.
-
-Réponds avec cet objet JSON, sans rien autour :
-{"lu": "...", "tex": "...", "isoler": [{"var": "...", "tex": "..."}]}
-
-"lu" : ce qui est écrit, sur UNE seule ligne, dans cette syntaxe stricte :
-- nombres avec un point décimal (0.25) ; une puissance de dix se colle au nombre : 6.02E23 pour 6,02 × 10^23, 1.8E-5 pour 1,8 × 10^-5, 1E-14 pour 10^-14 ;
-- opérations + - * / ^ et parenthèses ; mets TOUJOURS * entre deux facteurs : 2*x, R*I, 3*(a+b) ;
-- une fraction s'écrit (numérateur)/(dénominateur), avec les deux paires de parenthèses ;
-- fonctions : sqrt(...), log(...) pour le logarithme en base 10, ln(...), exp(...) pour e^(...), sin(...), cos(...), tan(...), abs(...) ; le nombre π s'écrit pi ;
-- lettres : garde-les telles quelles, indice avec _ (x, R, V_0, C_eq, K_a) ; lettre grecque en toutes lettres (epsilon_0, lambda) ;
-- garde le signe = d'une équation ; si rien n'est écrit après un « = » final (ou seulement « ? »), n'écris pas ce « = » ;
-- n'écris pas les unités (mol/L, V, Ω, µF, s…) : seulement les nombres et les lettres du calcul ;
-- s'il y a plusieurs lignes, recopie seulement la dernière.
-
-"tex" : la même chose en LaTeX simple (\\frac{}{}, ^{}, _{}, \\sqrt{}, \\times), avec la virgule décimale.
-
-"isoler" : seulement si "lu" est une équation qui contient au moins deux lettres différentes. Pour chaque lettre (6 au maximum), donne l'équation résolue pour cette lettre, en LaTeX simple, par exemple {"var": "R", "tex": "R = \\frac{V}{I}"}. Sinon : [].
-
-Si l'image est illisible ou ne contient aucun calcul : {"lu": "", "tex": "", "isoler": []}.`;
-      const body = think => JSON.stringify({
-        contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: "image/png", data: png } }] }],
-        generationConfig: Object.assign({ responseMimeType: "application/json" }, think ? { thinkingConfig: { thinkingBudget: 0 } } : {})
-      });
-      let models = ["gemini-flash-latest"], widened = false, lastErr = "";
-      for (let n = 0; n < models.length; n++) {
-        const m = models[n];
-        if (!aiNoQuota.has(m)) {
-          for (const think of [true, false]) {
-            const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 25000);
-            let resp;
-            try {
-              resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(m)}:generateContent?key=${encodeURIComponent(apiKey)}`, {
-                method: "POST", headers: { "Content-Type": "application/json" }, body: body(think), signal: ctl.signal
-              });
-            } finally { clearTimeout(timer); }
-            if (resp.ok) {
-              const data = await resp.json();
-              const text = (data?.candidates?.[0]?.content?.parts || []).filter(q => !q.thought).map(q => q.text || "").join("").trim();
-              if (!text) { lastErr = "réponse vide"; break; }
-              let o = null;
-              try { o = JSON.parse(text.replace(/^```[a-zA-Z]*\s*/, "").replace(/\s*```$/, "")); } catch (e) {}
-              if (!o) { const k = /"lu"\s*:\s*"((?:[^"\\]|\\.)*)"/.exec(text); o = { lu: k ? k[1].replace(/\\\\/g, "\\") : "" }; }
-              let lu = String(o.lu || "").trim();
-              if (/[\\{]/.test(lu)) lu = cxFromTex(lu);
-              return { lu, tex: String(o.tex || "").replace(/^\$+|\$+$/g, ""), iso: Array.isArray(o.isoler) ? o.isoler.slice(0, 6) : [], model: m };
-            }
-            let msg = "";
-            try { msg = (await resp.json())?.error?.message || ""; } catch (e) {}
-            lastErr = "erreur " + resp.status + (msg ? " : " + msg.slice(0, 140).replace(/\.$/, "") : "");
-            if (resp.status === 401 || resp.status === 403 || /api key/i.test(msg)) throw new Error(lastErr + ". Vérifie ta clé dans « IA »");
-            if (resp.status === 429 && /limit: ?0\b/i.test(msg)) aiNoQuota.add(m);
-            if (!(resp.status === 400 && think)) break;                   // 400 avec le réglage « sans réflexion » : on réessaie sans ce réglage
-          }
-        }
-        if (!widened && n === models.length - 1) {                        // le modèle rapide habituel n'a pas répondu : on essaie les autres
-          widened = true;
-          const all = await aiModelList(apiKey);
-          models = models.concat(all.filter(x => /flash/.test(x) && !models.includes(x)), all.filter(x => !/flash/.test(x)));
-        }
-      }
-      throw new Error(lastErr || "aucun modèle n'a répondu");
+    // le symbole qu'on corrige est entouré en orange sur la feuille
+    function cbMark() {
+      if (!doc) return;
+      redrawLive();
+      const n = cb && cb.sel != null && cb.rd && cb.rd.syms[cb.sel];
+      if (!n) return;
+      const b = n.g.b, pad = 6;
+      liveX.save();
+      liveX.lineWidth = 3;
+      liveX.strokeStyle = "#f59e0b";
+      liveX.fillStyle = "rgba(245,158,11,.2)";
+      liveX.beginPath();
+      liveX.rect(b[0] - pad, b[1] - pad, b[2] - b[0] + 2 * pad, b[3] - b[1] + 2 * pad);
+      liveX.fill();
+      liveX.stroke();
+      liveX.restore();
     }
     function lassoCalc() {
       if (!selection) return;
-      const ink = selection.strokes.filter(s => s.pts && s.t !== "px");
+      const ink = selection.strokes.filter(s => s.pts && (s.t === "pen" || s.t === "line"));
       if (!ink.length) { showToast("Entoure un calcul écrit à la main."); return; }
-      cbStart(ink, selection.box.slice());
-    }
-    function cbOffline() {
-      cbSet(`<div class="cb-note"><b>Pas d'Internet :</b> je ne peux pas lire ton écriture. La calculatrice, elle, marche sans Internet.</div>`,
-        [["calc", "🧮 Calculatrice"], ["retry", "Réessayer"], ["close", "Fermer"]]);
-    }
-    async function cbStart(ink, box) {
-      const run = ++cbRun;
-      cb = { ink, box };
+      cb = { ink, box: selection.box.slice(), over: {}, fixing: false, sel: null };
       $("cbEdit").hidden = true;
-      const apiKey = safeGet(LS.key, "");
-      if (!apiKey) {
-        cbSet(`<div class="cb-note">Pour lire ton écriture, il faut une clé dans « IA ». Sans clé, la calculatrice fait le calcul.</div>`,
-          [["key", "Ajouter une clé"], ["calc", "🧮 Calculatrice"], ["close", "Fermer"]]);
-        return;
-      }
-      if (navigator.onLine === false) { cbOffline(); return; }
-      cbSet(`<div class="cb-wait"><div class="spinner"></div><span>Je lis ton écriture…</span></div>`, [["close", "Annuler"]]);
-      try {
-        const r = await cxReadInk(apiKey, cbImage(new Set(ink), box));
-        if (run !== cbRun || !cb) return;
-        cb.lu = r.lu; cb.aiTex = r.tex; cb.iso = r.iso;
-        if (!cb.lu) {
-          cbSet(`<div class="cb-note">Je n'ai pas réussi à lire un calcul ici. Entoure seulement la ligne à calculer, ou écris-la toi-même.</div>`,
-            [["fix", "✏️ L'écrire"], ["close", "Fermer"]]);
-          return;
-        }
-        cbShow();
-      } catch (err) {
-        if (run !== cbRun || !cb) return;
-        if (err instanceof TypeError || navigator.onLine === false) { cbOffline(); return; }
-        const msg = err && err.name === "AbortError" ? "la lecture a pris trop de temps" : String(err && err.message || err);
-        cbSet(`<div class="cb-note"><b>La lecture n'a pas marché</b> (${escapeHtml(msg)}).</div>`,
-          [["retry", "Réessayer"], ["calc", "🧮 Calculatrice"], ["close", "Fermer"]]);
-      }
+      try { cb.rd = hwRead(ink); cb.lu = hwText(cb.rd, cb.over); } catch (e) { cb.rd = null; cb.lu = ""; }
+      cbShow();
     }
     function cbShow() {
       if (!cb) return;
       const cfg = calcCfg();
       const r = cxAnalyse(cb.lu || "", { ai: true, deg: cfg.deg !== false, cs: cfg.cs || 6 });
       const M = t => texToMathML(String(t), false);
-      const read = r.ok ? M(r.tex) : (cb.aiTex && !cb.edited ? M(cb.aiTex) : escapeHtml(cb.lu || ""));
-      let res = "", note = "", iso = "";
-      if (!r.ok) note = cb.lu ? "Je n'arrive pas à calculer cette ligne telle quelle. Touche « Corriger » pour l'ajuster." : "";
+      const read = r.ok ? M(r.tex) : escapeHtml(cb.lu || "");
+      let res = "", note = "";
+      if (!cb.lu) note = "Je ne vois pas de calcul ici. Entoure seulement le calcul (sans « K = »).";
+      else if (!r.ok) note = "Je n'arrive pas à calculer cette ligne : touche « Corriger », puis le symbole mal lu.";
       else if (r.kind === "val") {
         if (isFinite(r.value)) {
           res = M((r.label ? cxVarTex(r.label) + "=" : "") + r.resTex);
@@ -11566,38 +11834,135 @@ Si l'image est illisible ou ne contient aucun calcul : {"lu": "", "tex": "", "is
       } else if (r.kind === "solve") {
         if (r.roots.length) res = M(r.resTex);
         else note = "Je ne trouve aucune solution réelle à cette équation.";
-      } else if (r.kind === "vars") {
-        const list = cb.edited ? [] : (cb.iso || []).filter(o => o && o.var && o.tex);
-        if (list.length) {
-          iso = `<div class="cb-lbl">Isoler quelle lettre ?</div><div class="cb-iso">` + list.map((o, i) =>
-            `<button type="button" data-cb="iso:${i}" class="${cb.pick === i ? "on" : ""}">${M(cxVarTex(o.var))}</button>`).join("") + "</div>";
-          if (cb.pick != null && list[cb.pick]) { res = M(list[cb.pick].tex); note = "🤖 Isolé par l'IA, pas par l'app : vérifie d'un coup d'œil."; }
-        } else note = "Il reste des lettres sans valeur (" + escapeHtml(r.vars.join(", ")) + ") : je ne peux pas donner un nombre. Touche « Corriger » pour mettre les nombres.";
-      } else note = "Calcul impossible avec cette ligne. Touche « Corriger » pour l'ajuster.";
-      cbSet((read ? `<div class="cb-lbl">J'ai lu</div><div class="cb-read">${read}</div>` : "") + iso
+      } else if (r.kind === "vars") note = "Il y a un x sans « = » : ajoute « = » et l'autre côté pour le trouver (ou corrige-le si ce n'est pas un x).";
+      else note = "Calcul impossible avec cette ligne. Touche « Corriger » pour l'ajuster.";
+      let fix = "";
+      if (cb.fixing && cb.rd && !cb.edited) {
+        fix = `<div class="cb-lbl">Touche le symbole mal lu</div><div class="cb-chips">` + cb.rd.syms.map((n, i) =>
+          `<button type="button" data-cb="chip:${i}" class="${n.sup ? "sup" : ""}${cb.sel === i ? " on" : ""}">${escapeHtml(n.shown || n.cls)}</button>`).join("") + "</div>";
+        if (cb.sel != null) fix += `<div class="cb-lbl">C'est en fait…</div><div class="cb-pick">` + HW_PICK.map(([v, d]) =>
+          `<button type="button" data-cb="pick:${v}"${v === "skip" ? ' class="wide"' : ""}>${d}</button>`).join("") + "</div>";
+        fix += `<div class="cb-links"><button type="button" data-cb="type">⌨️ Taper la ligne</button><button type="button" data-cb="train">✍️ Apprendre mon écriture</button></div>`;
+      } else if (!cb.fixing && hwLearnedCount() < 10) {
+        fix = `<div class="cb-note">Lecture plus sûre : <button type="button" class="cb-link" data-cb="train">✍️ Apprendre mon écriture</button> (1 min, une fois).</div>`;
+      }
+      cbSet((read ? `<div class="cb-lbl">J'ai lu</div><div class="cb-read">${read}</div>` : "")
         + (res ? `<div class="cb-lbl">Résultat</div><div class="cb-res">${res}</div>` : "")
-        + (note ? `<div class="cb-note">${note}</div>` : ""), [["fix", "✏️ Corriger"], ["close", "Fermer"]]);
+        + (note ? `<div class="cb-note">${note}</div>` : "") + fix,
+        [["fix", cb.fixing ? "✓ Terminé" : "✏️ Corriger"], ["close", "Fermer"]]);
+      cbMark();
     }
     function cbEdited() {
       if (!cb) return;
-      cb.lu = $("cbInput").value; cb.edited = true; cb.pick = null;
+      cb.lu = $("cbInput").value; cb.edited = true; cb.sel = null;
       cbShow();
+    }
+    function cbReread() {   // après un apprentissage : on relit toute la sélection avec les nouveaux modèles
+      if (!cb || cb.edited) return;
+      try { cb.rd = hwRead(cb.ink); cb.lu = hwText(cb.rd, cb.over); } catch (e) {}
     }
     function cbAction(k) {
       if (k === "close") { calcBubbleClose(); return; }
-      if (k === "key") { openModal("apiModal"); return; }
       if (k === "calc") { calcToggle(true); return; }
+      if (k === "train") { hwTrainOpen(); return; }
       if (!cb) return;
-      if (k === "retry") cbStart(cb.ink, cb.box);
-      else if (k === "fix") {
+      if (k === "fix") { cb.fixing = !cb.fixing; cb.sel = null; if (!cb.fixing) $("cbEdit").hidden = true; cbShow(); }
+      else if (k === "type") {
         const ed = $("cbEdit"), inp = $("cbInput");
-        ed.hidden = !ed.hidden;
-        if (!ed.hidden) {
-          inp.value = String(cb.lu || "").replace(/(\d)\.(\d)/g, "$1,$2").replace(/\*/g, "×").replace(/\s*=\s*/g, " = ");
-          cbPlace();
-          try { inp.focus({ preventScroll: true }); } catch (e) { inp.focus(); }
-        } else cbPlace();
-      } else if (k.startsWith("iso:")) { cb.pick = Number(k.slice(4)); cbShow(); }
+        ed.hidden = false;
+        inp.value = String(cb.lu || "").replace(/(\d)\.(\d)/g, "$1,$2").replace(/\*/g, "×").replace(/\s*=\s*/g, " = ");
+        cbPlace();
+        try { inp.focus({ preventScroll: true }); } catch (e) { inp.focus(); }
+      } else if (k.startsWith("chip:")) { const i = Number(k.slice(5)); cb.sel = cb.sel === i ? null : i; cbShow(); }
+      else if (k.startsWith("pick:") && cb.sel != null && cb.rd) {
+        const v = k.slice(5), n = cb.rd.syms[cb.sel];
+        if (!n) return;
+        cb.over[n.key] = v;
+        if (HW_LEARN[v]) hwLearn(HW_LEARN[v], n.g.st.map(s => s.xy));
+        cb.sel = null;
+        cbReread();
+        cbShow();
+      }
+    }
+
+    // ---------- Apprendre l'écriture : chaque symbole écrit deux fois, il passe tout seul au suivant ----------
+    const HW_TRAIN = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "x", "+", "(", ")"];
+    const hwT = { step: 0, strokes: [], cur: null, id: null, timer: 0, ready: false };
+    function hwTrainOpen() {
+      hwT.step = 0;
+      openModal("hwModal");
+      if (!hwT.ready) hwPadInit();
+      requestAnimationFrame(() => { hwPadSize(); hwTrainShow(); });
+    }
+    function hwTrainShow() {
+      const n = HW_TRAIN.length * 2;
+      if (hwT.step >= n) { hwTrainEnd(); return; }
+      const c = HW_TRAIN[hwT.step >> 1];
+      $("hwSym").textContent = c === "x" ? "×" : c;
+      $("hwStep").textContent = `${hwT.step + 1} / ${n}`;
+      hwPadClear();
+    }
+    function hwPadSize() {
+      const c = $("hwPad"), r = c.getBoundingClientRect(), d = window.devicePixelRatio || 1;
+      c.width = Math.max(1, Math.round(r.width * d));
+      c.height = Math.max(1, Math.round(r.height * d));
+      c.getContext("2d").setTransform(d, 0, 0, d, 0, 0);
+    }
+    function hwPadClear() {
+      clearTimeout(hwT.timer);
+      hwT.strokes = []; hwT.cur = null;
+      const c = $("hwPad");
+      c.getContext("2d").clearRect(0, 0, c.width, c.height);
+    }
+    function hwTrainNext(skip) {
+      clearTimeout(hwT.timer);
+      if (!skip) {
+        if (!hwT.strokes.length) return;
+        hwLearn(HW_TRAIN[hwT.step >> 1], hwT.strokes.map(s => s.slice()));
+      }
+      hwT.step++;
+      hwTrainShow();
+    }
+    function hwTrainEnd() {
+      clearTimeout(hwT.timer);
+      closeModal("hwModal");
+      if (cb) { cbReread(); cbShow(); }
+      showToast(`Écriture apprise (${hwLearnedCount()} modèles). Chaque correction l'améliore encore.`);
+    }
+    function hwPadInit() {
+      hwT.ready = true;
+      const pad = $("hwPad");
+      const at = e => { const r = pad.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+      pad.addEventListener("pointerdown", e => {
+        if (hwT.cur) return;
+        e.preventDefault();
+        clearTimeout(hwT.timer);
+        try { pad.setPointerCapture(e.pointerId); } catch (err) {}
+        hwT.id = e.pointerId;
+        hwT.cur = at(e);
+        hwT.strokes.push(hwT.cur);
+        const x = pad.getContext("2d");
+        x.fillStyle = "#0f172a";
+        x.beginPath(); x.arc(hwT.cur[0], hwT.cur[1], 1.6, 0, Math.PI * 2); x.fill();
+      });
+      pad.addEventListener("pointermove", e => {
+        if (!hwT.cur || e.pointerId !== hwT.id) return;
+        const x = pad.getContext("2d");
+        x.lineWidth = 3.2; x.lineCap = x.lineJoin = "round"; x.strokeStyle = "#0f172a";
+        (e.getCoalescedEvents ? e.getCoalescedEvents() : [e]).forEach(ev => {
+          const p = at(ev), c = hwT.cur, n = c.length;
+          x.beginPath(); x.moveTo(c[n - 2], c[n - 1]); x.lineTo(p[0], p[1]); x.stroke();
+          c.push(p[0], p[1]);
+        });
+      });
+      const up = e => {
+        if (!hwT.cur || e.pointerId !== hwT.id) return;
+        hwT.cur = null;
+        hwT.timer = setTimeout(() => hwTrainNext(false), 1000);   // une seconde sans écrire : symbole suivant
+      };
+      pad.addEventListener("pointerup", up);
+      pad.addEventListener("pointercancel", up);
+      ["touchstart", "touchmove"].forEach(t => pad.addEventListener(t, e => { if (e.cancelable) e.preventDefault(); }, { passive: false }));
     }
 
     // =========================================================================
