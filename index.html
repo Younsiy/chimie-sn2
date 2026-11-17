@@ -9001,8 +9001,8 @@ $$P(-z_{\alpha/2} < Z < z_{\alpha}) = 1 - \frac{\alpha}{2} - \alpha = \frac{2 - 
     // La clé arrive d'un autre appareil
     function aiSyncApply(str) {
       const o = parseObj(str);
-      if (o.key) localStorage.setItem(LS.key, JSON.stringify(o.key)); else localStorage.removeItem(LS.key);
-      if (o.model) localStorage.setItem(LS.model, JSON.stringify(o.model));
+      if (o.key) safeSet(LS.key, o.key); else localStorage.removeItem(LS.key);   // safeSet fait de la place si la mémoire est pleine
+      if (o.model) safeSet(LS.model, o.model);
       aiModelCache = null; aiNoQuota.clear();
       $("apiKeyInput").value = safeGet(LS.key, "");
       $("modelInput").value = aiWantedModel();
@@ -10384,12 +10384,29 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
       if (kind === "doc") { const m = docs.find(d => d.id === k); return m ? JSON.stringify(m) : null; }
       return null;
     }
+    // Écrit dans localStorage ; s'il est plein, déplace d'abord les plus gros dessins vers IndexedDB
+    // (copie d'abord, retrait ensuite, comme relieveLocal : rien n'est jamais perdu), puis réessaie.
+    async function lsSetRoom(k, v) {
+      for (let n = 0; n < 15; n++) {
+        try { localStorage.setItem(k, v); return; }
+        catch (e) {
+          const big = idb && biggestLocalInk();
+          if (!big) throw e;
+          const id = big.slice(LS.ink.length), w = localStorage.getItem(big);
+          await idbPut("ink", id, w);
+          if (localStorage.getItem(big) !== w) continue;   // modifié entre-temps : on recommence
+          inkCache.set(id, w);
+          localStorage.removeItem(big);
+        }
+      }
+      localStorage.setItem(k, v);
+    }
     async function localWrite(key, str) {
       const [kind, k] = splitKey(key);
       cloud.applying = true;
       try {
         if (kind === "ls") {
-          localStorage.setItem(k, str || "{}");   // lance une erreur si la mémoire est pleine : on réessaiera
+          await lsSetRoom(k, str || "{}");   // mémoire pleine : on fait de la place (dessins → IndexedDB) avant d'écrire
           if (k === LS.status) exStatusMap = safeGet(LS.status, {});
           if (k === LS.revisit) revisitMap = safeGet(LS.revisit, {});
           if (k === LS.repass) repassMap = safeGet(LS.repass, {});
