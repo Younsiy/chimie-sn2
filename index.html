@@ -153,6 +153,15 @@
       cursor: crosshair;
     }
     #paper.finger { touch-action: none; }
+    /* Masquer ma feuille : petit bouton sous l'énoncé, à droite ; un cache couvre la démarche (pas d'écriture tant qu'il est là) */
+    #sheetBar { display: flex; justify-content: flex-end; margin: 8px 2px -4px; }
+    #hideWorkBtn { height: 32px; padding: 0 12px; border-radius: 999px; background: #fff; border: 1px solid #cbd5e1; font-size: 13px; font-weight: 600; color: #475569; touch-action: manipulation; }
+    #hideWorkBtn:active { background: #e2e8f0; }
+    body.work-hidden #hideWorkBtn { background: #1e293b; color: #fff; border-color: #1e293b; }
+    #paperCover { display: none; position: absolute; inset: 0; z-index: 6; background: #f1f5f9; }
+    body.work-hidden #paperCover { display: block; }
+    #paperCover .pc-msg { position: sticky; top: 30px; margin: 40px auto; max-width: 340px; text-align: center; color: #64748b; font-size: 15px; font-weight: 600; line-height: 1.5; }
+    body.mode-doc #sheetBar, body.mode-doc #paperCover { display: none !important; }
     #paper canvas { position: absolute; left: 0; top: 0; width: 100%; pointer-events: none; }
     /* Circuits copiés dans la feuille : sous l'encre (la gomme ne les touche pas), blanc transparent sur le quadrillage */
     #figLayer { position: absolute; inset: 0; pointer-events: none; }
@@ -617,11 +626,13 @@
           <div id="exStatement" class="selectable"></div>
         </section>
 
+        <div id="sheetBar"><button id="hideWorkBtn" type="button">🙈 Masquer</button></div>
         <div id="paper" class="paper-grid">
           <div id="pdfLayer"></div>
           <div id="figLayer"></div>
           <canvas id="inkCanvas"></canvas>
           <canvas id="liveCanvas"></canvas>
+          <div id="paperCover"><div class="pc-msg">🙈 Feuille masquée<br><span style="font-weight:500">Touche « 👁 Afficher » en haut à droite pour la revoir.</span></div></div>
           <div id="selMenu">
             <button type="button" data-sel="calc">🧮 Calculer</button>
             <button type="button" data-sel="dup">Dupliquer</button>
@@ -7410,6 +7421,7 @@ $$P(-z_{\alpha/2} < Z < z_{\alpha}) = 1 - \frac{\alpha}{2} - \alpha = \frac{2 - 
       applyEraserMode();
       $("statementCard").classList.toggle("collapsed", !!prefs.statementCollapsed);
       $("statementToggle").textContent = prefs.statementCollapsed ? "Afficher" : "Masquer";
+      applyHideWork();
       document.body.classList.toggle("drawer-open", prefs.drawerOpen === null ? isWide() : (prefs.drawerOpen && isWide()));
 
       migrateOldDrawings();
@@ -7921,6 +7933,24 @@ $$P(-z_{\alpha/2} < Z < z_{\alpha}) = 1 - \frac{\alpha}{2} - \alpha = \frac{2 - 
       $("markRepassBtn").className = "tb-btn" + (repassMap[currentExId] ? " on-repass" : "");
     }
 
+
+    // ---------- Masquer ma feuille : cacher sa démarche pour refaire un exercice sans la voir ----------
+    function applyHideWork() {
+      document.body.classList.toggle("work-hidden", !!prefs.hideWork);
+      $("hideWorkBtn").textContent = prefs.hideWork ? "👁 Afficher" : "🙈 Masquer";
+    }
+    function toggleHideWork() {
+      prefs.hideWork = !prefs.hideWork;
+      savePrefs();
+      applyHideWork();
+    }
+    (function () {
+      // agit au lever du doigt ou du crayon, une seule fois par toucher (le crayon ne déclenche pas toujours « click »)
+      const b = $("hideWorkBtn");
+      let lastUp = 0;
+      b.addEventListener("pointerup", e => { e.preventDefault(); lastUp = Date.now(); toggleHideWork(); });
+      b.addEventListener("click", () => { if (Date.now() - lastUp > 600) toggleHideWork(); });
+    })();
     function toggleStatement() {
       prefs.statementCollapsed = !prefs.statementCollapsed;
       savePrefs();
@@ -8466,6 +8496,7 @@ $$P(-z_{\alpha/2} < Z < z_{\alpha}) = 1 - \frac{\alpha}{2} - \alpha = \frac{2 - 
       if (act) return;                                         // un seul trait à la fois : la paume est ignorée
       if (e.pointerType === "touch" && !prefs.fingerDraw) return; // le doigt défile
       if (e.pointerType === "mouse" && e.button !== 0) return;
+      if (document.body.classList.contains("work-hidden") && !document.body.classList.contains("mode-doc")) { e.preventDefault(); showToast("Feuille masquée : touche « 👁 Afficher » pour écrire."); return; }
       if (e.pointerType === "pen" && !IS_APPLE_TOUCH) paperEl.style.touchAction = "none"; // stylets Windows/Android
       e.preventDefault();
       try { paperEl.setPointerCapture(e.pointerId); } catch (err) {}
