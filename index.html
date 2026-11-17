@@ -856,7 +856,7 @@ $$x = \frac{-b + \sqrt{b^2 - 4ac}}{2a}$$
         <div class="modal-actions"><button id="aiGo" class="btn primary" onclick="aiPrepare()">Préparer les fichiers</button></div>
         <div id="aiReady" style="display:none">
           <p id="aiReadyText" style="font-size:14px"></p>
-          <div class="modal-actions"><button class="btn primary" onclick="aiSave()">Enregistrer les fichiers</button></div>
+          <div class="modal-actions"><button class="btn primary" onclick="aiSave()">Enregistrer</button></div>
         </div>
       </div>
     </div>
@@ -10239,6 +10239,7 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
       const tag = ($("aiCourse").value === "all" ? "" : "_" + $("aiCourse").value) +
         (partial ? "_ch" + [...new Set([...chosen].map(k => k.split(":")[1]))].sort((a, b) => a - b).join("-") : "");
       aiFiles = [];
+      aiZipName = `SN-Pro${tag}_pour_IA_${date}.zip`;
       showBusy("Préparation du texte…");
       try {
         aiFiles.push(new File([aiMarkdown(courses, inkSet)], `SN-Pro${tag}_exercices_${date}.md`, { type: "text/markdown" }));
@@ -10287,8 +10288,61 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
         showToast("L'export n'a pas pu être préparé.");
       }
     }
+    // ---- Un seul fichier .zip (sans compression : les PDF et JPEG le sont déjà), écrit à la main ----
+    let aiZipName = "SN-Pro_pour_IA.zip";
+    const CRC_TABLE = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+    function crc32(b) { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC_TABLE[(c ^ b[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+    async function zipFiles(files) {
+      const enc = new TextEncoder(), parts = [], central = [];
+      const d = new Date(), time = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1);
+      const date = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+      let offset = 0;
+      for (const f of files) {
+        const data = new Uint8Array(await f.arrayBuffer()), name = enc.encode(f.name), crc = crc32(data);
+        const head = (sig, extra) => { const h = new DataView(new ArrayBuffer(extra)); h.setUint32(0, sig, true); return h; };
+        const lh = head(0x04034b50, 30);
+        lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, 0, true);   // 0x0800 : noms en UTF-8 (accents)
+        lh.setUint16(10, time, true); lh.setUint16(12, date, true); lh.setUint32(14, crc, true);
+        lh.setUint32(18, data.length, true); lh.setUint32(22, data.length, true); lh.setUint16(26, name.length, true);
+        parts.push(lh.buffer, name, data);
+        const ch = head(0x02014b50, 46);
+        ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true);
+        ch.setUint16(12, time, true); ch.setUint16(14, date, true); ch.setUint32(16, crc, true);
+        ch.setUint32(20, data.length, true); ch.setUint32(24, data.length, true); ch.setUint16(28, name.length, true);
+        ch.setUint32(42, offset, true);
+        central.push(ch.buffer, name);
+        offset += 30 + name.length + data.length;
+      }
+      const csize = central.reduce((n, p) => n + p.byteLength, 0);
+      const end = new DataView(new ArrayBuffer(22));
+      end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true);
+      end.setUint32(12, csize, true); end.setUint32(16, offset, true);
+      return new Blob([...parts, ...central, end.buffer], { type: "application/zip" });
+    }
+
     async function aiSave() {
       if (!aiFiles.length) return;
+      // Ordinateur (Chrome, Edge) : un seul .zip, et on choisit où l'enregistrer
+      if (window.showSaveFilePicker) {
+        let handle;
+        try {
+          handle = await window.showSaveFilePicker({ suggestedName: aiZipName, types: [{ description: "Archive zip", accept: { "application/zip": [".zip"] } }] });
+        } catch (e) {
+          if (e && e.name === "AbortError") return;   // fenêtre fermée : rien à faire
+          handle = null;                              // refusé par le navigateur : téléchargement classique plus bas
+        }
+        if (handle) {
+          try {
+            showBusy("Création du fichier zip…");
+            const zip = await zipFiles(aiFiles);
+            const w = await handle.createWritable();
+            await w.write(zip); await w.close();
+            hideBusy();
+            showToast(`Enregistré : ${handle.name}. Dépose-le dans ton IA (ou décompresse-le d'abord si elle refuse les .zip).`);
+          } catch (e) { hideBusy(); showToast("Le fichier zip n'a pas pu être enregistré."); }
+          return;
+        }
+      }
       try {
         if (navigator.canShare && navigator.canShare({ files: aiFiles })) {
           await navigator.share({ files: aiFiles, title: "SN-Pro pour l'IA" });
@@ -10298,14 +10352,12 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
       } catch (e) {
         if (e && e.name === "AbortError") return;
       }
-      for (const f of aiFiles) {   // ordinateur : un téléchargement par fichier
-        const url = URL.createObjectURL(f), a = document.createElement("a");
-        a.href = url; a.download = f.name;
-        document.body.appendChild(a); a.click(); a.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 8000);
-        await new Promise(r => setTimeout(r, 400));
-      }
-      showToast("Fichiers enregistrés dans Téléchargements.");
+      // autres navigateurs d'ordinateur : un seul .zip dans Téléchargements
+      const url = URL.createObjectURL(await zipFiles(aiFiles)), a = document.createElement("a");
+      a.href = url; a.download = aiZipName;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 30000);
+      showToast(`Enregistré dans Téléchargements : ${aiZipName}.`);
     }
 
     // =========================================================================
