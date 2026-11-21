@@ -10358,15 +10358,27 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
           handle = null;                              // refusé par le navigateur : téléchargement classique plus bas
         }
         if (handle) {
+          let zip = null;
           try {
             showBusy("Création du fichier zip…");
-            const zip = await zipFiles(aiFiles);
+            zip = await zipFiles(aiFiles);
             const w = await handle.createWritable();
             await w.write(zip); await w.close();
+            // vérification : le fichier est bien là, et entier (le navigateur peut refuser l'écriture à la toute fin)
+            const f = await handle.getFile();
+            if (f.size !== zip.size) throw new Error(`fichier incomplet (${f.size} octets sur ${zip.size})`);
             hideBusy();
-            showToast(`Enregistré : ${handle.name}. Dépose-le dans ton IA (ou décompresse-le d'abord si elle refuse les .zip).`);
-          } catch (e) { hideBusy(); showToast("Le fichier zip n'a pas pu être enregistré."); }
-          return;
+            aiSaved(`✅ Enregistré : ${handle.name} (${fmtSize(f.size)}), dans le dossier que tu as choisi. Dépose-le dans ton IA (ou décompresse-le d'abord si elle refuse les .zip).`);
+            return;
+          } catch (e) {
+            // version 38 : avant, le fichier disparaissait et seul un message de 3 s le disait. Maintenant il va dans Téléchargements.
+            hideBusy();
+            try {
+              aiDownload(zip || await zipFiles(aiFiles));
+              aiSaved(`⚠️ Le navigateur a refusé d'écrire à l'endroit choisi (${escapeHtml(String(e && (e.message || e.name) || e))}). Le fichier est donc dans <b>Téléchargements</b> : ${escapeHtml(aiZipName)}.`);
+            } catch (e2) { aiSaved("❌ Le fichier zip n'a pas pu être enregistré. Réessaie avec moins de chapitres."); }
+            return;
+          }
         }
       }
       try {
@@ -10379,11 +10391,20 @@ Exemple : « On isole t : $$t = \\frac{1}{k}\\ln\\frac{[\\ce{A}]_{0}}{[\\ce{A}]_
         if (e && e.name === "AbortError") return;
       }
       // autres navigateurs d'ordinateur : un seul .zip dans Téléchargements
-      const url = URL.createObjectURL(await zipFiles(aiFiles)), a = document.createElement("a");
+      aiDownload(await zipFiles(aiFiles));
+      aiSaved(`✅ Enregistré dans <b>Téléchargements</b> : ${escapeHtml(aiZipName)}.`);
+    }
+    function aiDownload(blob) {
+      const url = URL.createObjectURL(blob), a = document.createElement("a");
       a.href = url; a.download = aiZipName;
       document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 30000);
-      showToast(`Enregistré dans Téléchargements : ${aiZipName}.`);
+      setTimeout(() => URL.revokeObjectURL(url), 120000);
+    }
+    // le résultat reste écrit dans la fenêtre d'export (un message de 3 s passait inaperçu)
+    function aiSaved(html) {
+      const t = $("aiReadyText");
+      if (t) t.innerHTML = html;
+      showToast(html.replace(/<[^>]+>/g, ""));
     }
 
     // =========================================================================
